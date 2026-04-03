@@ -63,7 +63,7 @@ input:focus,select:focus{border-color:var(--blue)}
       <h1>🔐 TriDDS Admin</h1>
       <button id="btn-logout" class="btn btn-ghost" style="font-size:11px">Déconnexion</button>
     </div>
-    <p class="sub">Gestion des accès, plans et sites</p>
+    <p class="sub">Gestion des accès, offres et sites</p>
 
     <!-- Stats -->
     <div class="stats" id="stats-bar">
@@ -76,7 +76,7 @@ input:focus,select:focus{border-color:var(--blue)}
       <div style="font-weight:700;font-size:15px;margin-bottom:12px">➕ Nouveau site</div>
       <div class="row">
         <div><div class="lbl">Code d'accès</div><input id="new-code" placeholder="FAU-2025-PRO" style="text-transform:uppercase"></div>
-        <div><div class="lbl">Plan</div><select id="new-plan"><option value="free">Gratuit</option><option value="pro" selected>Pro (49€/mois)</option><option value="enterprise">Entreprise (149€/mois)</option></select></div>
+        <div><div class="lbl">Plan</div><select id="new-plan"><option value="free">Accès Base</option><option value="pro" selected>Pro Site (39€/mois)</option><option value="multisite">Multi-sites (99€/mois)</option><option value="enterprise">Entreprise (sur devis)</option></select></div>
       </div>
       <div class="lbl">Nom du site</div>
       <input id="new-site" placeholder="Déchetterie de Faulquemont">
@@ -118,7 +118,7 @@ function loadSites(){
     if(!sites.length){document.getElementById("sites-list").innerHTML='<div class="card" style="text-align:center;color:var(--tx2)">Aucun site. Créez-en un ci-dessus.</div>';return}
     var h="";
     sites.forEach(function(s){
-      var planBadge={free:'<span class="badge b-free">Gratuit</span>',pro:'<span class="badge b-pro">Pro</span>',enterprise:'<span class="badge b-ent">Entreprise</span>'}[s.plan]||"";
+      var planBadge={free:'<span class="badge b-free">Accès Base</span>',pro:'<span class="badge b-pro">Pro Site</span>',multisite:'<span class="badge b-ent">Multi-sites</span>',enterprise:'<span class="badge b-ent">Entreprise</span>'}[s.plan]||"";
       var statusBadge=s.active?'<span class="badge b-active">Actif</span>':'<span class="badge b-inactive">Désactivé</span>';
       h+='<div class="card site-card'+(s.active?'':' inactive')+'">';
       h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">';
@@ -133,7 +133,7 @@ function loadSites(){
       h+='<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">';
       if(s.active)h+='<button onclick="deactivate(\''+s.code+'\')" class="btn btn-red" style="font-size:11px;padding:6px 14px">🔒 Désactiver</button>';
       else h+='<button onclick="activate(\''+s.code+'\')" class="btn btn-green" style="font-size:11px;padding:6px 14px">🔓 Réactiver</button>';
-      h+='<select onchange="changePlan(\''+s.code+'\',this.value)" style="width:auto;margin:0;padding:6px 10px;font-size:11px;font-weight:700"><option value="free"'+(s.plan==="free"?" selected":"")+'>Gratuit</option><option value="pro"'+(s.plan==="pro"?" selected":"")+'>Pro</option><option value="enterprise"'+(s.plan==="enterprise"?" selected":"")+'>Entreprise</option></select>';
+      h+='<select onchange="changePlan(\''+s.code+'\',this.value)" style="width:auto;margin:0;padding:6px 10px;font-size:11px;font-weight:700"><option value="free"'+(s.plan==="free"?" selected":"")+'>Accès Base</option><option value="pro"'+(s.plan==="pro"?" selected":"")+'>Pro Site</option><option value="multisite"'+(s.plan==="multisite"?" selected":"")+'>Multi-sites</option><option value="enterprise"'+(s.plan==="enterprise"?" selected":"")+'>Entreprise</option></select>';
       h+='<button onclick="deleteSite(\''+s.code+'\')" class="btn btn-ghost" style="font-size:11px;padding:6px 14px;color:var(--int)">🗑️ Supprimer</button>';
       h+='</div></div>';
     });

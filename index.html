@@ -112,7 +112,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
         </div>
         <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
       </div>
-      <button id="btn-demo" style="display:block;margin:16px auto 0;color:var(--tx2);font-size:13px;text-decoration:underline">Essai gratuit (5 photos/jour)</button>
+      <button id="btn-demo" style="display:block;margin:16px auto 0;color:var(--tx2);font-size:13px;text-decoration:underline">Accès gratuit + 5 scans IA offerts</button>
     </div>
   </div>
   <div style="text-align:center;padding:16px;font-size:10px;color:var(--tx3)">TriDDS v5 · 482 produits · 21 flux</div>
@@ -126,8 +126,8 @@ button{cursor:pointer;border:none;background:none;color:inherit}
       <div style="font-size:20px;font-weight:900;letter-spacing:-.5px;margin-top:1px">Tri DDS</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span id="home-plan" class="plan-badge plan-free">Gratuit</span>
-      <div style="text-align:right"><div style="font-size:10px;color:var(--tx3)">Photos IA</div><div id="q-disp" style="font-size:16px;font-weight:800;color:var(--eco)">5/5</div></div>
+      <span id="home-plan" class="plan-badge plan-free">Accès Base</span>
+      <div style="text-align:right"><div id="q-label" style="font-size:10px;color:var(--tx3)">Essai IA</div><div id="q-disp" style="font-size:16px;font-weight:800;color:var(--eco)">5/5</div></div>
     </div>
   </div>
   <!-- Search bar -->
@@ -283,7 +283,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
       <div class="lbl">Site</div><div id="prof-site" style="font-weight:700;font-size:16px"></div>
       <div class="lbl" style="margin-top:12px">Agent</div><div id="prof-agent" style="font-weight:700;font-size:16px"></div>
       <div class="lbl" style="margin-top:12px">Plan</div><div id="prof-plan" style="font-weight:700;font-size:16px"></div>
-      <div class="lbl" style="margin-top:12px">Photos aujourd'hui</div><div id="prof-photos" style="font-weight:700;font-size:16px"></div>
+      <div class="lbl" style="margin-top:12px">Quota IA</div><div id="prof-photos" style="font-weight:700;font-size:16px"></div>
     </div>
     <button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
   </div>
@@ -327,7 +327,7 @@ var FM={E:"EcoDDS",H:"Hors EcoDDS",C:"Cas spécial",I:"Interdit"};
 var P=DB.map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});
 
 // ===== AUTH & SESSION =====
-var sess={code:"",site:"",agent:"",plan:"free",photosPerDay:5,memoryEnabled:false};
+var sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0};
 function loadSess(){try{var d=JSON.parse(localStorage.getItem("tridds_sess"));if(d&&d.code)sess=d}catch(e){}}
 function saveSess(){localStorage.setItem("tridds_sess",JSON.stringify(sess))}
 function isLoggedIn(){return!!sess.code}
@@ -339,21 +339,23 @@ function doLogin(code,agent){
   }).then(function(r){return r.json()}).then(function(d){
     if(d.error)throw new Error(d.error);
     sess.code=d.code;sess.site=d.site;sess.agent=agent;sess.plan=d.plan;
-    sess.photosPerDay=d.photosPerDay;sess.memoryEnabled=d.memoryEnabled;
+    sess.memoryEnabled=d.memoryEnabled;sess.aiEnabled=d.aiEnabled;
+    sess.trialTotal=d.trialTotal||0;sess.trialUsed=d.trialUsed||0;sess.trialRemaining=d.trialRemaining||0;
+    sess.monthlyLimit=d.monthlyLimit||0;sess.monthlyUsed=d.monthlyUsed||0;sess.monthlyRemaining=d.monthlyRemaining||0;
     saveSess();
     // Register agent
     fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"register-agent",code:d.code,agent:agent})});
     return d;
-  });
+  }).catch(function(e){goHome();alert(e&&e.message?e.message:"Analyse impossible");});
 }
 
 function demoLogin(){
-  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",plan:"free",photosPerDay:5,memoryEnabled:false};
+  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:0,trialUsed:0,trialRemaining:0,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0};
   saveSess();
 }
 
-function logout(){sess={code:"",site:"",agent:"",plan:"free",photosPerDay:5,memoryEnabled:false};saveSess();location.reload()}
+function logout(){sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0};saveSess();location.reload()}
 
 // ===== SHARED MEMORY =====
 var mem={brands:{},version:0,stats:{total:0,corrected:0}};
@@ -420,7 +422,11 @@ var st={screen:"login",query:"",matches:[],result:null,multi:null,image:null,
   stream:null,corIdx:-1,corJrnId:null,jrnFilter:"all",usedModel:null};
 
 function savePc(){localStorage.setItem("tridds_pc_"+today(),st.pc)}
-function rem(){return Math.max(0,sess.photosPerDay-st.pc)}
+function usageTotal(){return sess.monthlyLimit>0?sess.monthlyLimit:(sess.trialTotal||0)}
+function usageRemaining(){return sess.monthlyLimit>0?(sess.monthlyRemaining||0):(sess.trialRemaining||0)}
+function usageLabel(){return sess.monthlyLimit>0?"Scans IA/mois":"Essai IA"}
+function hasAiAccess(){return usageRemaining()>0}
+function applyUsage(u){if(!u)return;sess.plan=u.plan||sess.plan;sess.memoryEnabled=!!u.memoryEnabled;sess.aiEnabled=!!u.aiEnabled;sess.trialTotal=u.trialTotal||0;sess.trialUsed=u.trialUsed||0;sess.trialRemaining=u.trialRemaining||0;sess.monthlyLimit=u.monthlyLimit||0;sess.monthlyUsed=u.monthlyUsed||0;sess.monthlyRemaining=u.monthlyRemaining||0;saveSess();}
 function addHist(r){st.history=[{nm:r.n,f:r.f}].concat(st.history).slice(0,10);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
 
 // ===== SEARCH =====
@@ -434,18 +440,19 @@ var catFix={};Object.keys(catFluxMap).forEach(function(c){var f=Object.keys(catF
 function deepSearch(terms){var R=[];for(var t=0;t<terms.length;t++){if(!terms[t]||terms[t].length<2)continue;var res=searchAll(terms[t]);for(var i=0;i<res.length;i++){if(!R.find(function(x){return x.n===res[i].n}))R.push(res[i])}var fw=terms[t].split(/\s+/)[0];if(fw.length>=3&&fw!==terms[t]){var r2=searchAll(fw);for(var j=0;j<r2.length;j++){if(!R.find(function(x){return x.n===r2[j].n}))R.push(r2[j])}}}R.sort(function(a,b){return b.score-a.score});return R}
 
 // ===== AI =====
-function apiCall(b64,mime,sys,prompt,model){
-  if(!needApi("l’analyse IA"))return Promise.resolve("");
+function apiCall(b64,mime,sys,prompt,model,mode){
+  if(!needApi("l’analyse IA"))return Promise.resolve({text:"",usage:null});
   return fetch(apiUrl("analyze"),{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({image:b64,mime:mime,system:sys,prompt:prompt,model:model||"haiku"})
-  }).then(function(r){return r.json()}).then(function(d){return(d.content&&d.content[0])?d.content[0].text:""}).catch(function(){return""})
+    body:JSON.stringify({image:b64,mime:mime,system:sys,prompt:prompt,model:model||"haiku",mode:mode||"final",code:sess.code,agent:sess.agent})
+  }).then(function(r){return r.json().then(function(d){if(!r.ok||d.error)throw new Error(d.error||"Erreur IA");return{text:(d.content&&d.content[0])?d.content[0].text:"",usage:d.usage||null}})})
 }
 function parseProds(txt){var m=txt.match(/\{[\s\S]*\}/);if(m){try{var p=JSON.parse(m[0]);if(p.produits)return p.produits;if(p.nom||p.texte_lu)return[p]}catch(e){}}return null}
 
 function callSmart(b64,mime,onStatus){
   onStatus("🔍 Pré-scan...");
-  return apiCall(b64,mime,"","Compte combien de produits DISTINCTS sont visibles. Réponds en JSON: {\"count\":N}","haiku")
-  .then(function(txt){
+  return apiCall(b64,mime,'','Compte combien de produits DISTINCTS sont visibles. Réponds en JSON: {"count":N}','haiku','prescan')
+  .then(function(pre){
+    var txt=pre.text||"";
     var count=1;try{var m=txt.match(/\{[\s\S]*?\}/);if(m)count=JSON.parse(m[0]).count||1}catch(e){}
     var complex=count>2,model=complex?"sonnet":"haiku";
     onStatus("🤖 "+(complex?"Sonnet 4.6 ("+count+" produits)":"Haiku 4.5")+" analyse...");
@@ -454,8 +461,8 @@ function callSmart(b64,mime,onStatus){
       "Pour CHAQUE produit: 1) Lis le texte EXACT sur l'étiquette 2) Déduis le type si packaging reconnaissable 3) Estime le volume 4) Classe dans le référentiel (nom_referentiel, categorie, filiere) "+
       "5) Position: bbox={x,y,w,h} en % de l'image. "+
       "Traduis les noms commerciaux vers le référentiel. Réponds UNIQUEMENT en JSON.";
-    return apiCall(b64,mime,sysP,userP,model).then(function(t){return{prods:parseProds(t),model:model,count:count}});
-  }).catch(function(){return{prods:null,model:"haiku",count:0}});
+    return apiCall(b64,mime,sysP,userP,model,"final").then(function(fin){return{prods:parseProds(fin.text||""),model:model,count:count,usage:fin.usage||null}});
+  });
 }
 
 // ===== MATCH =====
@@ -509,11 +516,12 @@ function goHome(){show("home");st.result=null;st.image=null;st.matches=[];st.mul
 // ===== HOME =====
 function updHome(){
   document.getElementById("home-site").textContent=sess.site||"TriDDS";
-  var planCls={free:"plan-free",pro:"plan-pro",enterprise:"plan-ent"};
+  var planCls={free:"plan-free",pro:"plan-pro",multisite:"plan-ent",enterprise:"plan-ent"};
   var planEl=document.getElementById("home-plan");
   planEl.className="plan-badge "+(planCls[sess.plan]||"plan-free");
-  planEl.textContent={free:"Gratuit",pro:"Pro",enterprise:"Entreprise"}[sess.plan]||"Gratuit";
-  var r=rem();document.getElementById("q-disp").textContent=r+"/"+sess.photosPerDay;
+  planEl.textContent={free:"Accès Base",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||"Accès Base";
+  var r=usageRemaining();document.getElementById("q-label").textContent=usageLabel();
+  document.getElementById("q-disp").textContent=usageTotal()?r+"/"+usageTotal():"Off";
   document.getElementById("q-disp").style.color=r>2?"var(--eco)":"var(--int)";
   var hl=document.getElementById("hist-list");
   if(!st.history.length){hl.innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)"><div style="font-size:28px;margin-bottom:6px">♻️</div><div style="font-size:13px">Recherchez ou photographiez un produit</div></div>';return}
@@ -616,7 +624,7 @@ window.confirmM=function(i){if(!st.multi||!st.multi[i])return;var r=st.multi[i];
 window.correctM=function(i){st.corIdx=i;st.corJrnId=null;document.getElementById("cor-orig").textContent=st.multi[i].n;document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
 
 // ===== CAMERA & ANALYZE =====
-function openCam(){if(st.pc>=sess.photosPerDay){alert("Quota photo atteint ("+sess.photosPerDay+"/jour)");return}st.image=null;show("cam");document.getElementById("cam-view").style.display="block";document.getElementById("cam-prev").style.display="none";document.getElementById("cam-ctrl").style.display="flex";document.getElementById("cam-act").style.display="none";startCam()}
+function openCam(){if(!hasAiAccess()){alert(sess.plan==="free"?"Vos 5 scans IA offerts ont été utilisés. Passez au plan Pro pour continuer.":"Votre quota IA est atteint.");return}st.image=null;show("cam");document.getElementById("cam-view").style.display="block";document.getElementById("cam-prev").style.display="none";document.getElementById("cam-ctrl").style.display="flex";document.getElementById("cam-act").style.display="none";startCam()}
 function startCam(){navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280},height:{ideal:960}}}).then(function(s){st.stream=s;var v=document.getElementById("cam-vid");v.srcObject=s;v.play()}).catch(function(){})}
 function stopCam(){if(st.stream){st.stream.getTracks().forEach(function(t){t.stop()});st.stream=null}}
 function capture(){var v=document.getElementById("cam-vid");if(!v||!v.videoWidth)return;var c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);st.image=c.toDataURL("image/jpeg",.85);stopCam();document.getElementById("cam-view").style.display="none";document.getElementById("cam-prev").style.display="block";document.getElementById("cam-img").src=st.image;document.getElementById("cam-ctrl").style.display="none";document.getElementById("cam-act").style.display="flex"}
@@ -625,10 +633,10 @@ function analyze(){
   if(!st.image)return;show("load");
   document.getElementById("load-thumb").src=st.image;document.getElementById("load-thumb").style.display="block";
   document.getElementById("load-sub").textContent="Mode smart · "+memKeys().length+" marques apprises";
-  st.pc++;savePc();
   toJpeg(st.image).then(function(b64){
     return callSmart(b64,"image/jpeg",function(s){document.getElementById("load-msg").textContent=s});
   }).then(function(res){
+    if(res&&res.usage)applyUsage(res.usage);updHome();
     var prods=res.prods,model=res.model;
     if(!prods||!prods.length){st.result={n:"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",c:"Porter les EPI.",conf:0,nv:true,image:st.image};addHist(st.result);addJournal({name:"Non identifié",flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"auto",model:model});showRes();return}
     var seen={},uniq=[];for(var i=0;i<prods.length;i++){var k=(prods[i].nom||prods[i].texte_lu||"").toLowerCase().trim();if(k&&!seen[k]){seen[k]=true;uniq.push(prods[i])}}
@@ -732,7 +740,9 @@ document.getElementById("btn-login").addEventListener("click",function(){
   if(!agent){document.getElementById("login-err").textContent="Sélectionnez un agent";document.getElementById("login-err").style.display="block";return}
   
   sess.code=pendingLogin.code;sess.site=pendingLogin.site;sess.agent=agent;
-  sess.plan=pendingLogin.plan;sess.photosPerDay=pendingLogin.photosPerDay;sess.memoryEnabled=pendingLogin.memoryEnabled;
+  sess.plan=pendingLogin.plan;sess.memoryEnabled=pendingLogin.memoryEnabled;sess.aiEnabled=pendingLogin.aiEnabled;
+  sess.trialTotal=pendingLogin.trialTotal||0;sess.trialUsed=pendingLogin.trialUsed||0;sess.trialRemaining=pendingLogin.trialRemaining||0;
+  sess.monthlyLimit=pendingLogin.monthlyLimit||0;sess.monthlyUsed=pendingLogin.monthlyUsed||0;sess.monthlyRemaining=pendingLogin.monthlyRemaining||0;
   saveSess();
   
   // Update lastSeen
@@ -772,7 +782,7 @@ document.querySelectorAll("#main-tabs button").forEach(function(b){
     if(t==="home")goHome();
     else if(t==="journal")showJournal();
     else if(t==="memory"){syncMemory();showMemory()}
-    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent;document.getElementById("prof-plan").textContent={free:"Gratuit (5 photos/jour)",pro:"Pro (100 photos/jour)",enterprise:"Entreprise (illimité)"}[sess.plan];document.getElementById("prof-photos").textContent=st.pc+"/"+sess.photosPerDay+" utilisées"}
+    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent;document.getElementById("prof-plan").textContent={free:"Accès Base + 5 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse"}
   });
 });
 
