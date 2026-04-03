@@ -1,7 +1,8 @@
 {
   "name": "TriDDS",
   "short_name": "TriDDS",
-  "start_url": "/",
+  "start_url": "/triDDS/",
+  "scope": "/triDDS/",
   "display": "standalone",
   "background_color": "#f5f7fa",
   "theme_color": "#1a56db",
