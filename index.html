@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f7fa">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>TriDDS</title>
+<style>
+:root{--bg:#f5f7fa;--white:#fff;--card:#fff;--bd:#e5e7eb;--tx:#111827;--tx2:#6b7280;--tx3:#9ca3af;
+--eco:#059669;--eco-bg:#ecfdf5;--eco-bd:#6ee7b7;--eco-tx:#065f46;
+--hors:#d97706;--hors-bg:#fffbeb;--hors-bd:#fcd34d;--hors-tx:#92400e;
+--int:#dc2626;--int-bg:#fef2f2;--int-bd:#fca5a5;--int-tx:#991b1b;
+--blue:#1a56db;--blue-bg:#eff6ff;--purple:#7c3aed;--r:16px;--rs:10px;--font:'DM Sans',system-ui,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+input,button,textarea{font-family:var(--font);font-size:16px}
+button{cursor:pointer;border:none;background:none;color:inherit}
+.S{display:none;min-height:100dvh;flex-direction:column}.S.on{display:flex}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.spin{animation:spin .7s linear infinite}
+.fu{animation:fadeUp .3s ease both}
+
+/* Flux banners - the KEY visual element */
+.flux-banner{padding:20px;text-align:center;color:#fff;font-weight:900;font-size:20px;letter-spacing:.5px;text-transform:uppercase}
+.flux-banner.eco{background:linear-gradient(135deg,#059669,#10b981)}
+.flux-banner.hors{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.flux-banner.int{background:linear-gradient(135deg,#dc2626,#ef4444)}
+.flux-cat{font-size:14px;font-weight:600;opacity:.85;margin-top:4px;text-transform:none;letter-spacing:0}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:4px}
+
+/* Buttons */
+.btn{padding:12px 20px;border-radius:var(--rs);font-weight:700;font-size:14px;text-align:center;transition:all .12s}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:active{opacity:.85}
+.btn-eco{background:var(--eco);color:#fff}
+.btn-outline{background:var(--white);border:1.5px solid var(--bd);color:var(--tx)}
+.btn-f{width:100%;display:block}
+
+/* Badge */
+.badge{display:inline-flex;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800}
+.b-eco{background:var(--eco-bg);color:var(--eco);border:1.5px solid var(--eco-bd)}
+.b-hors{background:var(--hors-bg);color:var(--hors);border:1.5px solid var(--hors-bd)}
+.b-int{background:var(--int-bg);color:var(--int);border:1.5px solid var(--int-bd)}
+
+/* Search bar */
+.search-bar{display:flex;align-items:center;background:var(--white);border:2px solid var(--bd);border-radius:60px;padding:4px 4px 4px 16px;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:border-color .2s}
+.search-bar:focus-within{border-color:var(--blue)}
+.search-bar input{flex:1;border:none;outline:none;font-size:15px;padding:10px 8px;background:none;color:var(--tx)}
+.search-bar button{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-voice{background:var(--blue);color:#fff}
+.sb-cam{background:var(--eco);color:#fff;margin-left:4px}
+
+/* Header */
+.hdr{padding:12px 16px;display:flex;align-items:center;gap:10px}
+.hdr .bk{font-size:18px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center}
+.hdr h2{font-size:16px;font-weight:700;flex:1}
+
+/* Tabs */
+.tabs{display:flex;background:var(--white);border-top:1px solid var(--bd);padding:4px 0 max(4px,env(safe-area-inset-bottom))}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0;font-size:10px;font-weight:600;color:var(--tx3)}
+.tabs button.act{color:var(--blue)}
+.tabs button .ti{font-size:20px}
+
+/* Confidence */
+.cb{height:6px;border-radius:99px;background:#f0f0f5;overflow:hidden;margin-top:6px}
+.cb>div{height:100%;border-radius:99px}
+
+/* Overlay */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.ov.on{display:flex}
+.ov-body{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:fadeUp .25s ease}
+
+/* Plan badge */
+.plan-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase}
+.plan-free{background:#f0f0f5;color:var(--tx2)}
+.plan-pro{background:#dbeafe;color:#1e40af}
+.plan-ent{background:#f5f3ff;color:#6d28d9}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="s-login" class="S on" style="background:linear-gradient(160deg,#f5f7fa,#e0e7ff,#f5f7fa)">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+    <div style="font-size:42px;margin-bottom:12px">♻️</div>
+    <h1 style="font-size:28px;font-weight:900;color:var(--tx);letter-spacing:-1px">TriDDS</h1>
+    <p style="color:var(--tx2);font-size:14px;margin-top:4px">Assistant IA · Tri des DDS</p>
+    <div style="width:100%;max-width:340px;margin-top:32px">
+      <div class="card" style="padding:24px">
+        <!-- Step 1: Code -->
+        <div id="login-step1">
+          <div class="lbl">Code du site</div>
+          <input id="in-code" type="text" placeholder="Ex: FAU-2025-PRO" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:var(--rs);font-size:16px;font-weight:600;text-transform:uppercase;text-align:center;outline:none;margin-bottom:12px" autocomplete="off">
+          <button id="btn-check" class="btn btn-blue btn-f" style="padding:16px;font-size:16px">Vérifier le code</button>
+        </div>
+        <!-- Step 2: Agent selection (hidden initially) -->
+        <div id="login-step2" style="display:none">
+          <div style="text-align:center;margin-bottom:14px">
+            <div style="font-size:13px;color:var(--tx2)">Site vérifié ✅</div>
+            <div id="login-site-name" style="font-size:18px;font-weight:800;margin-top:2px"></div>
+          </div>
+          <div class="lbl">Sélectionnez votre nom</div>
+          <select id="sel-agent" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:var(--rs);font-size:16px;font-weight:600;outline:none;margin-bottom:12px;background:var(--card)"></select>
+          <button id="btn-login" class="btn btn-blue btn-f" style="padding:16px;font-size:16px">Se connecter</button>
+          <button id="btn-back-code" style="display:block;margin:10px auto 0;color:var(--tx2);font-size:12px;text-decoration:underline;background:none;border:none;cursor:pointer">← Changer de code</button>
+        </div>
+        <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
+      </div>
+      <button id="btn-demo" style="display:block;margin:16px auto 0;color:var(--tx2);font-size:13px;text-decoration:underline">Essai gratuit (5 photos/jour)</button>
+    </div>
+  </div>
+  <div style="text-align:center;padding:16px;font-size:10px;color:var(--tx3)">TriDDS v5 · 482 produits · 21 flux</div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div id="s-home" class="S">
+  <div style="padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;color:var(--tx2);font-weight:600" id="home-site">TriDDS</div>
+      <div style="font-size:20px;font-weight:900;letter-spacing:-.5px;margin-top:1px">Tri DDS</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="home-plan" class="plan-badge plan-free">Gratuit</span>
+      <div style="text-align:right"><div style="font-size:10px;color:var(--tx3)">Photos IA</div><div id="q-disp" style="font-size:16px;font-weight:800;color:var(--eco)">5/5</div></div>
+    </div>
+  </div>
+  <!-- Search bar -->
+  <div style="padding:8px 16px 12px">
+    <div class="search-bar">
+      <button id="btn-voice" class="sb-voice" title="Dicter">🎤</button>
+      <input id="in-search" type="text" placeholder="Nom du produit...">
+      <button id="btn-srch" style="display:none;background:var(--blue);color:#fff;font-size:13px;font-weight:800;border-radius:20px;width:auto;padding:0 16px">OK</button>
+      <button id="btn-photo" class="sb-cam" title="Photo IA">📸</button>
+    </div>
+  </div>
+  <!-- Quick actions -->
+  <div style="padding:0 16px 8px;display:flex;gap:8px">
+    <div style="flex:1;background:var(--eco-bg);border:1px solid var(--eco-bd);border-radius:var(--rs);padding:10px 12px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--eco)">EcoDDS</div><div style="font-size:9px;color:var(--eco-tx);margin-top:2px">Bacs dédiés</div></div>
+    <div style="flex:1;background:var(--hors-bg);border:1px solid var(--hors-bd);border-radius:var(--rs);padding:10px 12px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--hors)">Hors EcoDDS</div><div style="font-size:9px;color:var(--hors-tx);margin-top:2px">Bacs CHIMIREC</div></div>
+    <div style="flex:1;background:var(--int-bg);border:1px solid var(--int-bd);border-radius:var(--rs);padding:10px 12px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--int)">Interdit</div><div style="font-size:9px;color:var(--int-tx);margin-top:2px">Refuser</div></div>
+  </div>
+  <!-- Shared memory indicator -->
+  <div id="home-mem" style="display:none;margin:0 16px 8px;padding:8px 12px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:var(--rs);font-size:11px;color:#6d28d9;display:flex;align-items:center;gap:6px">
+    <span>🧠</span> <span id="mem-shared-count">0</span> marques apprises (partagées)
+  </div>
+  <!-- History -->
+  <div id="hist-list" style="flex:1;overflow-y:auto;padding:0 16px"></div>
+  <!-- Tabs -->
+  <div class="tabs" id="main-tabs">
+    <button class="act" data-t="home"><span class="ti">🏠</span>Accueil</button>
+    <button data-t="journal"><span class="ti">📋</span>Journal</button>
+    <button data-t="memory"><span class="ti">🧠</span>Mémoire</button>
+    <button data-t="profile"><span class="ti">👤</span>Profil</button>
+  </div>
+</div>
+
+<!-- ===== NOT FOUND ===== -->
+<div id="s-nf" class="S">
+  <div class="hdr" style="background:var(--hors);color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Produit non trouvé</h2></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:12px">
+    <div class="card" style="text-align:center;padding:28px;border-color:var(--hors-bd);background:var(--hors-bg)">
+      <div style="font-size:32px;margin-bottom:6px">🔍</div>
+      <div style="font-weight:800;color:var(--hors-tx);font-size:16px">Aucun résultat</div>
+      <div id="nf-name" style="font-weight:600;color:var(--hors);font-size:14px;margin-top:4px"></div>
+    </div>
+    <button id="btn-nf-photo" class="btn btn-eco btn-f" style="padding:16px">📸 Analyser par photo IA</button>
+    <button id="btn-nf-nonid" class="btn btn-outline btn-f">✅ Classer "Produits non ID"</button>
+    <button class="btn-back" style="color:var(--tx3);font-size:12px;text-decoration:underline;padding:8px">← Autre recherche</button>
+  </div>
+</div>
+
+<!-- ===== DISAMBIG ===== -->
+<div id="s-dis" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Plusieurs résultats</h2><span id="dis-cnt" style="font-size:12px;color:var(--tx2)"></span></div>
+  <div id="dis-info" style="background:var(--blue-bg);border-bottom:1px solid #bfdbfe;padding:10px 16px;font-size:12px;color:#1e40af"></div>
+  <div id="dis-list" style="flex:1;overflow-y:auto;padding:12px"></div>
+</div>
+
+<!-- ===== VOLUME ===== -->
+<div id="s-vol" class="S">
+  <div id="vol-hdr" class="hdr" style="color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Vérification volume</h2></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:14px">
+    <div id="vol-prod" class="card" style="text-align:center;padding:22px">
+      <div style="font-size:24px;margin-bottom:4px">📦</div>
+      <div id="vol-name" style="font-size:16px;font-weight:900"></div>
+      <div id="vol-flux" style="color:var(--tx2);font-size:12px;margin-top:4px"></div>
+    </div>
+    <div class="card" style="text-align:center;padding:22px">
+      <div style="color:var(--tx2);font-size:12px;margin-bottom:6px">Seuil EcoDDS</div>
+      <div id="vol-seuil" style="font-size:24px;font-weight:900;margin-bottom:14px"></div>
+      <div style="color:var(--tx);font-weight:600;font-size:14px;margin-bottom:12px">Le contenant respecte ce seuil ?</div>
+      <div style="display:flex;gap:10px">
+        <button id="btn-vol-ok" class="btn btn-eco" style="flex:1">✅ Oui</button>
+        <button id="btn-vol-over" class="btn" style="flex:1;background:var(--hors);color:#fff">❌ Dépasse</button>
+      </div>
+    </div>
+    <button id="btn-vol-unk" style="color:var(--tx3);font-size:11px;text-decoration:underline;text-align:center;padding:6px">Volume inconnu</button>
+  </div>
+</div>
+
+<!-- ===== RESULT (single) ===== -->
+<div id="s-res" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2 id="res-title"></h2></div>
+  <!-- FLUX BANNER - the dominant element -->
+  <div id="res-flux-banner" class="flux-banner eco"></div>
+  <div id="res-body" style="flex:1;overflow-y:auto;padding:14px"></div>
+  <div style="padding:12px 16px;background:var(--white);border-top:1px solid var(--bd)"><button class="btn btn-outline btn-f btn-back">Nouvelle recherche</button></div>
+</div>
+
+<!-- ===== CAMERA ===== -->
+<div id="s-cam" class="S" style="background:#000">
+  <div style="padding:10px;display:flex;align-items:center">
+    <button class="btn-back" style="color:rgba(255,255,255,.5);font-size:18px;padding:4px 8px">←</button>
+    <span style="flex:1;text-align:center;color:rgba(255,255,255,.4);font-size:12px;font-weight:600">Photographier le produit</span>
+    <div style="width:36px"></div>
+  </div>
+  <div id="cam-view" style="flex:1;margin:0 10px;border-radius:var(--r);overflow:hidden;background:#111">
+    <video id="cam-vid" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
+  </div>
+  <div id="cam-prev" style="flex:1;margin:0 10px;border-radius:var(--r);overflow:hidden;display:none">
+    <img id="cam-img" style="width:100%;height:100%;object-fit:contain;background:#111">
+  </div>
+  <div id="cam-ctrl" style="padding:18px;display:flex;align-items:center;justify-content:center;gap:22px">
+    <label style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2)">
+      📁<input id="cam-file" type="file" accept="image/*" style="display:none">
+    </label>
+    <button id="btn-cap" style="width:66px;height:66px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center"><div style="width:54px;height:54px;border-radius:50%;background:#fff"></div></button>
+    <div style="width:46px"></div>
+  </div>
+  <div id="cam-act" style="padding:14px 18px;display:none;gap:10px">
+    <button id="btn-retake" class="btn btn-outline" style="flex:1;color:#fff;border-color:rgba(255,255,255,.2)">🔄 Reprendre</button>
+    <button id="btn-anl" class="btn btn-blue" style="flex:1">🔍 Analyser</button>
+  </div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="s-load" class="S" style="background:var(--bg);align-items:center;justify-content:center;padding:32px">
+  <div style="width:44px;height:44px;border-radius:50%;border:3px solid #e0e7ff;border-top-color:var(--blue);margin-bottom:18px" class="spin"></div>
+  <p id="load-msg" style="font-weight:700;font-size:15px">Analyse IA en cours...</p>
+  <p id="load-sub" style="color:var(--tx2);font-size:11px;margin-top:5px"></p>
+  <img id="load-thumb" style="width:70px;height:70px;object-fit:cover;border-radius:var(--rs);margin-top:16px;opacity:.3;display:none">
+</div>
+
+<!-- ===== MULTI RESULTS ===== -->
+<div id="s-mul" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2 id="mul-title"></h2></div>
+  <div id="mul-img" style="margin:0 16px 8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);display:none"><img id="mul-photo" style="width:100%;max-height:100px;object-fit:contain;background:#f0f0f5"></div>
+  <div id="mul-model" style="margin:0 16px 8px"></div>
+  <div id="mul-list" style="flex:1;overflow-y:auto;padding:0 12px 12px"></div>
+  <div style="padding:12px 16px;background:var(--white);border-top:1px solid var(--bd)"><button class="btn btn-outline btn-f btn-back">Nouvelle recherche</button></div>
+</div>
+
+<!-- ===== JOURNAL ===== -->
+<div id="s-jrn" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>📋 Journal</h2><span id="jrn-cnt" style="font-size:12px;color:var(--tx2)"></span></div>
+  <div style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--bd);overflow-x:auto">
+    <button class="jf act" data-f="all" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;background:var(--blue);color:#fff;border:none;white-space:nowrap">Tous</button>
+    <button class="jf" data-f="review" style="font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;background:var(--white);color:var(--hors);border:1px solid var(--hors-bd);white-space:nowrap">⚠ À vérifier</button>
+    <button class="jf" data-f="ok" style="font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;background:var(--white);color:var(--eco);border:1px solid var(--eco-bd);white-space:nowrap">✅ Validés</button>
+    <button class="jf" data-f="corrected" style="font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;background:var(--white);color:var(--purple);border:1px solid #c4b5fd;white-space:nowrap">✏ Corrigés</button>
+  </div>
+  <div id="jrn-list" style="flex:1;overflow-y:auto;padding:12px"></div>
+</div>
+
+<!-- ===== MEMORY ===== -->
+<div id="s-mem" class="S">
+  <div class="hdr" style="background:#7c3aed;color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>🧠 Mémoire partagée</h2></div>
+  <div id="mem-stats" style="background:#f5f3ff;border-bottom:1px solid #ddd6fe;padding:10px 16px;font-size:12px;color:#5b21b6"></div>
+  <div id="mem-list" style="flex:1;overflow-y:auto;padding:12px"></div>
+</div>
+
+<!-- ===== PROFILE ===== -->
+<div id="s-prof" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>👤 Profil</h2></div>
+  <div style="padding:16px">
+    <div class="card" style="margin-bottom:12px">
+      <div class="lbl">Site</div><div id="prof-site" style="font-weight:700;font-size:16px"></div>
+      <div class="lbl" style="margin-top:12px">Agent</div><div id="prof-agent" style="font-weight:700;font-size:16px"></div>
+      <div class="lbl" style="margin-top:12px">Plan</div><div id="prof-plan" style="font-weight:700;font-size:16px"></div>
+      <div class="lbl" style="margin-top:12px">Photos aujourd'hui</div><div id="prof-photos" style="font-weight:700;font-size:16px"></div>
+    </div>
+    <button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
+  </div>
+</div>
+
+<!-- ===== CORRECTION OVERLAY ===== -->
+<div id="ov-cor" class="ov">
+  <div class="ov-body">
+    <div style="padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)">
+      <button id="btn-cor-close" style="font-size:18px;color:var(--tx2)">✕</button>
+      <div style="flex:1"><div style="font-weight:700;font-size:15px">Corriger</div><div id="cor-orig" style="font-size:12px;color:var(--tx2)"></div></div>
+    </div>
+    <div style="padding:10px 16px;border-bottom:1px solid var(--bd)">
+      <div class="search-bar" style="box-shadow:none;border-width:1.5px">
+        <span style="color:var(--tx3)">🔍</span>
+        <input id="cor-input" type="text" placeholder="Chercher le bon produit...">
+      </div>
+    </div>
+    <div id="cor-results" style="flex:1;overflow-y:auto;padding:12px;max-height:50vh"></div>
+  </div>
+</div>
+
+<!-- ===== DATA ===== -->
+<script src="config.js"></script>
+<script src="data.js"></script>
+
+<!-- ===== APP ===== -->
+<script>
+(function(){
+"use strict";
+
+var DB=window.TRIDDS_DB||[],SYS=window.TRIDDS_PROMPT||"";
+var API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||"").replace(/\/$/,"");
+function apiUrl(name){return API_BASE?API_BASE+"/"+name:""}
+function needApi(feature){
+  if(API_BASE)return true;
+  alert("Le backend n'est pas configuré pour GitHub Pages. Renseigne config.js (API_BASE) pour utiliser : "+feature);
+  return false;
+}
+var FM={E:"EcoDDS",H:"Hors EcoDDS",C:"Cas spécial",I:"Interdit"};
+var P=DB.map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});
+
+// ===== AUTH & SESSION =====
+var sess={code:"",site:"",agent:"",plan:"free",photosPerDay:5,memoryEnabled:false};
+function loadSess(){try{var d=JSON.parse(localStorage.getItem("tridds_sess"));if(d&&d.code)sess=d}catch(e){}}
+function saveSess(){localStorage.setItem("tridds_sess",JSON.stringify(sess))}
+function isLoggedIn(){return!!sess.code}
+
+function doLogin(code,agent){
+  if(!needApi("la connexion"))return Promise.reject(new Error("Backend non configuré"));
+  return fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"login",code:code})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.error)throw new Error(d.error);
+    sess.code=d.code;sess.site=d.site;sess.agent=agent;sess.plan=d.plan;
+    sess.photosPerDay=d.photosPerDay;sess.memoryEnabled=d.memoryEnabled;
+    saveSess();
+    // Register agent
+    fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"register-agent",code:d.code,agent:agent})});
+    return d;
+  });
+}
+
+function demoLogin(){
+  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",plan:"free",photosPerDay:5,memoryEnabled:false};
+  saveSess();
+}
+
+function logout(){sess={code:"",site:"",agent:"",plan:"free",photosPerDay:5,memoryEnabled:false};saveSess();location.reload()}
+
+// ===== SHARED MEMORY =====
+var mem={brands:{},version:0,stats:{total:0,corrected:0}};
+
+function syncMemory(){
+  if(!sess.memoryEnabled)return Promise.resolve();
+  if(!needApi("la mémoire partagée"))return Promise.resolve();
+  return fetch(apiUrl("memory-get"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({code:sess.code})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d&&d.brands){mem=d;updMemUI()}
+  }).catch(function(){});
+}
+
+function pushLearn(brand,product,flux,category,action){
+  if(!sess.memoryEnabled){
+    // Local-only for free plan
+    if(!mem.brands)mem.brands={};
+    var k=brand.toLowerCase().trim();if(k.length<2)return;
+    mem.brands[k]={p:product,f:flux,c:category,n:(mem.brands[k]?mem.brands[k].n:0)+1,d:today()};
+    return;
+  }
+  if(!needApi("la mémoire partagée"))return;
+  fetch(apiUrl("memory-set"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({code:sess.code,brand:brand,product:product,flux:flux,category:category,
+      agent:sess.agent,action:action||"learn"})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.ok)syncMemory();
+  }).catch(function(){});
+}
+
+function memKeys(){return Object.keys(mem.brands||{})}
+function updMemUI(){
+  var c=memKeys().length;
+  var el=document.getElementById("mem-shared-count");if(el)el.textContent=c;
+  var hm=document.getElementById("home-mem");
+  if(hm)hm.style.display=c>0?"flex":"none";
+}
+
+function buildMemCtx(){
+  var e=Object.entries(mem.brands||{});if(!e.length)return"";
+  e.sort(function(a,b){return(b[1].n||0)-(a[1].n||0)});e=e.slice(0,60);
+  var lines=e.map(function(x){
+    var fl=x[1].f==="E"?"EcoDDS":"Hors EcoDDS";
+    return'- "'+x[0]+'" → '+x[1].p+" ["+x[1].c+" / "+fl+"] (vu "+x[1].n+"x)";
+  });
+  return"\n\nAPPRENTISSAGES MÉMOIRE:\n"+lines.join("\n");
+}
+
+// ===== JOURNAL =====
+var JK="tridds_jrn",journal=[];
+function loadJournal(){try{journal=JSON.parse(localStorage.getItem(JK))||[]}catch(e){journal=[]}}
+function saveJournal(){try{localStorage.setItem(JK,JSON.stringify(journal.slice(0,200)))}catch(e){}}
+function today(){return new Date().toISOString().split("T")[0]}
+function nowStr(){var d=new Date();return d.toLocaleDateString("fr-FR")+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
+function addJournal(e){e.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);e.time=nowStr();e.timestamp=Date.now();e.reviewed=e.confidence>=70;e.agent=sess.agent;journal.unshift(e);saveJournal()}
+function markReviewed(id){for(var i=0;i<journal.length;i++){if(journal[i].id===id){journal[i].reviewed=true;if(journal[i].validationType==="auto")journal[i].validationType="confirmed";break}}saveJournal()}
+function updateJournalEntry(id,p,f,c){for(var i=0;i<journal.length;i++){if(journal[i].id===id){journal[i].correctedTo=p;journal[i].correctedFlux=f;journal[i].correctedCategory=c;journal[i].validationType="corrected";journal[i].reviewed=true;break}}saveJournal()}
+
+// ===== STATE =====
+var st={screen:"login",query:"",matches:[],result:null,multi:null,image:null,
+  history:JSON.parse(localStorage.getItem("tridds_h")||"[]"),
+  pc:parseInt(localStorage.getItem("tridds_pc_"+today())||"0"),
+  stream:null,corIdx:-1,corJrnId:null,jrnFilter:"all",usedModel:null};
+
+function savePc(){localStorage.setItem("tridds_pc_"+today(),st.pc)}
+function rem(){return Math.max(0,sess.photosPerDay-st.pc)}
+function addHist(r){st.history=[{nm:r.n,f:r.f}].concat(st.history).slice(0,10);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
+
+// ===== SEARCH =====
+function norm(s){return(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim()}
+function simil(a,b){if(!a||!b)return 0;if(a===b)return 1;var la=a.length,lb=b.length;if(la<2||lb<2)return 0;if(b.indexOf(a)>=0)return a.length/b.length*1.1;if(a.indexOf(b)>=0)return b.length/a.length*1.1;var m=[];for(var i=0;i<=la;i++){m[i]=[i]}for(var j=0;j<=lb;j++)m[0][j]=j;for(i=1;i<=la;i++)for(j=1;j<=lb;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return 1-m[la][lb]/Math.max(la,lb)}
+function searchAll(query){var q=norm(query);if(!q)return[];var R=[];for(var i=0;i<P.length;i++){var p=P[i],sc=0;if(p.q===q||p.n.toLowerCase()===query.toLowerCase())sc=100;else if(p.q.indexOf(q)>=0)sc=Math.round(85*q.length/p.q.length+15);else{var tgts=[p.q].concat((p.y||[]).map(norm)),best=0;for(var t=0;t<tgts.length;t++){best=Math.max(best,simil(q,tgts[t]));var qw=q.split(" "),tw=tgts[t].split(" ");for(var a=0;a<qw.length;a++)for(var b=0;b<tw.length;b++)best=Math.max(best,simil(qw[a],tw[b])*.9)}if(best>.65)sc=Math.round(best*70)}if(sc>0)R.push(Object.assign({},p,{score:sc}))}R.sort(function(a,b){return b.score-a.score});return R.slice(0,20)}
+
+// ===== CATEGORY VERIFICATION =====
+var catFluxMap={};P.forEach(function(p){if(!p.x)return;if(!catFluxMap[p.x])catFluxMap[p.x]={};catFluxMap[p.x][p.f]=true});
+var catFix={};Object.keys(catFluxMap).forEach(function(c){var f=Object.keys(catFluxMap[c]);if(f.length===1)catFix[c]=f[0]});
+function deepSearch(terms){var R=[];for(var t=0;t<terms.length;t++){if(!terms[t]||terms[t].length<2)continue;var res=searchAll(terms[t]);for(var i=0;i<res.length;i++){if(!R.find(function(x){return x.n===res[i].n}))R.push(res[i])}var fw=terms[t].split(/\s+/)[0];if(fw.length>=3&&fw!==terms[t]){var r2=searchAll(fw);for(var j=0;j<r2.length;j++){if(!R.find(function(x){return x.n===r2[j].n}))R.push(r2[j])}}}R.sort(function(a,b){return b.score-a.score});return R}
+
+// ===== AI =====
+function apiCall(b64,mime,sys,prompt,model){
+  if(!needApi("l’analyse IA"))return Promise.resolve("");
+  return fetch(apiUrl("analyze"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({image:b64,mime:mime,system:sys,prompt:prompt,model:model||"haiku"})
+  }).then(function(r){return r.json()}).then(function(d){return(d.content&&d.content[0])?d.content[0].text:""}).catch(function(){return""})
+}
+function parseProds(txt){var m=txt.match(/\{[\s\S]*\}/);if(m){try{var p=JSON.parse(m[0]);if(p.produits)return p.produits;if(p.nom||p.texte_lu)return[p]}catch(e){}}return null}
+
+function callSmart(b64,mime,onStatus){
+  onStatus("🔍 Pré-scan...");
+  return apiCall(b64,mime,"","Compte combien de produits DISTINCTS sont visibles. Réponds en JSON: {\"count\":N}","haiku")
+  .then(function(txt){
+    var count=1;try{var m=txt.match(/\{[\s\S]*?\}/);if(m)count=JSON.parse(m[0]).count||1}catch(e){}
+    var complex=count>2,model=complex?"sonnet":"haiku";
+    onStatus("🤖 "+(complex?"Sonnet 4.6 ("+count+" produits)":"Haiku 4.5")+" analyse...");
+    var sysP=SYS+buildMemCtx();
+    var userP="Analyse cette photo de déchetterie. ~"+count+" produits visibles. "+
+      "Pour CHAQUE produit: 1) Lis le texte EXACT sur l'étiquette 2) Déduis le type si packaging reconnaissable 3) Estime le volume 4) Classe dans le référentiel (nom_referentiel, categorie, filiere) "+
+      "5) Position: bbox={x,y,w,h} en % de l'image. "+
+      "Traduis les noms commerciaux vers le référentiel. Réponds UNIQUEMENT en JSON.";
+    return apiCall(b64,mime,sysP,userP,model).then(function(t){return{prods:parseProds(t),model:model,count:count}});
+  }).catch(function(){return{prods:null,model:"haiku",count:0}});
+}
+
+// ===== MATCH =====
+function matchOne(ai){
+  var name=ai.nom||ai.texte_lu||"",marque=ai.marque||"",nomRef=ai.nom_referentiel||ai.nom||"",aiCat=ai.categorie||"";
+  var dName=name+(marque&&marque!==name?" ("+marque+")":"");
+  if(aiCat&&ai.filiere){
+    var aiF=ai.filiere==="EcoDDS"?"E":(ai.filiere==="Cas spécial"||ai.filiere==="INTERDIT"?"C":"H");
+    var vF=aiF;if(catFix[aiCat]&&catFix[aiCat]!==aiF)vF=catFix[aiCat];
+    var db=null,terms=[nomRef,name,aiCat];if(marque)terms.push(marque);
+    var dr=deepSearch(terms);
+    var cm=dr.filter(function(r){return r.x===aiCat});
+    if(cm.length&&cm[0].score>=35)db=cm[0];else if(dr.length&&dr[0].score>=50)db=dr[0];
+    var fF=db?db.f:vF,fC=db?db.x:aiCat,conf=ai.confiance||70;
+    var r={n:dName,f:fF,x:fC,c:ai.consigne||(db?db.c:""),s:db?db.s:"",a:db?db.a:"",i:db?db.i:"",
+      conf:conf,nv:conf<70,aiData:ai,vol:ai.volume_estime||ai.volume||"",fluxCorrected:fF!==aiF};
+    if(conf>=60)pushLearn(marque||name,nomRef,r.f,r.x);
+    return r;
+  }
+  // Memory lookup
+  var mk=(marque||name).toLowerCase().trim(),mh=mem.brands[mk];
+  if(mh){var dm=searchAll(mh.p);var dbm=dm.length&&dm[0].score>=40?dm[0]:null;
+    return{n:dName,f:mh.f,x:mh.c,c:dbm?dbm.c:"",s:dbm?dbm.s:"",conf:Math.max(ai.confiance||60,75),nv:false,aiData:ai,fromMemory:true}}
+  // Fuzzy
+  if(name.length<2&&marque.length<2)return{n:"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",conf:0,nv:true,aiData:ai};
+  var R2=deepSearch([name,marque,name+" "+marque]);
+  if(R2.length&&R2[0].score>=55){var b2=R2[0],c3=Math.min(b2.score,ai.confiance||75);
+    if(c3>=55)pushLearn(marque||name,b2.n,b2.f,b2.x);
+    return Object.assign({},b2,{conf:c3,nv:c3<70,aiData:ai})}
+  return{n:dName,f:"H",x:"Produits non ID ou Laboratoire",conf:0,nv:true,aiData:ai};
+}
+
+function toJpeg(d){return new Promise(function(r){var i=new Image;i.onload=function(){var c=document.createElement("canvas");var s=Math.min(1024/i.width,1024/i.height,1);c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.85).split(",")[1])};i.src=d})}
+function cropImage(src,bb){return new Promise(function(r){if(!bb||!bb.w||!bb.h){r(null);return}var i=new Image;i.onload=function(){var sx=Math.round(i.width*Math.max(0,bb.x-2)/100),sy=Math.round(i.height*Math.max(0,bb.y-2)/100),sw=Math.round(i.width*Math.min(bb.w+4,100)/100),sh=Math.round(i.height*Math.min(bb.h+4,100)/100);if(sx+sw>i.width)sw=i.width-sx;if(sy+sh>i.height)sh=i.height-sy;if(sw<10||sh<10){r(null);return}var c=document.createElement("canvas");c.width=sw;c.height=sh;c.getContext("2d").drawImage(i,sx,sy,sw,sh,0,0,sw,sh);r(c.toDataURL("image/jpeg",.8))};i.onerror=function(){r(null)};i.src=src})}
+function cropAll(src,prods){return Promise.all(prods.map(function(p){var bb=(p.aiData||{}).bbox||(p.aiData||{}).position;return bb?cropImage(src,bb):Promise.resolve(null)}))}
+
+// ===== STYLING =====
+function fSt(f){
+  if(f==="E")return{bg:"var(--eco-bg)",bd:"var(--eco-bd)",bn:"var(--eco)",tx:"var(--eco-tx)",lb:"EcoDDS",bc:"b-eco",cls:"eco"};
+  if(f==="C"||f==="I")return{bg:"var(--int-bg)",bd:"var(--int-bd)",bn:"var(--int)",tx:"var(--int-tx)",lb:"INTERDIT",bc:"b-int",cls:"int"};
+  return{bg:"var(--hors-bg)",bd:"var(--hors-bd)",bn:"var(--hors)",tx:"var(--hors-tx)",lb:"Hors EcoDDS",bc:"b-hors",cls:"hors"};
+}
+function confCol(v){return v>=80?"#059669":v>=60?"#d97706":v>=40?"#ea580c":"#dc2626"}
+function badge(f){var s=fSt(f);return'<span class="badge '+s.bc+'">'+s.lb+'</span>'}
+function confBar(v){if(v<=0)return"";var c=confCol(v);return'<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:6px"><span style="color:var(--tx3)">Confiance</span><span style="color:'+c+';font-weight:700">'+v+'%</span></div><div class="cb"><div style="width:'+v+'%;background:'+c+'"></div></div>'}
+
+// ===== SCREENS =====
+function show(id){document.querySelectorAll(".S").forEach(function(e){e.classList.remove("on")});var e=document.getElementById("s-"+id);if(e)e.classList.add("on");st.screen=id}
+function goHome(){show("home");st.result=null;st.image=null;st.matches=[];st.multi=null;st.query="";st.corIdx=-1;st.corJrnId=null;st.usedModel=null;document.getElementById("in-search").value="";stopCam();updHome()}
+
+// ===== HOME =====
+function updHome(){
+  document.getElementById("home-site").textContent=sess.site||"TriDDS";
+  var planCls={free:"plan-free",pro:"plan-pro",enterprise:"plan-ent"};
+  var planEl=document.getElementById("home-plan");
+  planEl.className="plan-badge "+(planCls[sess.plan]||"plan-free");
+  planEl.textContent={free:"Gratuit",pro:"Pro",enterprise:"Entreprise"}[sess.plan]||"Gratuit";
+  var r=rem();document.getElementById("q-disp").textContent=r+"/"+sess.photosPerDay;
+  document.getElementById("q-disp").style.color=r>2?"var(--eco)":"var(--int)";
+  var hl=document.getElementById("hist-list");
+  if(!st.history.length){hl.innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)"><div style="font-size:28px;margin-bottom:6px">♻️</div><div style="font-size:13px">Recherchez ou photographiez un produit</div></div>';return}
+  var h='<div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:6px">Historique récent</div>';
+  st.history.forEach(function(x){
+    var s=fSt(x.f);
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--white);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:4px"><div style="width:4px;height:28px;border-radius:2px;background:'+s.bn+';flex-shrink:0"></div><span style="font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.nm+'</span>'+badge(x.f)+'</div>';
+  });
+  hl.innerHTML=h;
+}
+
+// ===== SEARCH/DISAMBIG/VOLUME (same logic as v4) =====
+function doSearch(){var q=(document.getElementById("in-search").value||"").trim();if(!q)return;st.query=q;var res=searchAll(q);if(!res.length){show("nf");document.getElementById("nf-name").textContent='"'+q+'"'}else if(res.length===1||(res[0].score>=95&&(res.length<2||res[1].score<80)))selectProd(res[0]);else{st.matches=res;showDis()}}
+function showDis(){show("dis");document.getElementById("dis-cnt").textContent=st.matches.length;document.getElementById("dis-info").innerHTML="<strong>"+st.matches.length+"</strong> produits correspondent";var h="";st.matches.forEach(function(m,i){var s=fSt(m.f);h+='<button data-i="'+i+'" class="di" style="width:100%;text-align:left;background:'+s.bg+';border:2px solid '+s.bd+';border-radius:var(--r);padding:14px;margin-bottom:6px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;color:'+s.tx+';font-size:14px">'+m.n+'</div>'+badge(m.f)+'</div><div style="font-size:12px;color:var(--tx2);margin-top:4px;font-weight:600">→ '+m.x+'</div>'+(m.s?'<div style="font-size:11px;color:var(--tx3);margin-top:2px">Seuil: '+m.s+'</div>':'')+'</button>'});document.getElementById("dis-list").innerHTML=h;document.querySelectorAll(".di").forEach(function(b){b.addEventListener("click",function(){selectProd(st.matches[parseInt(b.dataset.i)])})})}
+function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s}else{st.result=Object.assign({},p,{conf:p.score||85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()}}
+
+// ===== RESULT =====
+function showRes(){
+  show("res");var r=st.result,s=fSt(r.f);
+  document.getElementById("res-title").textContent=r.n;
+  // BIG FLUX BANNER
+  var fb=document.getElementById("res-flux-banner");
+  fb.className="flux-banner "+s.cls;
+  fb.innerHTML='<div>'+FM[r.f]+'</div><div class="flux-cat">→ '+(r.x||"Produits non ID")+'</div>';
+
+  var ai=r.aiData||{};var lp=[];if(ai.marque)lp.push(ai.marque);if(ai.nom&&ai.nom!==ai.marque)lp.push(ai.nom);
+  var lt=lp.join(" — ");var vol=ai.volume_estime||ai.volume||r.vol||"";
+
+  var h='';
+  // Product card
+  h+='<div class="card" style="border-left:5px solid '+s.bn+'">';
+  if(lt)h+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--tx)">🏷️ '+lt+'</div>';
+  h+='<div style="font-size:16px;font-weight:800;color:'+s.tx+'">→ '+r.n+'</div>';
+  if(vol)h+='<div style="font-size:12px;color:var(--tx2);margin-top:4px">📏 '+vol+'</div>';
+  h+=confBar(r.conf);
+  if(r.fromMemory)h+='<div style="margin-top:6px;font-size:10px;color:var(--purple)">🧠 Identifié par mémoire partagée</div>';
+  if(r.fluxCorrected)h+='<div style="margin-top:4px;font-size:10px;color:var(--eco)">🔄 Corrigé par le référentiel</div>';
+  h+='</div>';
+
+  // Consigne
+  if(r.c)h+='<div class="card" style="margin-top:8px;border-left:5px solid var(--int)"><div style="font-size:10px;font-weight:700;color:var(--int);text-transform:uppercase;margin-bottom:3px">⚠ Sécurité</div><div style="color:var(--int-tx);font-weight:600;font-size:12px">'+r.c+'</div></div>';
+
+  // Seuil
+  if(r.s&&!r.overSeuil)h+='<div style="margin-top:6px;font-size:12px;background:var(--blue-bg);color:#1e40af;padding:8px 12px;border-radius:var(--rs)">📦 Seuil: '+r.s+'</div>';
+  if(r.overSeuil)h+='<div class="card" style="margin-top:8px;background:var(--hors-bg);border-color:var(--hors-bd)"><div style="font-weight:700;color:var(--hors)">⚠️ Volume dépasse le seuil → Hors EcoDDS</div></div>';
+
+  // Crop image
+  if(r.cropImage)h+='<div style="margin-top:8px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:140px;object-fit:contain;background:#f0f0f5"></div>';
+  if(r.image&&!r.cropImage)h+='<div style="margin-top:8px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.image+'" style="width:100%;max-height:100px;object-fit:contain;background:#f0f0f5"></div>';
+
+  // Validation
+  if(r.nv)h+='<div class="card" style="margin-top:8px;background:#fefce8;border-color:#fde047"><div style="font-weight:700;color:var(--hors-tx);margin-bottom:8px">⚠️ Validation requise</div><div style="display:flex;gap:8px"><button onclick="confirmRes()" class="btn btn-eco" style="flex:1;font-size:12px">✅ Confirmer</button><button onclick="correctRes()" class="btn" style="flex:1;font-size:12px;background:var(--purple);color:#fff">✏️ Corriger</button><button onclick="markNonID()" class="btn btn-outline" style="flex:1;font-size:12px">❓ Non ID</button></div></div>';
+  else h+='<div style="margin-top:8px;text-align:center"><button onclick="correctRes()" style="font-size:12px;color:var(--purple);text-decoration:underline;background:none;border:none;cursor:pointer">Corriger ce classement</button></div>';
+
+  document.getElementById("res-body").innerHTML=h;
+}
+
+// Validation globals
+window.confirmRes=function(){if(!st.result)return;st.result.nv=false;st.result.conf=Math.max(st.result.conf,75);var ai=st.result.aiData;if(ai)pushLearn(ai.marque||ai.nom||st.result.n,st.result.n,st.result.f,st.result.x);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"confirmed"});showRes()};
+window.correctRes=function(){st.corJrnId=null;st.corIdx=-1;document.getElementById("cor-orig").textContent=st.result?st.result.n:"";document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
+window.markNonID=function(){if(!st.result)return;st.result.f="H";st.result.x="Produits non ID ou Laboratoire";st.result.nv=false;st.result.conf=0;addJournal({name:st.result.n,flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"manual"});addHist(st.result);showRes()};
+
+function applyCorrection(prod){
+  document.getElementById("ov-cor").classList.remove("on");
+  if(st.corJrnId){updateJournalEntry(st.corJrnId,prod.n,prod.f,prod.x);var e=journal.find(function(x){return x.id===st.corJrnId});if(e&&e.brand)pushLearn(e.brand,prod.n,prod.f,prod.x,"correct");st.corJrnId=null;showJournal()}
+  else if(st.corIdx>=0&&st.multi&&st.multi[st.corIdx]){var old=st.multi[st.corIdx];var br=old.aiData?(old.aiData.marque||old.aiData.nom||""):old.n;pushLearn(br,prod.n,prod.f,prod.x,"correct");st.multi[st.corIdx]=Object.assign({},prod,{conf:85,nv:false,image:old.image,aiData:old.aiData,cropImage:old.cropImage});st.corIdx=-1;showMulti()}
+  else if(st.result){var ai=st.result.aiData;var b2=ai?(ai.marque||ai.nom||""):st.result.n;pushLearn(b2,prod.n,prod.f,prod.x,"correct");st.result=Object.assign({},prod,{conf:85,nv:false,image:st.result.image,aiData:ai,cropImage:st.result.cropImage});addHist(st.result);addJournal({name:prod.n,flux:prod.f,category:prod.x,confidence:85,validationType:"corrected"});showRes()}
+}
+function corSearch(){var q=(document.getElementById("cor-input").value||"").trim(),box=document.getElementById("cor-results");if(q.length<2){box.innerHTML='<div style="text-align:center;color:var(--tx3);padding:30px;font-size:13px">Tapez au moins 2 caractères</div>';return}var res=searchAll(q);if(!res.length){box.innerHTML='<div style="text-align:center;color:var(--tx3);padding:30px;font-size:13px">Aucun résultat</div>';return}var h="";res.forEach(function(r){var s=fSt(r.f);h+='<button class="cp" data-n="'+r.n+'" style="width:100%;text-align:left;background:'+s.bg+';border:1.5px solid '+s.bd+';border-radius:var(--rs);padding:12px;margin-bottom:5px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:13px;color:'+s.tx+'">'+r.n+'</span>'+badge(r.f)+'</div><div style="font-size:11px;color:var(--tx2);margin-top:3px">'+r.x+'</div></button>'});box.innerHTML=h;box.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var f=res.find(function(r){return r.n===b.dataset.n});if(f)applyCorrection(f)})})}
+
+// ===== MULTI RESULTS =====
+function showMulti(){
+  show("mul");var prods=st.multi||[];
+  document.getElementById("mul-title").textContent=prods.length+" produits";
+  if(st.image){document.getElementById("mul-img").style.display="block";document.getElementById("mul-photo").src=st.image}
+  var ml=st.usedModel==="sonnet"?"Sonnet 4.6":"Haiku 4.5";
+  document.getElementById("mul-model").innerHTML='<div style="display:flex;align-items:center;gap:5px;padding:6px 10px;background:'+(st.usedModel==="sonnet"?"#f5f3ff":"var(--blue-bg)")+';border-radius:var(--rs);font-size:11px;color:'+(st.usedModel==="sonnet"?"#6d28d9":"#1e40af")+'"><span>🤖</span><strong>'+ml+'</strong></div>';
+  var h="";
+  prods.forEach(function(r,i){
+    var s=fSt(r.f),ai=r.aiData||{};var lp=[];if(ai.marque)lp.push(ai.marque);if(ai.nom&&ai.nom!==ai.marque)lp.push(ai.nom);var lt=lp.join(" — ");
+    var vol=ai.volume_estime||ai.volume||r.vol||"";
+    h+='<div class="fu" style="display:flex;background:var(--white);border:1.5px solid '+s.bd+';border-radius:var(--r);margin-bottom:8px;overflow:hidden;animation-delay:'+(i*60)+'ms">';
+    // Left color strip + optional crop
+    if(r.cropImage)h+='<img src="'+r.cropImage+'" style="width:72px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';
+    else h+='<div style="width:6px;background:'+s.bn+';flex-shrink:0"></div>';
+    // Content
+    h+='<div style="flex:1;padding:10px 12px;min-width:0">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center">'+badge(r.f)+'<span style="font-size:9px;color:var(--tx3)">PRODUIT '+(i+1)+'</span></div>';
+    if(lt)h+='<div style="font-size:11px;font-weight:600;color:var(--tx);margin-top:4px">🏷️ '+lt+'</div>';
+    h+='<div style="font-weight:800;color:'+s.tx+';font-size:13px;margin-top:2px">→ '+r.n+'</div>';
+    h+='<div style="font-size:10px;color:var(--tx2);margin-top:2px;font-weight:600">'+r.x+(vol?" · "+vol:"")+'</div>';
+    h+=confBar(r.conf);
+    if(r.nv)h+='<div style="margin-top:6px;display:flex;gap:6px"><button onclick="confirmM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:6px;background:var(--eco);color:#fff;border:none;cursor:pointer">✅</button><button onclick="correctM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:6px;background:var(--purple);color:#fff;border:none;cursor:pointer">✏️</button></div>';
+    else h+='<button onclick="correctM('+i+')" style="font-size:10px;color:var(--purple);text-decoration:underline;border:none;background:none;cursor:pointer;margin-top:4px">Corriger</button>';
+    h+='</div></div>';
+  });
+  document.getElementById("mul-list").innerHTML=h;
+}
+window.confirmM=function(i){if(!st.multi||!st.multi[i])return;var r=st.multi[i];r.nv=false;r.conf=Math.max(r.conf,75);if(r.aiData)pushLearn(r.aiData.marque||r.aiData.nom||r.n,r.n,r.f,r.x);addJournal({name:r.n,flux:r.f,category:r.x,confidence:r.conf,validationType:"confirmed"});showMulti()};
+window.correctM=function(i){st.corIdx=i;st.corJrnId=null;document.getElementById("cor-orig").textContent=st.multi[i].n;document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
+
+// ===== CAMERA & ANALYZE =====
+function openCam(){if(st.pc>=sess.photosPerDay){alert("Quota photo atteint ("+sess.photosPerDay+"/jour)");return}st.image=null;show("cam");document.getElementById("cam-view").style.display="block";document.getElementById("cam-prev").style.display="none";document.getElementById("cam-ctrl").style.display="flex";document.getElementById("cam-act").style.display="none";startCam()}
+function startCam(){navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280},height:{ideal:960}}}).then(function(s){st.stream=s;var v=document.getElementById("cam-vid");v.srcObject=s;v.play()}).catch(function(){})}
+function stopCam(){if(st.stream){st.stream.getTracks().forEach(function(t){t.stop()});st.stream=null}}
+function capture(){var v=document.getElementById("cam-vid");if(!v||!v.videoWidth)return;var c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);st.image=c.toDataURL("image/jpeg",.85);stopCam();document.getElementById("cam-view").style.display="none";document.getElementById("cam-prev").style.display="block";document.getElementById("cam-img").src=st.image;document.getElementById("cam-ctrl").style.display="none";document.getElementById("cam-act").style.display="flex"}
+
+function analyze(){
+  if(!st.image)return;show("load");
+  document.getElementById("load-thumb").src=st.image;document.getElementById("load-thumb").style.display="block";
+  document.getElementById("load-sub").textContent="Mode smart · "+memKeys().length+" marques apprises";
+  st.pc++;savePc();
+  toJpeg(st.image).then(function(b64){
+    return callSmart(b64,"image/jpeg",function(s){document.getElementById("load-msg").textContent=s});
+  }).then(function(res){
+    var prods=res.prods,model=res.model;
+    if(!prods||!prods.length){st.result={n:"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",c:"Porter les EPI.",conf:0,nv:true,image:st.image};addHist(st.result);addJournal({name:"Non identifié",flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"auto",model:model});showRes();return}
+    var seen={},uniq=[];for(var i=0;i<prods.length;i++){var k=(prods[i].nom||prods[i].texte_lu||"").toLowerCase().trim();if(k&&!seen[k]){seen[k]=true;uniq.push(prods[i])}}
+    if(uniq.length===1){var m=matchOne(uniq[0]);m.image=st.image;m.usedModel=model;st.result=m;var bb=uniq[0].bbox||uniq[0].position;if(bb){cropImage(st.image,bb).then(function(c){if(c)st.result.cropImage=c;addHist(m);addJournal({name:m.n,flux:m.f,category:m.x,confidence:m.conf,validationType:m.nv?"auto":"auto",model:model});showRes()})}else{addHist(m);addJournal({name:m.n,flux:m.f,category:m.x,confidence:m.conf,validationType:m.nv?"auto":"auto",model:model});showRes()}}
+    else{st.multi=uniq.map(function(ai){var m2=matchOne(ai);m2.image=st.image;m2.usedModel=model;return m2});st.usedModel=model;document.getElementById("load-msg").textContent="✂️ Découpe...";cropAll(st.image,st.multi).then(function(crops){for(var c=0;c<crops.length;c++){if(crops[c])st.multi[c].cropImage=crops[c]}st.multi.forEach(function(r){addJournal({name:r.n,flux:r.f,category:r.x,confidence:r.conf,validationType:r.nv?"auto":"auto",model:model})});showMulti()})}
+  });
+}
+
+// ===== JOURNAL =====
+function showJournal(){
+  show("jrn");var f=journal;
+  if(st.jrnFilter==="review")f=journal.filter(function(e){return!e.reviewed});
+  else if(st.jrnFilter==="ok")f=journal.filter(function(e){return e.reviewed&&e.validationType!=="corrected"});
+  else if(st.jrnFilter==="corrected")f=journal.filter(function(e){return e.validationType==="corrected"});
+  document.getElementById("jrn-cnt").textContent=journal.length+" entrées";
+  document.querySelectorAll(".jf").forEach(function(b){var a=b.dataset.f===st.jrnFilter;if(b.dataset.f==="all"){b.style.background=a?"var(--blue)":"var(--white)";b.style.color=a?"#fff":"var(--blue)"}else b.style.fontWeight=a?"800":"600"});
+  if(!f.length){document.getElementById("jrn-list").innerHTML='<div style="text-align:center;padding:50px;color:var(--tx3)"><div style="font-size:24px;margin-bottom:6px">📋</div>Aucune entrée</div>';return}
+  var h="";f.forEach(function(e){var s=fSt(e.correctedFlux||e.flux);var fn=e.correctedTo||e.name;
+    var ti=e.validationType==="confirmed"?"✅":e.validationType==="corrected"?"✏️":e.reviewed?"✅":"⚠️";
+    var tc=e.validationType==="corrected"?"var(--purple)":e.reviewed?"var(--eco)":"var(--hors)";
+    h+='<div class="card" style="margin-bottom:6px;border-left:4px solid '+s.bn+';padding:12px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;font-size:13px">'+fn+'</div>'+badge(e.correctedFlux||e.flux)+'</div>';
+    if(e.correctedTo)h+='<div style="font-size:10px;color:var(--int);text-decoration:line-through">'+e.name+'</div>';
+    h+='<div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap"><span style="font-size:10px;color:var(--tx2)">'+(e.category||"")+'</span><span style="font-size:9px;font-weight:700;color:'+tc+'">'+ti+'</span><span style="font-size:9px;color:var(--tx3)">'+e.time+'</span>'+(e.agent?'<span style="font-size:8px;color:var(--tx3)">👤 '+e.agent+'</span>':'')+'</div>';
+    if(!e.reviewed)h+='<div style="display:flex;gap:6px;margin-top:8px"><button onclick="jrnOk(\''+e.id+'\')" class="btn btn-eco" style="flex:1;font-size:10px;padding:6px">✅ Valider</button><button onclick="jrnFix(\''+e.id+'\')" class="btn" style="flex:1;font-size:10px;padding:6px;background:var(--purple);color:#fff">✏️ Corriger</button></div>';
+    h+='</div>'});
+  document.getElementById("jrn-list").innerHTML=h;
+}
+window.jrnOk=function(id){markReviewed(id);var e=journal.find(function(x){return x.id===id});if(e&&e.brand)pushLearn(e.brand,e.name,e.flux,e.category);showJournal()};
+window.jrnFix=function(id){st.corJrnId=id;var e=journal.find(function(x){return x.id===id});document.getElementById("cor-orig").textContent=e?e.name:"";document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
+
+// ===== MEMORY =====
+function showMemory(){
+  show("mem");var entries=Object.entries(mem.brands||{});
+  document.getElementById("mem-stats").innerHTML="<strong>"+entries.length+"</strong> marques · <strong>"+(mem.stats?mem.stats.corrected:0)+"</strong> corrections"+(sess.memoryEnabled?" · <span style='color:var(--eco)'>☁️ Partagée</span>":" · locale uniquement");
+  if(!entries.length){document.getElementById("mem-list").innerHTML='<div style="text-align:center;padding:50px;color:var(--tx3)">🧠 Mémoire vide</div>';return}
+  entries.sort(function(a,b){return(b[1].n||0)-(a[1].n||0)});
+  var h="";entries.forEach(function(e){var s=fSt(e[1].f);
+    h+='<div class="card" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:10px 12px"><div style="width:4px;height:24px;border-radius:2px;background:'+s.bn+';flex-shrink:0"></div><div style="font-weight:700;font-size:12px;flex-shrink:0;max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[0]+'</div><span style="color:var(--tx3);font-size:10px">→</span><div style="font-size:11px;color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[1].p+'</div>'+badge(e[1].f)+'<span style="font-size:9px;color:var(--tx3)">×'+e[1].n+'</span></div>'});
+  document.getElementById("mem-list").innerHTML=h;
+}
+
+// ===== VOICE =====
+function startVoice(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("Non disponible");return}var r=new SR();r.lang="fr-FR";r.continuous=false;r.interimResults=true;r.onresult=function(e){var res=e.results[0],txt=res[0].transcript;document.getElementById("in-search").value=txt;document.getElementById("btn-srch").style.display=txt?"block":"none";if(res.isFinal&&txt.length>2){st.query=txt;setTimeout(doSearch,300)}};r.onerror=function(){};r.start()}
+
+// ===== EVENTS =====
+// Login: 2-step flow
+var pendingLogin = null; // holds response from step 1
+
+document.getElementById("btn-check").addEventListener("click",function(){
+  var code=document.getElementById("in-code").value.trim();
+  if(!code){document.getElementById("login-err").textContent="Entrez un code";document.getElementById("login-err").style.display="block";return}
+  document.getElementById("login-err").style.display="none";
+  document.getElementById("btn-check").textContent="Vérification...";
+  
+  fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"login",code:code})
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById("btn-check").textContent="Vérifier le code";
+    if(d.error)throw new Error(d.error);
+    pendingLogin=d;
+    
+    // Show step 2
+    document.getElementById("login-step1").style.display="none";
+    document.getElementById("login-step2").style.display="block";
+    document.getElementById("login-site-name").textContent=d.site;
+    
+    // Populate agent dropdown
+    var sel=document.getElementById("sel-agent");
+    sel.innerHTML="";
+    var agents=d.agents||[];
+    if(agents.length===0){
+      sel.innerHTML='<option value="">Aucun agent configuré</option>';
+      sel.disabled=true;
+      document.getElementById("login-err").textContent="Demandez à l'admin d'ajouter votre nom";
+      document.getElementById("login-err").style.display="block";
+    } else {
+      sel.disabled=false;
+      agents.forEach(function(name){
+        var opt=document.createElement("option");opt.value=name;opt.textContent=name;sel.appendChild(opt);
+      });
+    }
+  }).catch(function(e){
+    document.getElementById("btn-check").textContent="Vérifier le code";
+    document.getElementById("login-err").textContent=e.message||"Code invalide";
+    document.getElementById("login-err").style.display="block";
+  });
+});
+document.getElementById("in-code").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("btn-check").click()});
+
+document.getElementById("btn-back-code").addEventListener("click",function(){
+  document.getElementById("login-step1").style.display="block";
+  document.getElementById("login-step2").style.display="none";
+  document.getElementById("login-err").style.display="none";
+  pendingLogin=null;
+});
+
+document.getElementById("btn-login").addEventListener("click",function(){
+  if(!pendingLogin)return;
+  var agent=document.getElementById("sel-agent").value;
+  if(!agent){document.getElementById("login-err").textContent="Sélectionnez un agent";document.getElementById("login-err").style.display="block";return}
+  
+  sess.code=pendingLogin.code;sess.site=pendingLogin.site;sess.agent=agent;
+  sess.plan=pendingLogin.plan;sess.photosPerDay=pendingLogin.photosPerDay;sess.memoryEnabled=pendingLogin.memoryEnabled;
+  saveSess();
+  
+  // Update lastSeen
+  fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"login",code:pendingLogin.code,agent:agent})}).catch(function(){});
+  
+  pendingLogin=null;show("home");updHome();syncMemory();
+});
+document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome()});
+document.getElementById("btn-logout").addEventListener("click",logout);
+
+document.getElementById("btn-voice").addEventListener("click",startVoice);
+document.getElementById("btn-srch").addEventListener("click",doSearch);
+document.getElementById("in-search").addEventListener("keydown",function(e){if(e.key==="Enter")doSearch()});
+document.getElementById("in-search").addEventListener("input",function(){document.getElementById("btn-srch").style.display=this.value?"block":"none"});
+document.getElementById("btn-photo").addEventListener("click",openCam);
+document.getElementById("btn-nf-photo").addEventListener("click",openCam);
+document.getElementById("btn-nf-nonid").addEventListener("click",function(){st.result={n:st.query||"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",c:"Porter les EPI.",conf:0,nv:false};addHist(st.result);addJournal({name:st.result.n,flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"manual"});showRes()});
+document.getElementById("btn-cap").addEventListener("click",capture);
+document.getElementById("cam-file").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){st.image=ev.target.result;stopCam();document.getElementById("cam-view").style.display="none";document.getElementById("cam-prev").style.display="block";document.getElementById("cam-img").src=st.image;document.getElementById("cam-ctrl").style.display="none";document.getElementById("cam-act").style.display="flex"};r.readAsDataURL(f)});
+document.getElementById("btn-retake").addEventListener("click",function(){st.image=null;openCam()});
+document.getElementById("btn-anl").addEventListener("click",analyze);
+document.getElementById("btn-vol-ok").addEventListener("click",function(){st.result.conf=st.result.score||85;addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()});
+document.getElementById("btn-vol-over").addEventListener("click",function(){st.result.f="H";st.result.overSeuil=true;st.result.conf=st.result.score||85;addHist(st.result);addJournal({name:st.result.n,flux:"H",category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()});
+document.getElementById("btn-vol-unk").addEventListener("click",function(){st.result.conf=st.result.score||85;addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()});
+document.getElementById("btn-cor-close").addEventListener("click",function(){document.getElementById("ov-cor").classList.remove("on")});
+document.getElementById("cor-input").addEventListener("input",corSearch);
+document.querySelectorAll(".btn-back").forEach(function(b){b.addEventListener("click",goHome)});
+document.querySelectorAll(".jf").forEach(function(b){b.addEventListener("click",function(){st.jrnFilter=b.dataset.f;showJournal()})});
+
+// Tabs
+document.querySelectorAll("#main-tabs button").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll("#main-tabs button").forEach(function(x){x.classList.remove("act")});
+    b.classList.add("act");
+    var t=b.dataset.t;
+    if(t==="home")goHome();
+    else if(t==="journal")showJournal();
+    else if(t==="memory"){syncMemory();showMemory()}
+    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent;document.getElementById("prof-plan").textContent={free:"Gratuit (5 photos/jour)",pro:"Pro (100 photos/jour)",enterprise:"Entreprise (illimité)"}[sess.plan];document.getElementById("prof-photos").textContent=st.pc+"/"+sess.photosPerDay+" utilisées"}
+  });
+});
+
+// ===== INIT =====
+loadSess();loadJournal();
+if(isLoggedIn()){show("home");updHome();syncMemory()}else{show("login")}
+
+})();
+</script>
+</body>
+</html>
