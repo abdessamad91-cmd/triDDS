@@ -175,7 +175,7 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         <p>TriDDS aide les agents à orienter correctement les produits grâce à la recherche, à la photo IA et à une base métier structurée. L’objectif n’est pas seulement que cela fonctionne, mais que l’outil donne confiance dès les premières secondes.</p>
         <div class="landing-cta">
           <a class="landing-pill primary" href="./pricing.html">Créer mon accès</a>
-          <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Tester l’IA gratuitement</button>
+          <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Continuer sans IA</button>
         </div>
         <div class="landing-points">
           <div class="landing-point"><strong>Découverte claire</strong><span>Un visiteur comprend immédiatement s’il doit tester, se connecter ou créer un accès.</span></div>
@@ -187,11 +187,11 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
       <section class="landing-login card">
         <div class="landing-login-top">
           <div class="landing-login-title">Se connecter</div>
-          <div class="landing-login-sub">Déjà client ? Entrez votre code d’accès. Nouveau visiteur ? Vous pouvez créer votre accès ou commencer gratuitement.</div>
+          <div class="landing-login-sub">Déjà client ? Entrez votre code d’accès. Nouveau visiteur ? Testez l’IA gratuitement depuis le bandeau principal, ou continuez sans IA.</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
           <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Créer mon accès</button>
-          <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Tester l’IA gratuitement</button>
+          <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Continuer sans IA</button>
         </div>
         <div class="landing-sep">J’ai déjà un code</div>
         <div id="login-step1">
@@ -212,7 +212,7 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
         <div class="landing-foot">
           <span>Accès Base disponible</span>
-          <button id="btn-demo" style="background:none;border:none;padding:0;color:#334155;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer">Continuer en accès gratuit</button>
+          <button id="btn-demo" style="background:none;border:none;padding:0;color:#334155;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer">Continuer en accès Base sans IA</button>
         </div>
       </section>
     </div>
@@ -421,6 +421,24 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 <script src="data.js"></script>
 
 <!-- ===== APP ===== -->
+<div id="trial-modal" class="trial-modal">
+  <div class="trial-box">
+    <h2>Tester l’IA gratuitement</h2>
+    <p>Créez un accès d’essai avec <strong>5 scans IA</strong>. L’essai est accordé une seule fois par email administrateur.</p>
+    <div class="trial-grid">
+      <div><div class="lbl">Nom du site</div><input id="trial-site" placeholder="Ex. Déchèterie de test"></div>
+      <div><div class="lbl">Nom administrateur</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
+      <div class="full"><div class="lbl">Email administrateur</div><input id="trial-email" type="email" placeholder="Ex. admin@site.fr"></div>
+      <div class="full"><div class="lbl">Contact (optionnel)</div><input id="trial-contact" placeholder="Téléphone ou email"></div>
+    </div>
+    <div class="trial-actions">
+      <button id="btn-trial-submit" class="btn btn-blue">Créer mon essai IA</button>
+      <button id="btn-trial-close" class="btn btn-outline">Annuler</button>
+    </div>
+    <div id="trial-msg" class="trial-msg"></div>
+  </div>
+</div>
+
 <script>
 (function(){
 "use strict";
@@ -847,7 +865,7 @@ function createTrialAccess(){
 
 // ===== EVENTS =====
 document.getElementById("btn-create-access").addEventListener("click",function(){ location.href="./pricing.html"; });
-document.getElementById("btn-free-access").addEventListener("click",startTrialFlow);
+document.getElementById("btn-free-access").addEventListener("click",function(){ document.getElementById("btn-demo").click(); });
 var heroTrial=document.getElementById("btn-free-access-hero"); if(heroTrial) heroTrial.addEventListener("click",startTrialFlow);
 
 // Login: 2-step flow
@@ -972,23 +990,7 @@ window.addEventListener("focus",function(){heartbeat(true)});
 })();
 </script>
 
-<div id="trial-modal" class="trial-modal">
-  <div class="trial-box">
-    <h2>Tester l’IA gratuitement</h2>
-    <p>Créez un accès d’essai avec <strong>5 scans IA</strong>. L’essai est accordé une seule fois par email administrateur.</p>
-    <div class="trial-grid">
-      <div><div class="lbl">Nom du site</div><input id="trial-site" placeholder="Ex. Déchèterie de test"></div>
-      <div><div class="lbl">Nom administrateur</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
-      <div class="full"><div class="lbl">Email administrateur</div><input id="trial-email" type="email" placeholder="Ex. admin@site.fr"></div>
-      <div class="full"><div class="lbl">Contact (optionnel)</div><input id="trial-contact" placeholder="Téléphone ou email"></div>
-    </div>
-    <div class="trial-actions">
-      <button id="btn-trial-submit" class="btn btn-blue">Créer mon essai IA</button>
-      <button id="btn-trial-close" class="btn btn-outline">Annuler</button>
-    </div>
-    <div id="trial-msg" class="trial-msg"></div>
-  </div>
-</div>
+
 
 </body>
 </html>
