@@ -126,8 +126,8 @@ function euro(v){return new Intl.NumberFormat('fr-FR',{style:'currency',currency
 function dt(v){if(!v)return'—';try{return new Date(v).toLocaleString('fr-FR')}catch(e){return v}}
 function planBadge(p){return {free:'<span class="badge b-free">Accès Base</span>',pro:'<span class="badge b-pro">Pro Site</span>',multisite:'<span class="badge b-multi">Multi-sites</span>',enterprise:'<span class="badge b-multi">Entreprise</span>'}[p]||''}
 function statusBadge(active){return active?'<span class="badge b-on">Actif</span>':'<span class="badge b-off">Désactivé</span>'}
-function roleBadge(role){return {admin:'<span class="role role-admin">Admin</span>',responsable:'<span class="role role-resp">Responsable</span>',agent:'<span class="role role-agent">Agent</span>'}[role]||'<span class="role role-agent">Agent</span>'}
-function roleHint(plan){return {free:'Base • 1 admin, pas de responsable',pro:"Pro • 1 admin, jusqu'à 2 responsables",multisite:'Multi-sites • plusieurs admins et responsables',enterprise:'Entreprise • rôles étendus'}[plan]||''}
+function roleBadge(role){return {responsable:'<span class="role role-resp">Responsable</span>',agent:'<span class="role role-agent">Agent</span>'}[role]||'<span class="role role-agent">Agent</span>'}
+function roleHint(plan){return {free:'Un responsable unique et des agents',pro:'Un responsable unique et des agents',multisite:'Un responsable unique par site et des agents',enterprise:'Un responsable unique par site et des agents'}[plan]||''}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none'},2600)}
 function api(action,data){if(!API)return Promise.reject(new Error('Backend non configuré dans config.js'));return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action:action},data||{}))}).then(function(r){return r.json()}).then(function(d){if(d.error)throw new Error(d.error);return d})}
 function setTab(name){document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name)});document.querySelectorAll('[data-section]').forEach(function(s){s.classList.toggle('hidden',s.dataset.section!==name)});window.scrollTo({top:0,behavior:'smooth'})}
@@ -158,7 +158,6 @@ function renderSites(items){
         h+='<div class="agent-left"><span>👤 <strong>'+a.name+'</strong></span>'+roleBadge(role)+(device?'<span class="mini muted">'+device+'</span>':'')+'</div>';
         h+='<div class="agent-right">';
         h+='<select onchange="setAgentRole('+safeCode+','+safeName+',this.value)" style="width:auto">';
-        h+='<option value="admin"'+(role==='admin'?' selected':'')+'>Admin</option>';
         h+='<option value="responsable"'+(role==='responsable'?' selected':'')+'>Responsable</option>';
         h+='<option value="agent"'+(role==='agent'?' selected':'')+'>Agent</option>';
         h+='</select>';
