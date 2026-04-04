@@ -82,29 +82,115 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .plan-pro{background:#dbeafe;color:#1e40af}
 .plan-ent{background:#f5f3ff;color:#6d28d9}
 </style>
+
+<style>
+body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
+#s-home{background:linear-gradient(180deg,#edf3ff,#f5f8ff 35%,#eef2f8)}
+.home-shell{max-width:1360px;width:100%;margin:0 auto;padding:22px 16px 120px;display:flex;flex-direction:column;gap:18px}
+.home-hero{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:28px;padding:24px;box-shadow:0 18px 50px rgba(15,23,42,.14)}
+.home-hero-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.home-kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:800;color:#fff;margin-bottom:12px}
+.home-title{font-size:36px;font-weight:900;letter-spacing:-1.4px;line-height:1.05;margin:0}
+.home-sub{max-width:760px;color:#dbeafe;font-size:15px;line-height:1.65;margin-top:10px}
+.home-status{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+#home-plan{border:none!important;box-shadow:none!important;padding:7px 12px;border-radius:999px!important}
+.home-quota{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:12px 14px;min-width:132px;text-align:right}
+.home-quota #q-label{font-size:11px;color:#dbeafe;font-weight:700}
+.home-quota #q-disp{font-size:22px;font-weight:900;letter-spacing:-.6px;color:#fff!important}
+.home-search-card{margin-top:18px;background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.6);border-radius:22px;padding:14px;box-shadow:0 14px 30px rgba(15,23,42,.10)}
+.home-search-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.search-bar{box-shadow:none;border:1.5px solid #dbe4f0;padding:6px 6px 6px 16px;background:#fff}
+.search-bar:focus-within{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.08)}
+.home-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.home-quick>div{border-radius:18px!important;padding:16px 14px!important;box-shadow:0 10px 24px rgba(15,23,42,.05);backdrop-filter:blur(8px)}
+#home-mem{margin:14px 0 0!important;border-radius:16px!important;padding:12px 14px!important;background:rgba(124,58,237,.08)!important;border:1px solid rgba(124,58,237,.22)!important;color:#6d28d9!important}
+.home-history{background:#fff;border:1px solid #e6edf8;border-radius:26px;padding:18px;box-shadow:0 14px 36px rgba(15,23,42,.06)}
+.home-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap}
+.home-history-head h3{font-size:24px;letter-spacing:-.6px;margin:0}
+.home-history-head p{margin:4px 0 0;color:#64748b;font-size:13px}
+#hist-list{padding:0!important;overflow:visible!important;min-height:220px}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;width:min(720px,calc(100% - 24px));border:1px solid rgba(255,255,255,.6);border-radius:24px;padding:8px 10px;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);box-shadow:0 20px 40px rgba(15,23,42,.12);z-index:90}
+.tabs button{border-radius:16px;padding:10px 0;color:#64748b}
+.tabs button.act{background:#eff6ff;color:#1d4ed8}
+#s-login{background:radial-gradient(circle at top left,#1e3a8a,#0f172a 58%)!important}
+#s-login .card{background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.4);border-radius:26px;box-shadow:0 24px 60px rgba(2,6,23,.22)}
+#s-login h1{font-size:34px!important;color:#fff0}
+#s-login h1:before{content:'TriDDS';display:block;color:#fff;font-size:34px;font-weight:900;letter-spacing:-1px}
+#s-login p{color:#dbeafe!important}
+#s-login > div > div:first-child{filter:drop-shadow(0 10px 16px rgba(16,185,129,.22))}
+#s-login .lbl{color:#94a3b8}
+#s-login input,#s-login select{background:#fff}
+@media(max-width:900px){.home-title{font-size:28px}.home-shell{padding:16px 12px 110px}.home-search-row{flex-direction:column;align-items:stretch}.home-quick{grid-template-columns:1fr}.home-history{padding:14px}.tabs{bottom:12px}}
+</style>
+
+
+<style>
+#s-login{padding:24px 18px 26px!important;background:radial-gradient(circle at top left,#1e3a8a,#0f172a 58%)!important}
+.landing-wrap{max-width:1380px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.landing-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.landing-brand{display:flex;align-items:center;gap:12px;color:#fff}.landing-brand-mark{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 16px 28px rgba(37,99,235,.22)}
+.landing-brand strong{display:block;font-size:24px;letter-spacing:-.8px}.landing-brand span{display:block;color:#c7d2fe;font-size:13px;margin-top:2px}
+.landing-nav-actions{display:flex;gap:10px;flex-wrap:wrap}.landing-link{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-weight:800;text-decoration:none}.landing-link.primary{background:#fff;color:#0f172a;border-color:#fff}
+.landing-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:22px;align-items:stretch}.landing-copy{background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.15);border-radius:32px;padding:34px;color:#fff;backdrop-filter:blur(10px);box-shadow:0 24px 60px rgba(2,6,23,.18)}
+.landing-kicker{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:800;color:#fff;margin-bottom:16px}.landing-copy h1{font-size:58px;line-height:1.02;letter-spacing:-2px;margin:0;color:#fff!important}.landing-copy h1:before{content:none!important}.landing-copy p{font-size:18px;line-height:1.65;color:#dbeafe!important;margin:18px 0 0!important}
+.landing-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.landing-pill{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;font-weight:900;text-decoration:none}.landing-pill.primary{background:#fff;color:#0f172a}.landing-pill.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff}
+.landing-points{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:24px}.landing-point{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:16px}.landing-point strong{display:block;font-size:15px;margin-bottom:6px}.landing-point span{display:block;color:#dbeafe;font-size:13px;line-height:1.5}
+.landing-login{background:rgba(255,255,255,.96)!important;border:1px solid rgba(255,255,255,.45)!important;border-radius:32px!important;padding:28px!important;box-shadow:0 24px 60px rgba(2,6,23,.22)!important}
+.landing-login-top{margin-bottom:18px}.landing-login-title{font-size:32px;font-weight:900;letter-spacing:-1.2px;color:#0f172a}.landing-login-sub{margin-top:8px;color:#64748b;font-size:14px;line-height:1.6}
+.landing-sep{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:#94a3b8;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.landing-sep:before,.landing-sep:after{content:'';height:1px;background:#e2e8f0;flex:1}
+.landing-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:#94a3b8}.landing-foot a{color:#475569;text-decoration:none;font-weight:700}
+@media(max-width:1080px){.landing-grid{grid-template-columns:1fr}.landing-copy h1{font-size:42px}.landing-points{grid-template-columns:1fr}.landing-wrap{gap:18px}}
+@media(max-width:720px){#s-login{padding:14px 12px 18px!important}.landing-copy,.landing-login{padding:22px!important}.landing-copy h1{font-size:34px}.landing-nav{justify-content:center}.landing-nav-actions{width:100%;justify-content:center}.landing-link{flex:1;min-width:140px}.landing-cta{flex-direction:column}.landing-pill{width:100%}}
+</style>
+
 </head>
 <body>
 
 <!-- ===== LOGIN ===== -->
-<div id="s-login" class="S on" style="background:linear-gradient(160deg,#f5f7fa,#e0e7ff,#f5f7fa)">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
-    <div style="font-size:42px;margin-bottom:12px">♻️</div>
-    <h1 style="font-size:28px;font-weight:900;color:var(--tx);letter-spacing:-1px">TriDDS</h1>
-    <p style="color:var(--tx2);font-size:14px;margin-top:4px">Assistant IA · Tri des DDS</p>
-    <div style="width:100%;max-width:340px;margin-top:32px">
-      <div class="card" style="padding:24px">
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+<div id="s-login" class="S on">
+  <div class="landing-wrap">
+    <div class="landing-nav">
+      <div class="landing-brand">
+        <div class="landing-brand-mark">♻️</div>
+        <div><strong>TriDDS</strong><span>Assistant IA de tri des DDS</span></div>
+      </div>
+      <div class="landing-nav-actions">
+        <a class="landing-link" href="./pricing.html">Tarifs</a>
+        <a class="landing-link primary" href="./pricing.html">Créer mon accès</a>
+      </div>
+    </div>
+
+    <div class="landing-grid">
+      <section class="landing-copy">
+        <div class="landing-kicker">Produit métier • Déchetteries • Agents terrain</div>
+        <h1>Un assistant de tri plus clair, plus fiable et plus rapide.</h1>
+        <p>TriDDS aide les agents à orienter correctement les produits grâce à la recherche, à la photo IA et à une base métier structurée. L’objectif n’est pas seulement que cela fonctionne, mais que l’outil donne confiance dès les premières secondes.</p>
+        <div class="landing-cta">
+          <a class="landing-pill primary" href="./pricing.html">Créer mon accès</a>
+          <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Tester gratuitement</button>
+        </div>
+        <div class="landing-points">
+          <div class="landing-point"><strong>Découverte claire</strong><span>Un visiteur comprend immédiatement s’il doit tester, se connecter ou créer un accès.</span></div>
+          <div class="landing-point"><strong>IA utile</strong><span>Recherche texte, photo IA et mémoire partagée pour retrouver les cas fréquents plus vite.</span></div>
+          <div class="landing-point"><strong>Accès pro</strong><span>Codes de site, gestion des agents, quotas IA et administration centralisée.</span></div>
+        </div>
+      </section>
+
+      <section class="landing-login card">
+        <div class="landing-login-top">
+          <div class="landing-login-title">Se connecter</div>
+          <div class="landing-login-sub">Déjà client ? Entrez votre code d’accès. Nouveau visiteur ? Vous pouvez créer votre accès ou commencer gratuitement.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
           <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Créer mon accès</button>
           <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Essayer gratuitement</button>
-          <div style="text-align:center;font-size:12px;color:var(--tx3);font-weight:700">Déjà client ? Entrez votre code d'accès</div>
         </div>
-        <!-- Step 1: Code -->
+        <div class="landing-sep">J’ai déjà un code</div>
         <div id="login-step1">
           <div class="lbl">Code du site</div>
           <input id="in-code" type="text" placeholder="Ex: FAU-2025-PRO" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:var(--rs);font-size:16px;font-weight:600;text-transform:uppercase;text-align:center;outline:none;margin-bottom:12px" autocomplete="off">
           <button id="btn-check" class="btn btn-blue btn-f" style="padding:16px;font-size:16px">Vérifier le code</button>
         </div>
-        <!-- Step 2: Agent selection (hidden initially) -->
         <div id="login-step2" style="display:none">
           <div style="text-align:center;margin-bottom:14px">
             <div style="font-size:13px;color:var(--tx2)">Site vérifié ✅</div>
@@ -116,47 +202,58 @@ button{cursor:pointer;border:none;background:none;color:inherit}
           <button id="btn-back-code" style="display:block;margin:10px auto 0;color:var(--tx2);font-size:12px;text-decoration:underline;background:none;border:none;cursor:pointer">← Changer de code</button>
         </div>
         <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
-      </div>
-      <button id="btn-demo" style="display:block;margin:16px auto 0;color:var(--tx2);font-size:13px;text-decoration:underline">Continuer en accès gratuit</button>
+        <div class="landing-foot">
+          <span>Accès Base disponible</span>
+          <button id="btn-demo" style="background:none;border:none;padding:0;color:#334155;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer">Continuer en accès gratuit</button>
+        </div>
+      </section>
     </div>
   </div>
-  <div style="text-align:center;padding:16px;font-size:10px;color:var(--tx3)">TriDDS v5 · 482 produits · 21 flux</div>
 </div>
 
 <!-- ===== HOME ===== -->
+<!-- ===== HOME ===== -->
 <div id="s-home" class="S">
-  <div style="padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <div style="font-size:11px;color:var(--tx2);font-weight:600" id="home-site">TriDDS</div>
-      <div style="font-size:20px;font-weight:900;letter-spacing:-.5px;margin-top:1px">Tri DDS</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span id="home-plan" class="plan-badge plan-free">Accès Base</span>
-      <div style="text-align:right"><div id="q-label" style="font-size:10px;color:var(--tx3)">Essai IA</div><div id="q-disp" style="font-size:16px;font-weight:800;color:var(--eco)">5/5</div></div>
-    </div>
+  <div class="home-shell">
+    <section class="home-hero">
+      <div class="home-hero-top">
+        <div>
+          <div id="home-site" class="home-kicker">TriDDS</div>
+          <h1 class="home-title">Assistant de tri intelligent</h1>
+          <div class="home-sub">Une interface plus propre, plus pro et plus rassurante pour les agents. Recherchez un produit, utilisez la photo IA et obtenez rapidement la bonne orientation de tri.</div>
+        </div>
+        <div class="home-status">
+          <span id="home-plan" class="plan-badge plan-free">Accès Base</span>
+          <div class="home-quota"><div id="q-label">Essai IA</div><div id="q-disp">5/5</div></div>
+        </div>
+      </div>
+      <div class="home-search-card">
+        <div class="home-search-row">
+          <div class="search-bar" style="flex:1">
+            <button id="btn-voice" class="sb-voice" title="Dicter">🎤</button>
+            <input id="in-search" type="text" placeholder="Nom du produit...">
+            <button id="btn-srch" style="display:none;background:var(--blue);color:#fff;font-size:13px;font-weight:800;border-radius:20px;width:auto;padding:0 16px">OK</button>
+            <button id="btn-photo" class="sb-cam" title="Photo IA">📸</button>
+          </div>
+        </div>
+        <div class="home-quick">
+          <div style="background:linear-gradient(180deg,#ecfdf5,#f7fffb);border:1px solid #a7f3d0;text-align:center"><div style="font-size:11px;font-weight:800;color:#047857">EcoDDS</div><div style="font-size:11px;color:#065f46;margin-top:4px">Bacs dédiés</div></div>
+          <div style="background:linear-gradient(180deg,#fffbeb,#fffdfa);border:1px solid #fcd34d;text-align:center"><div style="font-size:11px;font-weight:800;color:#b45309">Hors EcoDDS</div><div style="font-size:11px;color:#92400e;margin-top:4px">Bacs CHIMIREC</div></div>
+          <div style="background:linear-gradient(180deg,#fef2f2,#fffafa);border:1px solid #fca5a5;text-align:center"><div style="font-size:11px;font-weight:800;color:#dc2626">Interdit</div><div style="font-size:11px;color:#991b1b;margin-top:4px">Refuser</div></div>
+        </div>
+        <div id="home-mem" style="display:none">
+          <span>🧠</span> <span id="mem-shared-count">0</span> marques apprises (partagées)
+        </div>
+      </div>
+    </section>
+
+    <section class="home-history">
+      <div class="home-history-head">
+        <div><h3>Historique récent</h3><p>Retrouvez les dernières recherches et orientez plus vite les produits récurrents.</p></div>
+      </div>
+      <div id="hist-list"></div>
+    </section>
   </div>
-  <!-- Search bar -->
-  <div style="padding:8px 16px 12px">
-    <div class="search-bar">
-      <button id="btn-voice" class="sb-voice" title="Dicter">🎤</button>
-      <input id="in-search" type="text" placeholder="Nom du produit...">
-      <button id="btn-srch" style="display:none;background:var(--blue);color:#fff;font-size:13px;font-weight:800;border-radius:20px;width:auto;padding:0 16px">OK</button>
-      <button id="btn-photo" class="sb-cam" title="Photo IA">📸</button>
-    </div>
-  </div>
-  <!-- Quick actions -->
-  <div style="padding:0 16px 8px;display:flex;gap:8px">
-    <div style="flex:1;background:var(--eco-bg);border:1px solid var(--eco-bd);border-radius:var(--rs);padding:10px 12px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--eco)">EcoDDS</div><div style="font-size:9px;color:var(--eco-tx);margin-top:2px">Bacs dédiés</div></div>
-    <div style="flex:1;background:var(--hors-bg);border:1px solid var(--hors-bd);border-radius:var(--rs);padding:10px 12px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--hors)">Hors EcoDDS</div><div style="font-size:9px;color:var(--hors-tx);margin-top:2px">Bacs CHIMIREC</div></div>
-    <div style="flex:1;background:var(--int-bg);border:1px solid var(--int-bd);border-radius:var(--rs);padding:10px 12px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--int)">Interdit</div><div style="font-size:9px;color:var(--int-tx);margin-top:2px">Refuser</div></div>
-  </div>
-  <!-- Shared memory indicator -->
-  <div id="home-mem" style="display:none;margin:0 16px 8px;padding:8px 12px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:var(--rs);font-size:11px;color:#6d28d9;display:flex;align-items:center;gap:6px">
-    <span>🧠</span> <span id="mem-shared-count">0</span> marques apprises (partagées)
-  </div>
-  <!-- History -->
-  <div id="hist-list" style="flex:1;overflow-y:auto;padding:0 16px"></div>
-  <!-- Tabs -->
   <div class="tabs" id="main-tabs">
     <button class="act" data-t="home"><span class="ti">🏠</span>Accueil</button>
     <button data-t="journal"><span class="ti">📋</span>Journal</button>
@@ -370,8 +467,7 @@ function heartbeat(force){
   if(!force&&now-lastHeartbeat<60000)return;
   lastHeartbeat=now;
   authPost({action:"heartbeat",code:sess.code,agent:sess.agent,sessionId:sess.sessionId,deviceName:sess.deviceName||deviceName()}).then(function(d){
-    if(d&&d.error){clearSess();alert("Votre session a expiré ou a été reprise sur un autre appareil.");location.reload();return;}
-    if(d) applyUsage(d);
+    if(d&&d.error){clearSess();alert("Votre session a expiré ou a été reprise sur un autre appareil.");location.reload();}
   }).catch(function(){});
 }
 function registerActivity(){heartbeat(false)}
@@ -458,7 +554,7 @@ var st={screen:"login",query:"",matches:[],result:null,multi:null,image:null,
 function savePc(){localStorage.setItem("tridds_pc_"+today(),st.pc)}
 function usageTotal(){return sess.monthlyLimit>0?sess.monthlyLimit:(sess.trialTotal||0)}
 function usageRemaining(){return sess.monthlyLimit>0?(sess.monthlyRemaining||0):(sess.trialRemaining||0)}
-function usageLabel(){if(sess.monthlyLimit>0)return "Scans IA/mois";if((sess.trialTotal||0)>0)return "Essai IA";return "IA"}
+function usageLabel(){return sess.monthlyLimit>0?"Scans IA/mois":"Essai IA"}
 function hasAiAccess(){return usageRemaining()>0}
 function applyUsage(u){if(!u)return;sess.plan=u.plan||sess.plan;sess.memoryEnabled=!!u.memoryEnabled;sess.aiEnabled=!!u.aiEnabled;sess.trialTotal=u.trialTotal||0;sess.trialUsed=u.trialUsed||0;sess.trialRemaining=u.trialRemaining||0;sess.monthlyLimit=u.monthlyLimit||0;sess.monthlyUsed=u.monthlyUsed||0;sess.monthlyRemaining=u.monthlyRemaining||0;saveSess();}
 function addHist(r){st.history=[{nm:r.n,f:r.f}].concat(st.history).slice(0,10);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
@@ -825,7 +921,7 @@ document.querySelectorAll("#main-tabs button").forEach(function(b){
     if(t==="home")goHome();
     else if(t==="journal")showJournal();
     else if(t==="memory"){syncMemory();showMemory()}
-    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent;document.getElementById("prof-plan").textContent=sess.plan==="free"?((sess.trialTotal||0)>0?"Accès Base + 5 scans offerts":"Accès Base (sans IA)"):{pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse"}
+    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent;document.getElementById("prof-plan").textContent={free:"Accès Base + 5 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse"}
   });
 });
 
