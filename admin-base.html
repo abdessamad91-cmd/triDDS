@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TriDDS Admin — Base produits</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef4ff;--panel:#fff;--line:#e7eef8;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--blue2:#1d4ed8;--green:#059669;--red:#dc2626;--purple:#7c3aed;--shadow:0 16px 40px rgba(15,23,42,.08);--r:22px}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top left,#1e3a8a,#0f172a 55%)}.card{width:min(460px,100%);background:#fff;border-radius:28px;padding:28px;box-shadow:var(--shadow)}.logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:28px;margin-bottom:16px}.title{font-size:32px;font-weight:900;letter-spacing:-1px;margin:0}.sub{margin:10px 0 20px;color:var(--muted);line-height:1.55}.label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}.field{margin-bottom:14px}.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:16px;border:1.5px solid #dbe3f0;font:inherit;background:#fff;outline:none}.field textarea{min-height:96px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}.btn{border:none;border-radius:16px;padding:13px 18px;font:inherit;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 12px 24px rgba(37,99,235,.22)}.btn-soft{background:#fff;border:1px solid var(--line);color:var(--text)}.btn-red{background:#fef2f2;border:1px solid #fecaca;color:var(--red)}.btn-green{background:#ecfdf5;border:1px solid #a7f3d0;color:var(--green)}.btn-sm{padding:10px 12px;border-radius:12px;font-size:12px}.err{display:none;color:var(--red);font-size:13px;font-weight:700;margin-top:8px}
+.main{padding:24px}.shell{max-width:1420px;margin:0 auto}.topbar{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:28px;padding:28px;display:flex;justify-content:space-between;gap:18px;align-items:flex-start;box-shadow:var(--shadow);margin-bottom:18px}.topbar h1{margin:0;font-size:34px;font-weight:900;letter-spacing:-1px}.topbar p{margin:10px 0 0;color:#dbeafe;max-width:760px;line-height:1.6}.actions{display:flex;gap:10px;flex-wrap:wrap}.actions .btn-soft{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16);color:#fff}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:18px}.kpi{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}.kpi .tag{font-size:12px;font-weight:800;text-transform:uppercase;color:var(--muted);letter-spacing:.08em}.kpi .num{font-size:34px;font-weight:900;margin-top:10px}.grid{display:grid;grid-template-columns:1.3fr .9fr;gap:18px}.panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)}.panel-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panel-title h2{margin:0;font-size:20px;font-weight:900}.panel-sub{font-size:13px;color:var(--muted);margin-top:4px}.toolbar{display:grid;grid-template-columns:220px 1fr auto;gap:10px;margin-bottom:14px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:13px;vertical-align:top}.table th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}.pill-blue{background:#dbeafe;color:#1d4ed8}.pill-green{background:#ecfdf5;color:#047857}.pill-gray{background:#f1f5f9;color:#475569}.empty{padding:18px 0;color:var(--muted)}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:800;display:none;z-index:999}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}.mini{font-size:12px;color:var(--muted)}@media(max-width:980px){.grid,.toolbar,.form-grid{grid-template-columns:1fr}.topbar{flex-direction:column}.main{padding:16px}}
+</style>
+</head>
+<body>
+<section id="login" class="login">
+  <div class="card">
+    <div class="logo">T</div>
+    <h1 class="title">Base produits admin</h1>
+    <p class="sub">Gestion centrale des fiches produits personnalisées par client et par site.</p>
+    <div class="field"><div class="label">Clé administrateur</div><input id="in-key" type="password" placeholder="Entrez votre clé admin"></div>
+    <button id="btn-login" class="btn btn-primary" style="width:100%">Ouvrir la base produits</button>
+    <div id="login-err" class="err"></div>
+  </div>
+</section>
+
+<main id="app" class="main hidden">
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <div class="pill pill-blue">📚 Catalogue TriDDS</div>
+        <h1>Base produits</h1>
+        <p>Ajoutez, modifiez et supprimez les fiches personnalisées créées par client et par site, sans passer par l’espace utilisateur.</p>
+      </div>
+      <div class="actions">
+        <a href="./admin.html" class="btn btn-soft">Retour admin</a>
+        <button id="btn-refresh" class="btn btn-soft">Actualiser</button>
+        <button id="btn-logout" class="btn btn-soft">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="tag">Fiches</div><div class="num" id="kpi-items">0</div></div>
+      <div class="kpi"><div class="tag">Sites concernés</div><div class="num" id="kpi-sites">0</div></div>
+      <div class="kpi"><div class="tag">Clients concernés</div><div class="num" id="kpi-clients">0</div></div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Catalogue global</h2>
+            <div class="panel-sub">Vue consolidée des fiches personnalisées par site.</div>
+          </div>
+        </div>
+        <div class="toolbar">
+          <select id="flt-site"><option value="">Tous les sites</option></select>
+          <input id="flt-search" placeholder="Rechercher un produit, une catégorie, un client...">
+          <button id="btn-new" class="btn btn-primary btn-sm">+ Nouvelle fiche</button>
+        </div>
+        <div id="catalog-table" class="table-wrap"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-title">
+          <div>
+            <h2 id="form-title">Nouvelle fiche</h2>
+            <div class="panel-sub">Vous pouvez créer ou corriger une fiche pour un site précis.</div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field full"><div class="label">Site</div><select id="f-code"></select></div>
+          <div class="field full"><div class="label">Nom du produit</div><input id="f-name" placeholder="Ex. Décapant bois X300"></div>
+          <div class="field"><div class="label">Flux</div><select id="f-flux"><option value="H">Hors EcoDDS</option><option value="E">EcoDDS</option><option value="D">Déchets dangereux</option><option value="R">Réemploi</option></select></div>
+          <div class="field"><div class="label">Catégorie</div><input id="f-category" placeholder="Ex. Solvants"></div>
+          <div class="field full"><div class="label">Orientation / consigne</div><textarea id="f-orientation" placeholder="Consigne de tri / orientation recommandée"></textarea></div>
+          <div class="field full"><div class="label">Sous-catégorie / précision</div><input id="f-sub" placeholder="Ex. Décapants / dissolvants"></div>
+          <div class="field full"><div class="label">Synonymes</div><input id="f-syn" placeholder="séparés par des virgules"></div>
+          <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+            <button id="btn-save" class="btn btn-primary">Enregistrer</button>
+            <button id="btn-delete" class="btn btn-red hidden">Supprimer</button>
+            <button id="btn-cancel" class="btn btn-soft hidden">Annuler l’édition</button>
+          </div>
+          <div id="form-meta" class="mini full"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+let KEY='';
+let editing=null;
+let state={sites:[],items:[]};
+const API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||'').replace(/\/$/,'');
+const API=API_BASE?API_BASE+'/admin':'';
+function $(id){return document.getElementById(id)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2600)}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]))}
+function api(action,data){if(!API)return Promise.reject(new Error('Backend non configuré dans config.js'));return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action},data||{}))}).then(async r=>{const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch(e){d={error:t||('HTTP '+r.status)}}if(!r.ok||d.error)throw new Error(d.error||('HTTP '+r.status));return d;})}
+function dt(v){if(!v)return '—';try{return new Date(v).toLocaleString('fr-FR')}catch(e){return v}}
+function resetForm(){editing=null;$('form-title').textContent='Nouvelle fiche';$('f-code').value=state.sites[0]?.code||'';$('f-name').value='';$('f-flux').value='H';$('f-category').value='';$('f-orientation').value='';$('f-sub').value='';$('f-syn').value='';$('btn-delete').classList.add('hidden');$('btn-cancel').classList.add('hidden');$('form-meta').textContent=''}
+function fillSiteSelect(){const opts=['<option value="">Choisir un site</option>'].concat(state.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`));$('f-code').innerHTML=opts.join('');$('flt-site').innerHTML='<option value="">Tous les sites</option>'+state.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`).join('')}
+function filteredItems(){const site=$('flt-site').value;const q=$('flt-search').value.trim().toLowerCase();return state.items.filter(i=>{if(site&&i.code!==site)return false;if(!q)return true;const hay=[i.n,i.x,i.c,i.s,(i.y||[]).join(','),i.site,i.client,i.code].join(' ').toLowerCase();return hay.includes(q)})}
+function renderTable(){const items=filteredItems();$('kpi-items').textContent=state.items.length;$('kpi-sites').textContent=new Set(state.items.map(i=>i.code)).size;$('kpi-clients').textContent=new Set(state.items.map(i=>i.client||'')).size; if(!items.length){$('catalog-table').innerHTML='<div class="empty">Aucune fiche personnalisée.</div>';return;} let h='<table class="table"><thead><tr><th>Produit</th><th>Site</th><th>Client</th><th>Flux</th><th>Catégorie</th><th>Mise à jour</th><th></th></tr></thead><tbody>';items.forEach(i=>{h+=`<tr><td><strong>${esc(i.n)}</strong><div class="mini">${esc(i.x||'')}</div></td><td>${esc(i.site||'—')}<div class="mini">${esc(i.code||'')}</div></td><td>${esc(i.client||'—')}</td><td><span class="pill pill-gray">${esc(i.f||'—')}</span></td><td>${esc(i.c||'—')}<div class="mini">${esc(i.s||'')}</div></td><td>${esc(dt(i.updatedAt))}</td><td><button class="btn btn-soft btn-sm js-edit" data-code="${esc(i.code)}" data-id="${esc(i.id)}">Modifier</button></td></tr>`});h+='</tbody></table>';$('catalog-table').innerHTML=h}
+function load(){api('catalog-admin-list').then(d=>{state=d;fillSiteSelect();renderTable();if(!editing)resetForm()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function startEdit(code,id){const item=state.items.find(x=>x.code===code&&x.id===id);if(!item)return;editing={code,id};$('form-title').textContent='Modifier la fiche';$('f-code').value=item.code||'';$('f-name').value=item.n||'';$('f-flux').value=item.f||'H';$('f-category').value=item.x||'';$('f-orientation').value=item.c||'';$('f-sub').value=item.s||'';$('f-syn').value=(item.y||[]).join(', ');$('btn-delete').classList.remove('hidden');$('btn-cancel').classList.remove('hidden');$('form-meta').textContent='Dernière mise à jour : '+dt(item.updatedAt)+' · Site : '+(item.site||'—')}
+function save(){const code=$('f-code').value;const item={id:editing?editing.id:'',n:$('f-name').value.trim(),f:$('f-flux').value,x:$('f-category').value.trim(),c:$('f-orientation').value.trim(),s:$('f-sub').value.trim(),y:$('f-syn').value.split(',').map(v=>v.trim()).filter(Boolean)};if(!code||!item.n||!item.x){toast('Site, nom et catégorie requis');alert('Site, nom et catégorie requis');return;} api('catalog-admin-save',{code,item}).then(()=>{toast(editing?'Fiche mise à jour':'Fiche créée');resetForm();load()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function removeItem(){if(!editing)return;if(!confirm('Supprimer cette fiche ?'))return;api('catalog-admin-delete',{code:editing.code,id:editing.id}).then(()=>{toast('Fiche supprimée');resetForm();load()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+$('btn-login').addEventListener('click',()=>{KEY=$('in-key').value.trim();if(!KEY){$('login-err').textContent='Entrez la clé admin';$('login-err').style.display='block';return;} api('catalog-admin-list').then(d=>{state=d;$('login').classList.add('hidden');$('app').classList.remove('hidden');$('login-err').style.display='none';fillSiteSelect();renderTable();resetForm()}).catch(e=>{$('login-err').textContent=e.message||'Clé invalide';$('login-err').style.display='block'})});
+$('in-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('btn-login').click()});
+$('btn-refresh').addEventListener('click',load);$('btn-logout').addEventListener('click',()=>{KEY='';$('app').classList.add('hidden');$('login').classList.remove('hidden');$('in-key').value='';});
+$('btn-save').addEventListener('click',save);$('btn-delete').addEventListener('click',removeItem);$('btn-cancel').addEventListener('click',resetForm);$('btn-new').addEventListener('click',resetForm);
+$('flt-site').addEventListener('change',renderTable);$('flt-search').addEventListener('input',renderTable);
+document.addEventListener('click',e=>{const btn=e.target.closest('.js-edit');if(!btn)return;startEdit(btn.dataset.code,btn.dataset.id)});
+})();
+</script>
+</body>
+</html>
