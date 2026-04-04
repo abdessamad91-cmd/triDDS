@@ -117,6 +117,7 @@
 
 <script src="config.js"></script>
 <script>
+
 (function(){
 var KEY='';
 var API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||'').replace(/\/$/,'');
@@ -129,10 +130,23 @@ function statusBadge(active){return active?'<span class="badge b-on">Actif</span
 function roleBadge(role){return {responsable:'<span class="role role-resp">Responsable</span>',agent:'<span class="role role-agent">Agent</span>'}[role]||'<span class="role role-agent">Agent</span>'}
 function roleHint(plan){return {free:'Un responsable unique et des agents',pro:'Un responsable unique et des agents',multisite:'Un responsable unique par site et des agents',enterprise:'Un responsable unique par site et des agents'}[plan]||''}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none'},2600)}
-function api(action,data){if(!API)return Promise.reject(new Error('Backend non configuré dans config.js'));return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action:action},data||{}))}).then(function(r){return r.text().then(function(t){var d={};try{d=t?JSON.parse(t):{}}catch(e){d={error:t||('HTTP '+r.status)}}if(!r.ok) throw new Error(d.error||('HTTP '+r.status));if(d.error) throw new Error(d.error);return d;})})}
+function api(action,data){
+  if(!API) return Promise.reject(new Error('Backend non configuré dans config.js'));
+  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action:action},data||{}))})
+    .then(function(r){
+      return r.text().then(function(t){
+        var d={};
+        try { d = t ? JSON.parse(t) : {}; }
+        catch(e) { d = { error: t || ('HTTP '+r.status) }; }
+        if(!r.ok) throw new Error(d.error || ('HTTP '+r.status));
+        if(d.error) throw new Error(d.error);
+        return d;
+      });
+    });
+}
 function setTab(name){document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name)});document.querySelectorAll('[data-section]').forEach(function(s){s.classList.toggle('hidden',s.dataset.section!==name)});window.scrollTo({top:0,behavior:'smooth'})}
 function renderSalesTable(items,targetId,limit){var list=(items||[]).slice(0,limit||items.length);var el=document.getElementById(targetId);if(!list.length){el.innerHTML='<div class="empty">Aucune vente enregistrée.</div>';return}var h='<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Site</th><th>Plan</th><th>Montant</th><th>Email</th><th>Code</th></tr></thead><tbody>';list.forEach(function(s){h+='<tr><td>'+dt(s.date)+'</td><td><strong>'+s.site+'</strong></td><td>'+planBadge(s.plan)+'</td><td>'+euro(s.amount)+'</td><td class="muted">'+(s.adminEmail||'—')+'</td><td class="code">'+(s.code||'—')+'</td></tr>'});h+='</tbody></table></div>';el.innerHTML=h}
-function renderSessionsList(items,targetId,limit){var list=(items||[]).slice(0,limit||items.length);var el=document.getElementById(targetId);if(!list.length){el.innerHTML='<div class="empty">Aucune session active.</div>';return}var h='';list.forEach(function(s){h+='<div class="session"><div><div style="font-weight:900">'+s.agent+'</div><div class="mini muted">'+s.site+' · '+s.code+'</div><div class="mini muted">'+(s.deviceName||'Appareil inconnu')+'</div><div class="mini muted">Dernière activité : '+dt(s.lastSeenAt)+'</div></div><div><button class="btn btn-red btn-sm" onclick="kickSession(\''+s.code+'\',\''+s.agent.replace(/'/g,"\\'")+'\')">Forcer la déconnexion</button></div></div>'});el.innerHTML=h}
+function renderSessionsList(items,targetId,limit){var list=(items||[]).slice(0,limit||items.length);var el=document.getElementById(targetId);if(!list.length){el.innerHTML='<div class="empty">Aucune session active.</div>';return}var h='';list.forEach(function(s){h+='<div class="session"><div><div style="font-weight:900">'+s.agent+'</div><div class="mini muted">'+s.site+' · '+s.code+'</div><div class="mini muted">'+(s.deviceName||'Appareil inconnu')+'</div><div class="mini muted">Dernière activité : '+dt(s.lastSeenAt)+'</div></div><div><button class="btn btn-red btn-sm js-action" data-action="kick-session" data-code="'+s.code+'" data-agent="'+String(s.agent).replace(/"/g,'&quot;')+'">Forcer la déconnexion</button></div></div>'});el.innerHTML=h}
 function renderSites(items){
   var el=document.getElementById('sites-list');
   if(!items.length){el.innerHTML='<div class="empty">Aucun site enregistré.</div>';return}
@@ -151,24 +165,78 @@ function renderSites(items){
     if((s.agentsList||[]).length){
       s.agentsList.forEach(function(a){
         var role=(a.role||'agent');
-        var safeCode=JSON.stringify(s.code);
-        var safeName=JSON.stringify(a.name);
+        var safeCode=String(s.code).replace(/"/g,'&quot;');
+        var safeName=String(a.name).replace(/"/g,'&quot;');
         var device=(a.activeSession&&a.activeSession.deviceName)?'🟢 '+a.activeSession.deviceName:'';
         h+='<div class="agent-row">';
         h+='<div class="agent-left"><span>👤 <strong>'+a.name+'</strong></span>'+roleBadge(role)+(device?'<span class="mini muted">'+device+'</span>':'')+'</div>';
         h+='<div class="agent-right">';
-        h+='<select onchange="setAgentRole('+safeCode+','+safeName+',this.value)" style="width:auto">';
+        h+='<select class="js-role-select" data-code="'+safeCode+'" data-agent="'+safeName+'" style="width:auto">';
         h+='<option value="responsable"'+(role==='responsable'?' selected':'')+'>Responsable</option>';
         h+='<option value="agent"'+(role==='agent'?' selected':'')+'>Agent</option>';
         h+='</select>';
-        h+='<button onclick="removeAgent('+safeCode+','+safeName+')" style="border:none;background:none;color:#dc2626;font-weight:800;cursor:pointer">✕</button>';
+        h+='<button class="js-action" data-action="remove-agent" data-code="'+safeCode+'" data-agent="'+safeName+'" style="border:none;background:none;color:#dc2626;font-weight:800;cursor:pointer">✕</button>';
         h+='</div></div>';
       });
     }else h+='<span class="mini muted">Aucun profil</span>';
     h+='</div>';
     h+='<div style="margin-top:14px;display:grid;grid-template-columns:1fr 170px;gap:8px"><input id="add-agent-'+s.code+'" placeholder="Nom du nouveau profil"><select id="add-role-'+s.code+'"><option value="agent">Agent</option><option value="responsable">Responsable</option></select></div>';
-    var safeCode=JSON.stringify(s.code);
-    h+='<div class="site-actions"><button class="btn btn-green btn-sm" onclick="addAgent('+safeCode+')">+ Profil</button>'+(s.active?'<button class="btn btn-red btn-sm" onclick="deactivate('+safeCode+')">Désactiver</button>':'<button class="btn btn-green btn-sm" onclick="activate('+safeCode+')">Réactiver</button>')+'<select onchange="changePlan('+safeCode+',this.value)" style="width:auto"><option value="free"'+(s.plan==='free'?' selected':'')+'>Accès Base</option><option value="pro"'+(s.plan==='pro'?' selected':'')+'>Pro Site</option><option value="multisite"'+(s.plan==='multisite'?' selected':'')+'>Multi-sites</option><option value="enterprise"'+(s.plan==='enterprise'?' selected':'')+'>Entreprise</option></select><button class="btn btn-soft btn-sm" style="color:#dc2626" onclick="deleteSite('+safeCode+')">Supprimer</button></div>';
+    var safeCode=String(s.code).replace(/"/g,'&quot;');
+    h+='<div class="site-actions"><button class="btn btn-green btn-sm js-action" data-action="add-agent" data-code="'+safeCode+'">+ Profil</button>'+(s.active?'<button class="btn btn-red btn-sm js-action" data-action="deactivate" data-code="'+safeCode+'">Désactiver</button>':'<button class="btn btn-green btn-sm js-action" data-action="activate" data-code="'+safeCode+'">Réactiver</button>')+'<select class="js-plan-select" data-code="'+safeCode+'" style="width:auto"><option value="free"'+(s.plan==='free'?' selected':'')+'>Accès Base</option><option value="pro"'+(s.plan==='pro'?' selected':'')+'>Pro Site</option><option value="multisite"'+(s.plan==='multisite'?' selected':'')+'>Multi-sites</option><option value="enterprise"'+(s.plan==='enterprise'?' selected':'')+'>Entreprise</option></select><button class="btn btn-soft btn-sm js-action" style="color:#dc2626" data-action="delete-site" data-code="'+safeCode+'">Supprimer</button></div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+function render(){document.getElementById('kpi-sites').textContent=state.stats.activeSites||0;document.getElementById('kpi-sessions').textContent=state.stats.activeSessions||0;document.getElementById('kpi-sales').textContent=state.stats.totalSales||0;document.getElementById('kpi-mrr').textContent=euro(state.stats.mrr||0);document.getElementById('kpi-brands').textContent=state.stats.totalBrands||0;renderSalesTable(state.sales,'sales-preview',5);renderSalesTable(state.sales,'sales-full');renderSessionsList(state.sessions,'sessions-preview',4);renderSessionsList(state.sessions,'sessions-full');renderSites(state.sites)}
+function loadDashboard(){api('dashboard').then(function(d){state=d;render();window.scrollTo({top:0,behavior:'smooth'})}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function setRoleForAgent(code,name,role){if(role==='responsable'&&!confirm("Définir "+name+" comme responsable unique du site ? L'ancien responsable sera passé en agent.")){loadDashboard();return}api('set-agent-role',{code:code,agent:name,role:role}).then(function(){toast('Rôle mis à jour');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function addProfileToSite(code){var inp=document.getElementById('add-agent-'+code);var sel=document.getElementById('add-role-'+code);var name=(inp?inp.value:'').trim();var role=sel?sel.value:'agent';if(!name){toast('Entrez un nom de profil');alert('Entrez un nom de profil');return}if(role==='responsable'&&!confirm("Définir ce profil comme responsable unique du site ? L'ancien responsable sera passé en agent."))return;api('add-agent',{code:code,agent:name,role:role}).then(function(){toast('Profil ajouté');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function removeProfileFromSite(code,name){if(!confirm('Retirer '+name+' ?'))return;api('remove-agent',{code:code,agent:name}).then(function(){toast('Agent retiré');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function kickSessionForAgent(code,name){if(!confirm('Forcer la déconnexion de '+name+' ?'))return;api('kick-session',{code:code,agent:name}).then(function(){toast('Session fermée');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function updateSiteStatus(code,active){api('update',{code:code,active:active}).then(function(){toast(active?'Site réactivé':'Site désactivé');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function updateSitePlan(code,plan){api('update',{code:code,plan:plan}).then(function(){toast('Plan mis à jour');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function deleteSiteByCode(code){if(!confirm('Supprimer définitivement '+code+' ?'))return;api('delete',{code:code}).then(function(){toast('Site supprimé');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+document.addEventListener('click',function(e){var btn=e.target.closest('.js-action');if(!btn)return;var action=btn.dataset.action||'';var code=btn.dataset.code||'';var agent=btn.dataset.agent||'';if(action==='add-agent')addProfileToSite(code);else if(action==='deactivate')updateSiteStatus(code,false);else if(action==='activate')updateSiteStatus(code,true);else if(action==='delete-site')deleteSiteByCode(code);else if(action==='remove-agent')removeProfileFromSite(code,agent);else if(action==='kick-session')kickSessionForAgent(code,agent);});
+document.addEventListener('change',function(e){if(e.target.matches('.js-role-select'))setRoleForAgent(e.target.dataset.code||'',e.target.dataset.agent||'',e.target.value);if(e.target.matches('.js-plan-select'))updateSitePlan(e.target.dataset.code||'',e.target.value);});
+function renderSalesTable(items,targetId,limit){var list=(items||[]).slice(0,limit||items.length);var el=document.getElementById(targetId);if(!list.length){el.innerHTML='<div class="empty">Aucune vente enregistrée.</div>';return}var h='<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Site</th><th>Plan</th><th>Montant</th><th>Email</th><th>Code</th></tr></thead><tbody>';list.forEach(function(s){h+='<tr><td>'+dt(s.date)+'</td><td><strong>'+s.site+'</strong></td><td>'+planBadge(s.plan)+'</td><td>'+euro(s.amount)+'</td><td class="muted">'+(s.adminEmail||'—')+'</td><td class="code">'+(s.code||'—')+'</td></tr>'});h+='</tbody></table></div>';el.innerHTML=h}
+function renderSessionsList(items,targetId,limit){var list=(items||[]).slice(0,limit||items.length);var el=document.getElementById(targetId);if(!list.length){el.innerHTML='<div class="empty">Aucune session active.</div>';return}var h='';list.forEach(function(s){h+='<div class="session"><div><div style="font-weight:900">'+s.agent+'</div><div class="mini muted">'+s.site+' · '+s.code+'</div><div class="mini muted">'+(s.deviceName||'Appareil inconnu')+'</div><div class="mini muted">Dernière activité : '+dt(s.lastSeenAt)+'</div></div><div><button class="btn btn-red btn-sm js-action" data-action="kick-session" data-code="'+s.code+'" data-agent="'+String(s.agent).replace(/"/g,'&quot;')+'">Forcer la déconnexion</button></div></div>'});el.innerHTML=h}
+function renderSites(items){
+  var el=document.getElementById('sites-list');
+  if(!items.length){el.innerHTML='<div class="empty">Aucun site enregistré.</div>';return}
+  var h='<div class="cards">';
+  items.forEach(function(s){
+    h+='<div class="site-card">';
+    h+='<div class="site-head"><div><div class="site-title">'+s.site+'</div><div class="code">'+s.code+'</div></div><div class="badges">'+planBadge(s.plan)+statusBadge(s.active)+'</div></div>';
+    if(s.client)h+='<div class="mini muted">Client : '+s.client+'</div>';
+    if(s.principal)h+='<div class="mini muted">Contact principal : '+s.principal+(s.principalEmail?' · '+s.principalEmail:'')+'</div>';
+    if(s.responsable)h+='<div class="mini muted">Responsable du site : '+s.responsable+'</div>';
+    if(s.contact)h+='<div class="mini muted">Contact : '+s.contact+'</div>';
+    if(s.notes)h+='<div class="mini muted">Notes : '+s.notes+'</div>';
+    h+='<div class="mini muted" style="margin-top:8px">Créé : '+dt(s.created)+'</div>';
+    h+='<div class="mini muted" style="margin-top:4px">'+roleHint(s.plan)+'</div>';
+    h+='<div class="agent-list">';
+    if((s.agentsList||[]).length){
+      s.agentsList.forEach(function(a){
+        var role=(a.role||'agent');
+        var safeCode=String(s.code).replace(/"/g,'&quot;');
+        var safeName=String(a.name).replace(/"/g,'&quot;');
+        var device=(a.activeSession&&a.activeSession.deviceName)?'🟢 '+a.activeSession.deviceName:'';
+        h+='<div class="agent-row">';
+        h+='<div class="agent-left"><span>👤 <strong>'+a.name+'</strong></span>'+roleBadge(role)+(device?'<span class="mini muted">'+device+'</span>':'')+'</div>';
+        h+='<div class="agent-right">';
+        h+='<select class="js-role-select" data-code="'+safeCode+'" data-agent="'+safeName+'" style="width:auto">';
+        h+='<option value="responsable"'+(role==='responsable'?' selected':'')+'>Responsable</option>';
+        h+='<option value="agent"'+(role==='agent'?' selected':'')+'>Agent</option>';
+        h+='</select>';
+        h+='<button class="js-action" data-action="remove-agent" data-code="'+safeCode+'" data-agent="'+safeName+'" style="border:none;background:none;color:#dc2626;font-weight:800;cursor:pointer">✕</button>';
+        h+='</div></div>';
+      });
+    }else h+='<span class="mini muted">Aucun profil</span>';
+    h+='</div>';
+    h+='<div style="margin-top:14px;display:grid;grid-template-columns:1fr 170px;gap:8px"><input id="add-agent-'+s.code+'" placeholder="Nom du nouveau profil"><select id="add-role-'+s.code+'"><option value="agent">Agent</option><option value="responsable">Responsable</option></select></div>';
+    var safeCode=String(s.code).replace(/"/g,'&quot;');
+    h+='<div class="site-actions"><button class="btn btn-green btn-sm js-action" data-action="add-agent" data-code="'+safeCode+'">+ Profil</button>'+(s.active?'<button class="btn btn-red btn-sm js-action" data-action="deactivate" data-code="'+safeCode+'">Désactiver</button>':'<button class="btn btn-green btn-sm js-action" data-action="activate" data-code="'+safeCode+'">Réactiver</button>')+'<select class="js-plan-select" data-code="'+safeCode+'" style="width:auto"><option value="free"'+(s.plan==='free'?' selected':'')+'>Accès Base</option><option value="pro"'+(s.plan==='pro'?' selected':'')+'>Pro Site</option><option value="multisite"'+(s.plan==='multisite'?' selected':'')+'>Multi-sites</option><option value="enterprise"'+(s.plan==='enterprise'?' selected':'')+'>Entreprise</option></select><button class="btn btn-soft btn-sm js-action" style="color:#dc2626" data-action="delete-site" data-code="'+safeCode+'">Supprimer</button></div>';
     h+='</div>';
   });
   h+='</div>';
@@ -181,7 +249,7 @@ window.activate=function(code){api('update',{code:code,active:true}).then(functi
 window.changePlan=function(code,plan){api('update',{code:code,plan:plan}).then(function(){toast('Plan mis à jour');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})};
 window.deleteSite=function(code){if(!confirm('Supprimer définitivement '+code+' ?'))return;api('delete',{code:code}).then(function(){toast('Site supprimé');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})};
 window.setAgentRole=function(code,name,role){if(role==='responsable'&&!confirm("Définir "+name+" comme responsable unique du site ? L'ancien responsable sera passé en agent.")){loadDashboard();return}api('set-agent-role',{code:code,agent:name,role:role}).then(function(){toast('Rôle mis à jour');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})};
-window.addAgent=function(code){var inp=document.getElementById('add-agent-'+code);var sel=document.getElementById('add-role-'+code);var name=(inp?inp.value:'').trim();var role=(sel?sel.value:'agent');if(!name){toast('Entrez un nom de profil');alert('Entrez un nom de profil');return}if(role==='responsable'&&!confirm("Définir ce profil comme responsable unique du site ? L'ancien responsable sera passé en agent."))return;api('add-agent',{code:code,agent:name,role:role}).then(function(){toast('Profil ajouté');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})};
+window.addAgent=function(code){var inp=document.getElementById('add-agent-'+code);var sel=document.getElementById('add-role-'+code);var name=(inp?inp.value:'').trim();var role=sel?sel.value:'agent';if(!name){toast('Entrez un nom de profil');alert('Entrez un nom de profil');return}if(role==='responsable'&&!confirm("Définir ce profil comme responsable unique du site ? L'ancien responsable sera passé en agent."))return;api('add-agent',{code:code,agent:name,role:role}).then(function(){toast('Profil ajouté');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})};
 window.removeAgent=function(code,name){if(!confirm('Retirer '+name+' ?'))return;api('remove-agent',{code:code,agent:name}).then(function(){toast('Agent retiré');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message);alert('Erreur: '+e.message)})};
 window.kickSession=function(code,name){if(!confirm('Forcer la déconnexion de '+name+' ?'))return;api('kick-session',{code:code,agent:name}).then(function(){toast('Session fermée');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
 document.querySelectorAll('.tab').forEach(function(btn){btn.addEventListener('click',function(){setTab(btn.dataset.tab)})});
@@ -190,6 +258,7 @@ document.getElementById('in-key').addEventListener('keydown',function(e){if(e.ke
 document.getElementById('btn-refresh').addEventListener('click',loadDashboard);document.getElementById('btn-logout').addEventListener('click',function(){KEY='';document.getElementById('main-panel').classList.add('hidden');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('in-key').value='';setTab('overview')});
 document.getElementById('btn-create').addEventListener('click',function(){var code=document.getElementById('new-code').value.trim();var client=document.getElementById('new-client').value.trim();var principal=document.getElementById('new-principal').value.trim();var principalEmail=document.getElementById('new-principal-email').value.trim();var site=document.getElementById('new-site').value.trim();var plan=document.getElementById('new-plan').value;var contact=document.getElementById('new-contact').value.trim();var notes=document.getElementById('new-notes').value.trim();if(!code||!site||!client){toast('Client, code et nom du site requis');return}api('create',{code:code,client:client,principal:principal,principalEmail:principalEmail,site:site,plan:plan,contact:contact,notes:notes}).then(function(){toast('Accès créé');document.getElementById('new-code').value='';document.getElementById('new-client').value='';document.getElementById('new-principal').value='';document.getElementById('new-principal-email').value='';document.getElementById('new-site').value='';document.getElementById('new-contact').value='';document.getElementById('new-notes').value='';loadDashboard();setTab('sites')}).catch(function(e){toast('Erreur: '+e.message)})});
 })();
+
 </script>
 </body>
 </html>
