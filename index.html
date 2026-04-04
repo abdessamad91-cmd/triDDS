@@ -143,6 +143,14 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 @media(max-width:720px){#s-login{padding:14px 12px 18px!important}.landing-copy,.landing-login{padding:22px!important}.landing-copy h1{font-size:34px}.landing-nav{justify-content:center}.landing-nav-actions{width:100%;justify-content:center}.landing-link{flex:1;min-width:140px}.landing-cta{flex-direction:column}.landing-pill{width:100%}}
 </style>
 
+
+<style>
+.trial-modal{position:fixed;inset:0;background:rgba(2,6,23,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:120}
+.trial-modal.on{display:flex}.trial-box{width:min(560px,100%);background:#fff;border:1px solid #e6edf8;border-radius:28px;padding:24px;box-shadow:0 30px 70px rgba(2,6,23,.22)}
+.trial-box h2{margin:0;font-size:30px;letter-spacing:-1px}.trial-box p{margin:10px 0 0;color:#64748b;line-height:1.6}.trial-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.trial-grid .full{grid-column:1/-1}.trial-grid input{width:100%;padding:13px 14px;border:1.5px solid #d7e0ec;border-radius:14px;outline:none}.trial-grid input:focus{border-color:#2563eb}.trial-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.trial-msg{margin-top:12px;padding:12px 14px;border-radius:14px;font-size:13px;font-weight:700;display:none}.trial-msg.err{display:block;background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.trial-msg.ok{display:block;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75}
+@media(max-width:720px){.trial-grid{grid-template-columns:1fr}.trial-box{padding:20px}}
+</style>
+
 </head>
 <body>
 
@@ -167,7 +175,7 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         <p>TriDDS aide les agents à orienter correctement les produits grâce à la recherche, à la photo IA et à une base métier structurée. L’objectif n’est pas seulement que cela fonctionne, mais que l’outil donne confiance dès les premières secondes.</p>
         <div class="landing-cta">
           <a class="landing-pill primary" href="./pricing.html">Créer mon accès</a>
-          <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Tester gratuitement</button>
+          <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Tester l’IA gratuitement</button>
         </div>
         <div class="landing-points">
           <div class="landing-point"><strong>Découverte claire</strong><span>Un visiteur comprend immédiatement s’il doit tester, se connecter ou créer un accès.</span></div>
@@ -183,7 +191,7 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
           <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Créer mon accès</button>
-          <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Essayer gratuitement</button>
+          <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Tester l’IA gratuitement</button>
         </div>
         <div class="landing-sep">J’ai déjà un code</div>
         <div id="login-step1">
@@ -812,9 +820,35 @@ function showMemory(){
 // ===== VOICE =====
 function startVoice(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("Non disponible");return}var r=new SR();r.lang="fr-FR";r.continuous=false;r.interimResults=true;r.onresult=function(e){var res=e.results[0],txt=res[0].transcript;document.getElementById("in-search").value=txt;document.getElementById("btn-srch").style.display=txt?"block":"none";if(res.isFinal&&txt.length>2){st.query=txt;setTimeout(doSearch,300)}};r.onerror=function(){};r.start()}
 
+
+function showTrialModal(){var m=document.getElementById("trial-modal");if(m)m.classList.add("on")}
+function hideTrialModal(){var m=document.getElementById("trial-modal");if(m)m.classList.remove("on");var msg=document.getElementById("trial-msg");if(msg){msg.style.display="none";msg.textContent="";msg.className="trial-msg";}}
+function showTrialMsg(text,type){var msg=document.getElementById("trial-msg");if(!msg)return;msg.className="trial-msg "+(type||"err");msg.style.display="block";msg.textContent=text}
+function startTrialFlow(){showTrialModal()}
+function createTrialAccess(){
+  if(!needApi("l'essai IA")){showTrialMsg("Backend non configuré","err");return;}
+  var siteName=(document.getElementById("trial-site").value||"").trim();
+  var adminName=(document.getElementById("trial-admin").value||"").trim();
+  var adminEmail=(document.getElementById("trial-email").value||"").trim();
+  var contact=(document.getElementById("trial-contact").value||"").trim();
+  if(!siteName||!adminName||!adminEmail){showTrialMsg("Renseignez au minimum le site, le nom administrateur et l'email.","err");return;}
+  var btn=document.getElementById("btn-trial-submit");btn.disabled=true;btn.textContent="Création de l'essai...";
+  fetch(apiUrl("create-trial"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteName:siteName,adminName:adminName,adminEmail:adminEmail,contact:contact})})
+    .then(function(r){return r.json().then(function(d){d.__status=r.status;return d;})})
+    .then(function(d){
+      btn.disabled=false;btn.textContent="Créer mon essai IA";
+      if(d.error) throw new Error(d.error);
+      showTrialMsg("Essai créé. Votre code est "+d.code+". Un email vient d'être envoyé.","ok");
+      document.getElementById("in-code").value=d.code;
+      setTimeout(function(){hideTrialModal();document.getElementById("btn-check").click();},900);
+    })
+    .catch(function(e){btn.disabled=false;btn.textContent="Créer mon essai IA";showTrialMsg(e&&e.message?e.message:"Impossible de créer l'essai.","err");});
+}
+
 // ===== EVENTS =====
 document.getElementById("btn-create-access").addEventListener("click",function(){ location.href="./pricing.html"; });
-document.getElementById("btn-free-access").addEventListener("click",function(){ document.getElementById("btn-demo").click(); });
+document.getElementById("btn-free-access").addEventListener("click",startTrialFlow);
+var heroTrial=document.getElementById("btn-free-access-hero"); if(heroTrial) heroTrial.addEventListener("click",startTrialFlow);
 
 // Login: 2-step flow
 var pendingLogin = null; // holds response from step 1
@@ -937,5 +971,24 @@ window.addEventListener("focus",function(){heartbeat(true)});
 
 })();
 </script>
+
+<div id="trial-modal" class="trial-modal">
+  <div class="trial-box">
+    <h2>Tester l’IA gratuitement</h2>
+    <p>Créez un accès d’essai avec <strong>5 scans IA</strong>. L’essai est accordé une seule fois par email administrateur.</p>
+    <div class="trial-grid">
+      <div><div class="lbl">Nom du site</div><input id="trial-site" placeholder="Ex. Déchèterie de test"></div>
+      <div><div class="lbl">Nom administrateur</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
+      <div class="full"><div class="lbl">Email administrateur</div><input id="trial-email" type="email" placeholder="Ex. admin@site.fr"></div>
+      <div class="full"><div class="lbl">Contact (optionnel)</div><input id="trial-contact" placeholder="Téléphone ou email"></div>
+    </div>
+    <div class="trial-actions">
+      <button id="btn-trial-submit" class="btn btn-blue">Créer mon essai IA</button>
+      <button id="btn-trial-close" class="btn btn-outline">Annuler</button>
+    </div>
+    <div id="trial-msg" class="trial-msg"></div>
+  </div>
+</div>
+
 </body>
 </html>
