@@ -151,6 +151,19 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 @media(max-width:720px){.trial-grid{grid-template-columns:1fr}.trial-box{padding:20px}}
 </style>
 
+
+<style>
+.manage-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+.manage-btn{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:16px;border:1px solid var(--bd);background:#fff;font-weight:800}
+.manage-note{font-size:12px;color:var(--tx2);margin-top:6px}
+.team-row,.cat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border:1px solid var(--bd);border-radius:14px;background:#fff;margin-bottom:8px}
+.team-left,.cat-left{display:flex;flex-direction:column;gap:4px}
+.input,.select{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;background:#fff;outline:none}
+.toolbar{display:grid;grid-template-columns:1fr 140px;gap:8px;margin-bottom:12px}
+.cat-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.cat-form .full{grid-column:1/-1}
+@media(max-width:800px){.cat-form,.toolbar{grid-template-columns:1fr}}
+</style>
+
 </head>
 <body>
 
@@ -395,7 +408,43 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
       <div class="lbl" style="margin-top:12px">Plan</div><div id="prof-plan" style="font-weight:700;font-size:16px"></div>
       <div class="lbl" style="margin-top:12px">Quota IA</div><div id="prof-photos" style="font-weight:700;font-size:16px"></div>
     </div>
-    <button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
+    <div id="prof-manage" class="manage-grid" style="display:none"><button id="btn-manage-team" class="manage-btn">👥 Gérer mon équipe<div class="manage-note">Créer des profils, changer les rôles et piloter l’équipe du site.</div></button><button id="btn-manage-catalog" class="manage-btn">🗂️ Gérer ma base produits<div class="manage-note">Ajouter, modifier ou retirer des fiches personnalisées pour le site.</div></button></div><button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
+  </div>
+</div>
+
+<!-- ===== TEAM ===== -->
+<div id="s-team" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>👥 Mon équipe</h2></div>
+  <div style="padding:16px">
+    <div class="card" style="margin-bottom:12px">
+      <div class="lbl">Gestion des profils</div>
+      <div class="toolbar"><input id="team-new-name" class="input" placeholder="Nom du nouveau profil"><select id="team-new-role" class="select"><option value="agent">Agent</option><option value="responsable">Responsable</option><option value="admin">Admin</option></select></div>
+      <button id="btn-team-add" class="btn btn-blue btn-f">Ajouter un profil</button>
+      <div class="manage-note">Disponible pour l’administrateur du site.</div>
+    </div>
+    <div id="team-list"></div>
+  </div>
+</div>
+
+<!-- ===== CATALOG ===== -->
+<div id="s-catalog" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>🗂️ Base produits</h2></div>
+  <div style="padding:16px">
+    <div class="card" style="margin-bottom:12px">
+      <div class="lbl">Ajouter / modifier une fiche</div>
+      <div class="cat-form">
+        <input id="cat-id" class="input full" placeholder="ID technique (laisser vide pour création)">
+        <input id="cat-name" class="input" placeholder="Nom du produit">
+        <select id="cat-flux" class="select"><option value="E">EcoDDS</option><option value="H">Hors EcoDDS</option><option value="C">Cas spécial</option><option value="I">Interdit</option></select>
+        <input id="cat-cat" class="input full" placeholder="Catégorie / orientation">
+        <input id="cat-consigne" class="input full" placeholder="Consigne">
+        <input id="cat-seuil" class="input" placeholder="Seuil (optionnel)">
+        <input id="cat-syn" class="input" placeholder="Synonymes séparés par des virgules">
+      </div>
+      <button id="btn-cat-save" class="btn btn-blue btn-f">Enregistrer la fiche</button>
+      <div class="manage-note">Les fiches ajoutées ici deviennent disponibles dans la recherche pour ce site.</div>
+    </div>
+    <div id="cat-list"></div>
   </div>
 </div>
 
@@ -455,22 +504,30 @@ var FM={E:"EcoDDS",H:"Hors EcoDDS",C:"Cas spécial",I:"Interdit"};
 var P=DB.map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});
 
 // ===== AUTH & SESSION =====
-var sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};
+var sess={code:"",site:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};
+var customCatalog=[];
 function loadSess(){try{var d=JSON.parse(localStorage.getItem("tridds_sess"));if(d&&d.code)sess=d}catch(e){}}
 function saveSess(){localStorage.setItem("tridds_sess",JSON.stringify(sess))}
 function isLoggedIn(){return!!sess.code}
-function clearSess(){sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};saveSess()}
+function clearSess(){sess={code:"",site:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};customCatalog=[];saveSess()}
 function deviceName(){var ua=navigator.userAgent||"";if(/iPhone/i.test(ua))return"iPhone";if(/iPad/i.test(ua))return"iPad";if(/Android/i.test(ua))return"Android";if(/Windows/i.test(ua))return"PC Windows";if(/Macintosh/i.test(ua))return"Mac";return"Navigateur web"}
 function authPost(payload){
   if(!needApi("la connexion"))return Promise.reject(new Error("Backend non configuré"));
   return fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
     .then(function(r){return r.json().then(function(d){d.__status=r.status;return d})});
 }
+function siteAdminPost(action,data){
+  if(!needApi("la gestion du site"))return Promise.reject(new Error("Backend non configuré"));
+  return fetch(apiUrl("site-admin"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({action:action,code:sess.code,agent:sess.agent,sessionId:sess.sessionId},data||{}))})
+    .then(function(r){return r.json().then(function(d){d.__status=r.status;return d})})
+    .then(function(d){if(d.error)throw new Error(d.error);return d});
+}
+function mergeCatalog(){var base=(window.TRIDDS_DB||[]).map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});var extras=(customCatalog||[]).map(function(p){return{n:p.n,q:(p.q||p.n||"").toLowerCase(),f:p.f,x:p.x||"",c:p.c||"",s:p.s||"",a:"",i:"",y:p.y||[]}});P=base.concat(extras)}
 function startAgentSession(code,agent,force){
   return authPost({action:"start-session",code:code,agent:agent,sessionId:sess.sessionId||"",deviceName:deviceName(),force:!!force}).then(function(d){
     if(d.__status===409&&d.error==="SESSION_ACTIVE")return d;
     if(d.error)throw new Error(d.message||d.error);
-    sess.code=d.code;sess.site=d.site;sess.agent=agent;sess.plan=d.plan;sess.memoryEnabled=d.memoryEnabled;sess.aiEnabled=d.aiEnabled;
+    sess.code=d.code;sess.site=d.site;sess.agent=agent;sess.agentRole=d.agentRole||"agent";sess.canManageUsers=!!d.canManageUsers;sess.canManageCatalog=!!d.canManageCatalog;sess.plan=d.plan;sess.memoryEnabled=d.memoryEnabled;sess.aiEnabled=d.aiEnabled;
     sess.trialTotal=d.trialTotal||0;sess.trialUsed=d.trialUsed||0;sess.trialRemaining=d.trialRemaining||0;
     sess.monthlyLimit=d.monthlyLimit||0;sess.monthlyUsed=d.monthlyUsed||0;sess.monthlyRemaining=d.monthlyRemaining||0;
     sess.sessionId=d.sessionId||sess.sessionId||"";sess.deviceName=(d.activeSession&&d.activeSession.deviceName)||deviceName();
@@ -582,7 +639,7 @@ function usageTotal(){return sess.monthlyLimit>0?sess.monthlyLimit:(sess.trialTo
 function usageRemaining(){return sess.monthlyLimit>0?(sess.monthlyRemaining||0):(sess.trialRemaining||0)}
 function usageLabel(){return sess.monthlyLimit>0?"Scans IA/mois":"Essai IA"}
 function hasAiAccess(){return usageRemaining()>0}
-function applyUsage(u){if(!u)return;sess.plan=u.plan||sess.plan;sess.memoryEnabled=!!u.memoryEnabled;sess.aiEnabled=!!u.aiEnabled;sess.trialTotal=u.trialTotal||0;sess.trialUsed=u.trialUsed||0;sess.trialRemaining=u.trialRemaining||0;sess.monthlyLimit=u.monthlyLimit||0;sess.monthlyUsed=u.monthlyUsed||0;sess.monthlyRemaining=u.monthlyRemaining||0;saveSess();}
+function applyUsage(u){if(!u)return;sess.plan=u.plan||sess.plan;sess.agentRole=u.agentRole||sess.agentRole||"agent";sess.canManageUsers=!!u.canManageUsers;sess.canManageCatalog=!!u.canManageCatalog;sess.memoryEnabled=!!u.memoryEnabled;sess.aiEnabled=!!u.aiEnabled;sess.trialTotal=u.trialTotal||0;sess.trialUsed=u.trialUsed||0;sess.trialRemaining=u.trialRemaining||0;sess.monthlyLimit=u.monthlyLimit||0;sess.monthlyUsed=u.monthlyUsed||0;sess.monthlyRemaining=u.monthlyRemaining||0;saveSess();}
 function addHist(r){st.history=[{nm:r.n,f:r.f}].concat(st.history).slice(0,10);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
 
 // ===== SEARCH =====
@@ -863,6 +920,16 @@ function createTrialAccess(){
     .catch(function(e){btn.disabled=false;btn.textContent="Créer mon essai IA";showTrialMsg(e&&e.message?e.message:"Impossible de créer l'essai.","err");});
 }
 
+function loadCustomCatalog(){if(!isLoggedIn()||sess.code==="DEMO"||!sess.canManageCatalog)return Promise.resolve();return siteAdminPost("catalog-list").then(function(d){customCatalog=d.items||[];mergeCatalog();return d}).catch(function(){customCatalog=[];mergeCatalog();});}
+function renderTeam(items){var el=document.getElementById("team-list");if(!el)return;if(!(items||[]).length){el.innerHTML='<div class="card muted">Aucun profil enregistré.</div>';return}var h="";(items||[]).forEach(function(u){var last=u.lastSeen?new Date(u.lastSeen).toLocaleString('fr-FR'):'—';var safeName=JSON.stringify(u.name);h+='<div class="team-row"><div class="team-left"><strong>'+u.name+'</strong><span class="muted" style="font-size:12px">Dernière activité : '+last+'</span></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select class="select" style="width:auto" onchange="teamSetRole('+safeName+',this.value)"><option value="admin"'+(u.role==='admin'?' selected':'')+'>Admin</option><option value="responsable"'+(u.role==='responsable'?' selected':'')+'>Responsable</option><option value="agent"'+(u.role==='agent'?' selected':'')+'>Agent</option></select><button class="btn btn-outline" onclick="teamRemove('+safeName+')">Supprimer</button></div></div>';});el.innerHTML=h}
+function loadTeam(){siteAdminPost("team").then(function(d){renderTeam(d.team||[]);show("team")}).catch(function(e){alert(e.message||"Impossible de charger l'équipe.")})}
+function renderCatalog(items){var el=document.getElementById("cat-list");if(!el)return;if(!(items||[]).length){el.innerHTML='<div class="card muted">Aucune fiche personnalisée.</div>';return}var h="";(items||[]).forEach(function(it){var safeId=JSON.stringify(it.id);h+='<div class="cat-row"><div class="cat-left"><strong>'+it.n+'</strong><span class="muted" style="font-size:12px">'+(it.x||'')+' · '+(FM[it.f]||it.f)+'</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="catalogEdit('+safeId+')">Modifier</button><button class="btn btn-outline" style="color:var(--int);border-color:var(--int-bd)" onclick="catalogDelete('+safeId+')">Supprimer</button></div></div>';});el.innerHTML=h}
+function loadCatalog(){siteAdminPost("catalog-list").then(function(d){customCatalog=d.items||[];mergeCatalog();renderCatalog(customCatalog);show("catalog")}).catch(function(e){alert(e.message||"Impossible de charger la base.")})}
+window.teamSetRole=function(name,role){siteAdminPost("set-user-role",{name:name,role:role}).then(loadTeam).catch(function(e){alert(e.message||"Erreur rôle.")})}
+window.teamRemove=function(name){if(!confirm("Supprimer "+name+" ?"))return;siteAdminPost("remove-user",{name:name}).then(loadTeam).catch(function(e){alert(e.message||"Erreur suppression.")})}
+window.catalogEdit=function(id){var item=(customCatalog||[]).find(function(x){return x.id===id});if(!item)return;document.getElementById("cat-id").value=item.id||"";document.getElementById("cat-name").value=item.n||"";document.getElementById("cat-flux").value=item.f||"H";document.getElementById("cat-cat").value=item.x||"";document.getElementById("cat-consigne").value=item.c||"";document.getElementById("cat-seuil").value=item.s||"";document.getElementById("cat-syn").value=(item.y||[]).join(", ");show("catalog");window.scrollTo({top:0,behavior:"smooth"})}
+window.catalogDelete=function(id){if(!confirm("Supprimer cette fiche ?"))return;siteAdminPost("catalog-delete",{id:id}).then(loadCatalog).catch(function(e){alert(e.message||"Erreur suppression.")})}
+function resetCatalogForm(){["cat-id","cat-name","cat-cat","cat-consigne","cat-seuil","cat-syn"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});document.getElementById("cat-flux").value="H"}
 // ===== EVENTS =====
 document.getElementById("btn-create-access").addEventListener("click",function(){ location.href="./pricing.html"; });
 document.getElementById("btn-free-access").addEventListener("click",function(){ document.getElementById("btn-demo").click(); });
@@ -943,6 +1010,10 @@ document.getElementById("btn-login").addEventListener("click",function(){
   }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block";});
 });
 document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome()});
+document.getElementById("btn-manage-team").addEventListener("click",loadTeam);
+document.getElementById("btn-manage-catalog").addEventListener("click",loadCatalog);
+document.getElementById("btn-team-add").addEventListener("click",function(){var name=(document.getElementById("team-new-name").value||"").trim();var role=document.getElementById("team-new-role").value;if(!name){alert("Entrez un nom.");return}siteAdminPost("add-user",{name:name,role:role}).then(function(){document.getElementById("team-new-name").value="";loadTeam()}).catch(function(e){alert(e.message||"Erreur ajout.")})});
+document.getElementById("btn-cat-save").addEventListener("click",function(){var item={id:(document.getElementById("cat-id").value||"").trim(),n:(document.getElementById("cat-name").value||"").trim(),f:document.getElementById("cat-flux").value,x:(document.getElementById("cat-cat").value||"").trim(),c:(document.getElementById("cat-consigne").value||"").trim(),s:(document.getElementById("cat-seuil").value||"").trim(),y:(document.getElementById("cat-syn").value||"").trim()};siteAdminPost("catalog-save",{item:item}).then(function(){resetCatalogForm();loadCatalog()}).catch(function(e){alert(e.message||"Erreur enregistrement.")})});
 var btnTrialClose=document.getElementById("btn-trial-close"); if(btnTrialClose) btnTrialClose.addEventListener("click",hideTrialModal);
 var btnTrialSubmit=document.getElementById("btn-trial-submit"); if(btnTrialSubmit) btnTrialSubmit.addEventListener("click",createTrialAccess);
 var trialModal=document.getElementById("trial-modal"); if(trialModal) trialModal.addEventListener("click",function(e){ if(e.target&&e.target.id==="trial-modal") hideTrialModal(); });
@@ -976,7 +1047,7 @@ document.querySelectorAll("#main-tabs button").forEach(function(b){
     if(t==="home")goHome();
     else if(t==="journal")showJournal();
     else if(t==="memory"){syncMemory();showMemory()}
-    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent;document.getElementById("prof-plan").textContent={free:"Accès Base + 5 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse"}
+    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;document.getElementById("prof-agent").textContent=sess.agent+(sess.agentRole?" • "+sess.agentRole:"");document.getElementById("prof-plan").textContent={free:"Accès Base + 5 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse";document.getElementById("prof-manage").style.display=(sess.canManageUsers||sess.canManageCatalog)?"grid":"none"}
   });
 });
 
@@ -984,7 +1055,7 @@ document.querySelectorAll("#main-tabs button").forEach(function(b){
 loadSess();loadJournal();
 if(isLoggedIn()){
   if(sess.code==="DEMO"){show("home");updHome();}
-  else {show("home");updHome();syncMemory();resumeCurrentSession();}
+  else {show("home");updHome();syncMemory();resumeCurrentSession();loadCustomCatalog();}
 }else{show("login")}
 ["click","keydown","touchstart","input"].forEach(function(ev){document.addEventListener(ev,registerActivity,{passive:true})});
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")heartbeat(true)});
