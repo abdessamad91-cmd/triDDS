@@ -943,6 +943,9 @@ document.getElementById("btn-login").addEventListener("click",function(){
   }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block";});
 });
 document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome()});
+var btnTrialClose=document.getElementById("btn-trial-close"); if(btnTrialClose) btnTrialClose.addEventListener("click",hideTrialModal);
+var btnTrialSubmit=document.getElementById("btn-trial-submit"); if(btnTrialSubmit) btnTrialSubmit.addEventListener("click",createTrialAccess);
+var trialModal=document.getElementById("trial-modal"); if(trialModal) trialModal.addEventListener("click",function(e){ if(e.target&&e.target.id==="trial-modal") hideTrialModal(); });
 document.getElementById("btn-logout").addEventListener("click",logout);
 
 document.getElementById("btn-voice").addEventListener("click",startVoice);
