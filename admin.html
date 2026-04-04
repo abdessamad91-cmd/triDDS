@@ -16,7 +16,7 @@
     <div class="login-card fade-in">
       <div class="logo">T</div>
       <h1 class="login-title">TriDDS Admin</h1>
-      <p class="login-sub">Pilotez les accès, les ventes, les sessions actives et les sites depuis un tableau de bord centralisé.</p>
+      <p class="login-sub">Un vrai dashboard admin, plus clair et plus pro : accès, ventes, sessions actives et pilotage des sites.</p>
       <div class="field">
         <div class="label">Clé administrateur</div>
         <input id="in-key" type="password" placeholder="Entrez votre clé admin">
@@ -32,7 +32,7 @@
         <div>
           <div class="badge" style="background:rgba(255,255,255,.12);color:#fff">🛡️ Administration TriDDS</div>
           <h1>Dashboard de pilotage</h1>
-          <p>Vue centralisée des ventes, des sites, des profils, des plans et des sessions actives.</p>
+          <p>Vue complète des ventes, des sites, des profils, des plans et des sessions actives. L’objectif est d’avoir une interface plus crédible, plus lisible et plus proche d’un vrai SaaS métier.</p>
         </div>
         <div class="topbar-actions">
           <a href="./pricing.html" class="btn btn-soft">Tarifs</a>
@@ -76,6 +76,9 @@
             <div class="form-grid">
               <div><div class="label">Code d’accès</div><input id="new-code" placeholder="TRI-FAU-PRO"></div>
               <div><div class="label">Plan</div><select id="new-plan"><option value="free">Accès Base</option><option value="pro" selected>Pro Site</option><option value="multisite">Multi-sites</option><option value="enterprise">Entreprise</option></select></div>
+              <div><div class="label">Client</div><input id="new-client" placeholder="Nicollin"></div>
+              <div><div class="label">Contact principal</div><input id="new-principal" placeholder="Nom du contact principal"></div>
+              <div><div class="label">Email principal</div><input id="new-principal-email" placeholder="contact@client.fr"></div>
               <div><div class="label">Nom du site</div><input id="new-site" placeholder="Déchèterie de Faulquemont"></div>
               <div><div class="label">Contact</div><input id="new-contact" placeholder="Email ou téléphone"></div>
               <div class="full"><div class="label">Notes</div><input id="new-notes" placeholder="Infos complémentaires"></div>
@@ -137,6 +140,9 @@ function renderSites(items){
   items.forEach(function(s){
     h+='<div class="site-card">';
     h+='<div class="site-head"><div><div class="site-title">'+s.site+'</div><div class="code">'+s.code+'</div></div><div class="badges">'+planBadge(s.plan)+statusBadge(s.active)+'</div></div>';
+    if(s.client)h+='<div class="mini muted">Client : '+s.client+'</div>';
+    if(s.principal)h+='<div class="mini muted">Contact principal : '+s.principal+(s.principalEmail?' · '+s.principalEmail:'')+'</div>';
+    if(s.responsable)h+='<div class="mini muted">Responsable du site : '+s.responsable+'</div>';
     if(s.contact)h+='<div class="mini muted">Contact : '+s.contact+'</div>';
     if(s.notes)h+='<div class="mini muted">Notes : '+s.notes+'</div>';
     h+='<div class="mini muted" style="margin-top:8px">Créé : '+dt(s.created)+'</div>';
@@ -161,7 +167,7 @@ function renderSites(items){
       });
     }else h+='<span class="mini muted">Aucun profil</span>';
     h+='</div>';
-    h+='<div style="margin-top:14px;display:grid;grid-template-columns:1fr 170px;gap:8px"><input id="add-agent-'+s.code+'" placeholder="Nom du nouveau profil"><select id="add-role-'+s.code+'"><option value="agent">Agent</option><option value="responsable">Responsable</option><option value="admin">Admin</option></select></div>';
+    h+='<div style="margin-top:14px;display:grid;grid-template-columns:1fr 170px;gap:8px"><input id="add-agent-'+s.code+'" placeholder="Nom du nouveau profil"><select id="add-role-'+s.code+'"><option value="agent">Agent</option><option value="responsable">Responsable</option></select></div>';
     var safeCode=JSON.stringify(s.code);
     h+='<div class="site-actions"><button class="btn btn-green btn-sm" onclick="addAgent('+safeCode+')">+ Profil</button>'+(s.active?'<button class="btn btn-red btn-sm" onclick="deactivate('+safeCode+')">Désactiver</button>':'<button class="btn btn-green btn-sm" onclick="activate('+safeCode+')">Réactiver</button>')+'<select onchange="changePlan('+safeCode+',this.value)" style="width:auto"><option value="free"'+(s.plan==='free'?' selected':'')+'>Accès Base</option><option value="pro"'+(s.plan==='pro'?' selected':'')+'>Pro Site</option><option value="multisite"'+(s.plan==='multisite'?' selected':'')+'>Multi-sites</option><option value="enterprise"'+(s.plan==='enterprise'?' selected':'')+'>Entreprise</option></select><button class="btn btn-soft btn-sm" style="color:#dc2626" onclick="deleteSite('+safeCode+')">Supprimer</button></div>';
     h+='</div>';
@@ -182,7 +188,7 @@ document.querySelectorAll('.tab').forEach(function(btn){btn.addEventListener('cl
 document.getElementById('btn-auth').addEventListener('click',function(){KEY=document.getElementById('in-key').value.trim();if(!KEY){document.getElementById('auth-err').textContent='Entrez la clé admin';document.getElementById('auth-err').style.display='block';return}api('dashboard').then(function(d){state=d;document.getElementById('login-screen').classList.add('hidden');document.getElementById('main-panel').classList.remove('hidden');document.getElementById('auth-err').style.display='none';render();window.scrollTo({top:0,behavior:'instant'})}).catch(function(e){document.getElementById('auth-err').textContent=e.message||'Clé invalide';document.getElementById('auth-err').style.display='block'})});
 document.getElementById('in-key').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-auth').click()});
 document.getElementById('btn-refresh').addEventListener('click',loadDashboard);document.getElementById('btn-logout').addEventListener('click',function(){KEY='';document.getElementById('main-panel').classList.add('hidden');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('in-key').value='';setTab('overview')});
-document.getElementById('btn-create').addEventListener('click',function(){var code=document.getElementById('new-code').value.trim();var site=document.getElementById('new-site').value.trim();var plan=document.getElementById('new-plan').value;var contact=document.getElementById('new-contact').value.trim();var notes=document.getElementById('new-notes').value.trim();if(!code||!site){toast('Code et nom du site requis');return}api('create',{code:code,site:site,plan:plan,contact:contact,notes:notes}).then(function(){toast('Accès créé');document.getElementById('new-code').value='';document.getElementById('new-site').value='';document.getElementById('new-contact').value='';document.getElementById('new-notes').value='';loadDashboard();setTab('sites')}).catch(function(e){toast('Erreur: '+e.message)})});
+document.getElementById('btn-create').addEventListener('click',function(){var code=document.getElementById('new-code').value.trim();var client=document.getElementById('new-client').value.trim();var principal=document.getElementById('new-principal').value.trim();var principalEmail=document.getElementById('new-principal-email').value.trim();var site=document.getElementById('new-site').value.trim();var plan=document.getElementById('new-plan').value;var contact=document.getElementById('new-contact').value.trim();var notes=document.getElementById('new-notes').value.trim();if(!code||!site||!client){toast('Client, code et nom du site requis');return}api('create',{code:code,client:client,principal:principal,principalEmail:principalEmail,site:site,plan:plan,contact:contact,notes:notes}).then(function(){toast('Accès créé');document.getElementById('new-code').value='';document.getElementById('new-client').value='';document.getElementById('new-principal').value='';document.getElementById('new-principal-email').value='';document.getElementById('new-site').value='';document.getElementById('new-contact').value='';document.getElementById('new-notes').value='';loadDashboard();setTab('sites')}).catch(function(e){toast('Erreur: '+e.message)})});
 })();
 </script>
 </body>
