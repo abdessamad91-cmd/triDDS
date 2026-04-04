@@ -6,94 +6,93 @@
 <title>TriDDS Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f5f7fa;--card:#fff;--bd:#e5e7eb;--tx:#111827;--tx2:#6b7280;--blue:#1a56db;--eco:#059669;--hors:#d97706;--int:#dc2626;--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:0}
-.container{max-width:800px;margin:0 auto;padding:16px}
-h1{font-size:24px;font-weight:900;margin-bottom:4px}
-.sub{font-size:13px;color:var(--tx2);margin-bottom:20px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:12px}
-.lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tx2);margin-bottom:4px}
-input,select{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px}
-input:focus,select:focus{border-color:var(--blue)}
-.btn{display:inline-flex;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;border:none;cursor:pointer;align-items:center;gap:6px}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-red{background:#fef2f2;color:var(--int);border:1px solid #fecaca}
-.btn-green{background:#ecfdf5;color:var(--eco);border:1px solid #86efac}
-.btn-ghost{background:var(--bg);color:var(--tx2);border:1px solid var(--bd)}
-.btn:hover{opacity:.9}
-.row{display:flex;gap:10px}
-.row>*{flex:1}
-.badge{display:inline-flex;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800}
-.b-pro{background:#dbeafe;color:#1e40af}
-.b-ent{background:#f5f3ff;color:#6d28d9}
-.b-free{background:#f0f0f5;color:var(--tx2)}
-.b-active{background:#ecfdf5;color:var(--eco)}
-.b-inactive{background:#fef2f2;color:var(--int)}
-.site-card{border-left:4px solid var(--eco)}
-.site-card.inactive{border-left-color:var(--int);opacity:.7}
-.agents{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.agent-tag{font-size:10px;background:var(--bg);padding:2px 8px;border-radius:4px;color:var(--tx2)}
-.stats{display:flex;gap:12px;margin-bottom:16px}
-.stat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;text-align:center}
-.stat .num{font-size:28px;font-weight:900;color:var(--blue)}
-.stat .lab{font-size:11px;color:var(--tx2);margin-top:2px}
-#login-panel{max-width:400px;margin:80px auto;text-align:center}
-.hidden{display:none}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;display:none}
+:root{--bg:#f3f6fb;--card:#fff;--bd:#e5e7eb;--tx:#111827;--tx2:#6b7280;--blue:#2563eb;--green:#059669;--purple:#7c3aed;--orange:#d97706;--red:#dc2626;--shadow:0 10px 30px rgba(15,23,42,.07);--r:18px}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+.container{max-width:1280px;margin:0 auto;padding:20px}.hidden{display:none}.grid{display:grid;gap:16px}.grid.kpi{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:18px}.grid.main{grid-template-columns:1.2fr .8fr}.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}.title{font-size:13px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}.hero{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.hero h1{font-size:30px;font-weight:900}.sub{color:var(--tx2);font-size:14px;margin-top:6px}.kpi-num{font-size:34px;font-weight:900;letter-spacing:-1px}.kpi-lab{font-size:12px;color:var(--tx2);margin-top:6px}.kpi-blue{color:var(--blue)}.kpi-green{color:var(--green)}.kpi-purple{color:var(--purple)}.kpi-orange{color:var(--orange)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:11px 16px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none}.btn-blue{background:var(--blue);color:#fff}.btn-ghost{background:#fff;border:1px solid var(--bd);color:var(--tx2)}.btn-green{background:#ecfdf5;color:var(--green);border:1px solid #a7f3d0}.btn-red{background:#fef2f2;color:var(--red);border:1px solid #fecaca}.btn-sm{padding:8px 12px;font-size:12px;border-radius:10px}
+input,select{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;font-size:14px;font-family:inherit;outline:none;background:#fff}input:focus,select:focus{border-color:var(--blue)}.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800}.b-free{background:#eef2ff;color:#4338ca}.b-pro{background:#dbeafe;color:#1d4ed8}.b-multi{background:#f3e8ff;color:#7e22ce}.b-active{background:#ecfdf5;color:#047857}.b-off{background:#fef2f2;color:#b91c1c}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px 8px;border-bottom:1px solid var(--bd);font-size:13px;text-align:left;vertical-align:top}.table th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--tx2)}.muted{color:var(--tx2)}.site{border:1px solid var(--bd);border-radius:16px;padding:16px;background:#fff}.site-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--tx2)}.agents{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.agent{display:inline-flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid var(--bd);border-radius:999px;padding:6px 10px;font-size:12px}.pill{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.login-card{max-width:420px;width:100%;background:#fff;border:1px solid var(--bd);border-radius:22px;padding:24px;box-shadow:var(--shadow)}.section-title{font-size:18px;font-weight:900;margin-bottom:12px}.stack>*+*{margin-top:12px}.site-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;display:none;z-index:999}.mini{font-size:12px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}.empty{color:var(--tx2);font-size:13px;padding:12px 0}.session-card{display:flex;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--bd);border-radius:14px;background:#fff}.session-card+.session-card{margin-top:10px}@media(max-width:980px){.grid.main,.two-col,.row{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
 
-<div id="login-panel">
-  <div style="font-size:36px;margin-bottom:12px">🔐</div>
-  <h1>TriDDS Admin</h1>
-  <p class="sub">Gestion des accès et des sites</p>
-  <div class="card">
-    <div class="lbl">Clé administrateur</div>
-    <input id="in-key" type="password" placeholder="Entrez votre clé admin...">
-    <button id="btn-auth" class="btn btn-blue" style="width:100%;justify-content:center">Se connecter</button>
-    <div id="auth-err" style="color:var(--int);font-size:12px;margin-top:8px;display:none"></div>
+<div id="login-panel" class="login-wrap">
+  <div class="login-card">
+    <div style="font-size:40px;margin-bottom:10px">🛡️</div>
+    <h1 style="font-size:30px;font-weight:900">TriDDS Admin</h1>
+    <p class="sub">Dashboard admin · accès, ventes, sessions, pilotage</p>
+    <div class="stack" style="margin-top:18px">
+      <div>
+        <div class="title">Clé administrateur</div>
+        <input id="in-key" type="password" placeholder="Entrez votre clé admin">
+      </div>
+      <button id="btn-auth" class="btn btn-blue" style="width:100%">Se connecter</button>
+      <div id="auth-err" class="mini" style="color:var(--red);display:none"></div>
+    </div>
   </div>
 </div>
 
 <div id="main-panel" class="hidden">
   <div class="container">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <h1>🔐 TriDDS Admin</h1>
-      <button id="btn-logout" class="btn btn-ghost" style="font-size:11px">Déconnexion</button>
-    </div>
-    <p class="sub">Gestion des accès, offres et sites</p>
-
-    <!-- Stats -->
-    <div class="stats" id="stats-bar">
-      <div class="stat"><div class="num" id="st-sites">-</div><div class="lab">Sites actifs</div></div>
-      <div class="stat"><div class="num" id="st-brands">-</div><div class="lab">Marques apprises</div></div>
-    </div>
-
-    <!-- New site form -->
-    <div class="card" style="border:2px dashed var(--bd)">
-      <div style="font-weight:700;font-size:15px;margin-bottom:12px">➕ Nouveau site</div>
-      <div class="row">
-        <div><div class="lbl">Code d'accès</div><input id="new-code" placeholder="FAU-2025-PRO" style="text-transform:uppercase"></div>
-        <div><div class="lbl">Plan</div><select id="new-plan"><option value="free">Accès Base</option><option value="pro" selected>Pro Site (39€/mois)</option><option value="multisite">Multi-sites (99€/mois)</option><option value="enterprise">Entreprise (sur devis)</option></select></div>
+    <div class="hero">
+      <div>
+        <div class="pill">🔐 Dashboard administrateur</div>
+        <h1 style="margin-top:10px">Pilotage TriDDS</h1>
+        <p class="sub">Vue d’ensemble des sites, des ventes, des sessions et des accès.</p>
       </div>
-      <div class="lbl">Nom du site</div>
-      <input id="new-site" placeholder="Déchetterie de Faulquemont">
-      <div class="row">
-        <div><div class="lbl">Contact</div><input id="new-contact" placeholder="Email ou téléphone"></div>
-        <div><div class="lbl">Notes</div><input id="new-notes" placeholder="Infos complémentaires"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn btn-ghost" href="./pricing.html">Voir les offres</a>
+        <button id="btn-refresh" class="btn btn-blue">Actualiser</button>
+        <button id="btn-logout" class="btn btn-ghost">Déconnexion</button>
       </div>
-      <button id="btn-create" class="btn btn-blue">➕ Créer l'accès</button>
     </div>
 
-    <!-- Sites list -->
-    <div style="font-weight:700;font-size:15px;margin:16px 0 8px">📋 Sites enregistrés</div>
-    <div id="sites-list"></div>
+    <div class="grid kpi">
+      <div class="card"><div class="title">Sites actifs</div><div class="kpi-num kpi-blue" id="kpi-sites">0</div><div class="kpi-lab">Sites avec accès actif</div></div>
+      <div class="card"><div class="title">Sessions actives</div><div class="kpi-num kpi-green" id="kpi-sessions">0</div><div class="kpi-lab">Agents connectés en ce moment</div></div>
+      <div class="card"><div class="title">Ventes</div><div class="kpi-num kpi-purple" id="kpi-sales">0</div><div class="kpi-lab">Achats enregistrés</div></div>
+      <div class="card"><div class="title">MRR estimé</div><div class="kpi-num kpi-orange" id="kpi-mrr">0 €</div><div class="kpi-lab">Base mensuelle estimée</div></div>
+      <div class="card"><div class="title">Mémoire partagée</div><div class="kpi-num" id="kpi-brands">0</div><div class="kpi-lab">Marques apprises</div></div>
+    </div>
+
+    <div class="grid main">
+      <div class="card">
+        <div class="section-title">📈 Historique des ventes</div>
+        <div id="sales-wrap"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">🟢 Sessions actives</div>
+        <div id="sessions-wrap"></div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:18px">
+      <div class="card">
+        <div class="section-title">➕ Créer un accès</div>
+        <div class="row">
+          <div><div class="title">Code d'accès</div><input id="new-code" placeholder="TRI-FAU-PRO"></div>
+          <div><div class="title">Plan</div><select id="new-plan"><option value="free">Accès Base</option><option value="pro" selected>Pro Site</option><option value="multisite">Multi-sites</option><option value="enterprise">Entreprise</option></select></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div><div class="title">Nom du site</div><input id="new-site" placeholder="Déchèterie de Faulquemont"></div>
+          <div><div class="title">Contact</div><input id="new-contact" placeholder="Email ou téléphone"></div>
+        </div>
+        <div style="margin-top:12px"><div class="title">Notes</div><input id="new-notes" placeholder="Infos complémentaires"></div>
+        <div style="margin-top:14px"><button id="btn-create" class="btn btn-blue">Créer l'accès</button></div>
+      </div>
+      <div class="card">
+        <div class="section-title">🧭 Vue admin</div>
+        <p class="sub" style="margin-top:0">Cette vue centralise les ventes Stripe, les sessions actives, les accès et la gestion des agents. Un agent ne peut garder qu’une seule session active à la fois ; un autre appareil peut reprendre la main si nécessaire.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div class="section-title">🏢 Sites enregistrés</div>
+      <div id="sites-list"></div>
+    </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div id="toast" class="toast"></div>
 
 <script src="config.js"></script>
 <script>
@@ -101,92 +100,27 @@ input:focus,select:focus{border-color:var(--blue)}
 var KEY="";
 var API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||"").replace(/\/$/,"");
 var API=API_BASE?API_BASE+"/admin":"";
-
-function toast(msg){var t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(function(){t.style.display="none"},2500)}
-
-function api(action,data){
-  if(!API){return Promise.reject(new Error("Backend non configuré dans config.js"))}
-  return fetch(API,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+KEY},
-    body:JSON.stringify(Object.assign({action:action},data||{}))
-  }).then(function(r){return r.json()}).then(function(d){if(d.error)throw new Error(d.error);return d});
-}
-
-function loadSites(){
-  api("list").then(function(d){
-    var sites=d.sites||[];
-    document.getElementById("st-sites").textContent=sites.filter(function(s){return s.active}).length;
-    if(!sites.length){document.getElementById("sites-list").innerHTML='<div class="card" style="text-align:center;color:var(--tx2)">Aucun site. Créez-en un ci-dessus.</div>';return}
-    var h="";
-    sites.forEach(function(s){
-      var planBadge={free:'<span class="badge b-free">Accès Base</span>',pro:'<span class="badge b-pro">Pro Site</span>',multisite:'<span class="badge b-ent">Multi-sites</span>',enterprise:'<span class="badge b-ent">Entreprise</span>'}[s.plan]||"";
-      var statusBadge=s.active?'<span class="badge b-active">Actif</span>':'<span class="badge b-inactive">Désactivé</span>';
-      h+='<div class="card site-card'+(s.active?'':' inactive')+'">';
-      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">';
-      h+='<div><div style="font-weight:800;font-size:16px">'+s.site+'</div>';
-      h+='<div style="font-size:13px;color:var(--tx2);margin-top:2px;font-family:monospace;letter-spacing:1px">'+s.code+'</div></div>';
-      h+='<div style="display:flex;gap:6px">'+planBadge+statusBadge+'</div></div>';
-      if(s.contact)h+='<div style="font-size:12px;color:var(--tx2)">📧 '+s.contact+'</div>';
-      if(s.notes)h+='<div style="font-size:12px;color:var(--tx2)">📝 '+s.notes+'</div>';
-      if(s.agentsList.length>0){h+='<div class="agents">';s.agentsList.forEach(function(a){h+='<span class="agent-tag">👤 '+a.name+' <button onclick="removeAgent(\''+s.code+'\',\''+a.name+'\')" style="color:var(--int);font-weight:700;border:none;background:none;cursor:pointer;font-size:11px;margin-left:2px">✕</button></span>'});h+='</div>'}
-      else h+='<div style="font-size:11px;color:var(--tx2);margin-top:4px;font-style:italic">Aucun agent configuré</div>';
-      h+='<div style="display:flex;gap:4px;margin-top:6px"><input id="add-agent-'+s.code+'" placeholder="Nom du nouvel agent" style="flex:1;margin:0;padding:6px 10px;font-size:12px"><button onclick="addAgent(\''+s.code+'\')" class="btn btn-green" style="font-size:11px;padding:6px 12px">+ Agent</button></div>';
-      h+='<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">';
-      if(s.active)h+='<button onclick="deactivate(\''+s.code+'\')" class="btn btn-red" style="font-size:11px;padding:6px 14px">🔒 Désactiver</button>';
-      else h+='<button onclick="activate(\''+s.code+'\')" class="btn btn-green" style="font-size:11px;padding:6px 14px">🔓 Réactiver</button>';
-      h+='<select onchange="changePlan(\''+s.code+'\',this.value)" style="width:auto;margin:0;padding:6px 10px;font-size:11px;font-weight:700"><option value="free"'+(s.plan==="free"?" selected":"")+'>Accès Base</option><option value="pro"'+(s.plan==="pro"?" selected":"")+'>Pro Site</option><option value="multisite"'+(s.plan==="multisite"?" selected":"")+'>Multi-sites</option><option value="enterprise"'+(s.plan==="enterprise"?" selected":"")+'>Entreprise</option></select>';
-      h+='<button onclick="deleteSite(\''+s.code+'\')" class="btn btn-ghost" style="font-size:11px;padding:6px 14px;color:var(--int)">🗑️ Supprimer</button>';
-      h+='</div></div>';
-    });
-    document.getElementById("sites-list").innerHTML=h;
-  }).catch(function(e){toast("Erreur: "+e.message)});
-
-  api("stats").then(function(d){
-    document.getElementById("st-brands").textContent=d.totalBrands||0;
-  }).catch(function(){});
-}
-
-// Global actions
-window.deactivate=function(code){api("update",{code:code,active:false}).then(function(){toast("🔒 "+code+" désactivé");loadSites()}).catch(function(e){toast("Erreur: "+e.message)})};
-window.activate=function(code){api("update",{code:code,active:true}).then(function(){toast("🔓 "+code+" réactivé");loadSites()}).catch(function(e){toast("Erreur: "+e.message)})};
-window.changePlan=function(code,plan){api("update",{code:code,plan:plan}).then(function(){toast("✅ Plan mis à jour");loadSites()}).catch(function(e){toast("Erreur: "+e.message)})};
-window.deleteSite=function(code){if(!confirm("Supprimer définitivement "+code+" ?\nCela supprime aussi la mémoire partagée du site."))return;api("delete",{code:code}).then(function(){toast("🗑️ "+code+" supprimé");loadSites()}).catch(function(e){toast("Erreur: "+e.message)})};
-window.addAgent=function(code){var inp=document.getElementById("add-agent-"+code);var name=(inp?inp.value:"").trim();if(!name){toast("Entrez un nom d'agent");return}api("add-agent",{code:code,agent:name}).then(function(){toast("✅ "+name+" ajouté");loadSites()}).catch(function(e){toast("Erreur: "+e.message)})};
-window.removeAgent=function(code,name){if(!confirm("Retirer l'agent "+name+" ?"))return;api("remove-agent",{code:code,agent:name}).then(function(){toast("✅ "+name+" retiré");loadSites()}).catch(function(e){toast("Erreur: "+e.message)})};
-
-// Auth
-document.getElementById("btn-auth").addEventListener("click",function(){
-  KEY=document.getElementById("in-key").value.trim();
-  if(!KEY){document.getElementById("auth-err").textContent="Entrez la clé";document.getElementById("auth-err").style.display="block";return}
-  api("list").then(function(){
-    document.getElementById("login-panel").classList.add("hidden");
-    document.getElementById("main-panel").classList.remove("hidden");
-    loadSites();
-  }).catch(function(e){
-    document.getElementById("auth-err").textContent=e.message||"Clé invalide";
-    document.getElementById("auth-err").style.display="block";
-  });
-});
-document.getElementById("in-key").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("btn-auth").click()});
-
-// Logout
-document.getElementById("btn-logout").addEventListener("click",function(){KEY="";document.getElementById("main-panel").classList.add("hidden");document.getElementById("login-panel").classList.remove("hidden");document.getElementById("in-key").value=""});
-
-// Create site
-document.getElementById("btn-create").addEventListener("click",function(){
-  var code=document.getElementById("new-code").value.trim();
-  var site=document.getElementById("new-site").value.trim();
-  var plan=document.getElementById("new-plan").value;
-  var contact=document.getElementById("new-contact").value.trim();
-  var notes=document.getElementById("new-notes").value.trim();
-  if(!code||!site){toast("Code et nom du site requis");return}
-  api("create",{code:code,site:site,plan:plan,contact:contact,notes:notes}).then(function(d){
-    toast("✅ Site "+d.code+" créé !");
-    document.getElementById("new-code").value="";document.getElementById("new-site").value="";
-    document.getElementById("new-contact").value="";document.getElementById("new-notes").value="";
-    loadSites();
-  }).catch(function(e){toast("Erreur: "+e.message)});
-});
-
+function euro(v){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(v||0))}
+function dt(v){if(!v)return'—';try{return new Date(v).toLocaleString('fr-FR')}catch(e){return v}}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none'},2600)}
+function badgePlan(p){return {free:'<span class="badge b-free">Accès Base</span>',pro:'<span class="badge b-pro">Pro Site</span>',multisite:'<span class="badge b-multi">Multi-sites</span>',enterprise:'<span class="badge b-multi">Entreprise</span>'}[p]||''}
+function api(action,data){if(!API)return Promise.reject(new Error('Backend non configuré dans config.js'));return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action:action},data||{}))}).then(function(r){return r.json()}).then(function(d){if(d.error)throw new Error(d.error);return d})}
+function renderSales(items){var el=document.getElementById('sales-wrap');if(!items||!items.length){el.innerHTML='<div class="empty">Aucune vente enregistrée pour le moment.</div>';return}var h='<table class="table"><thead><tr><th>Date</th><th>Site</th><th>Plan</th><th>Montant</th><th>Email</th><th>Code</th></tr></thead><tbody>';items.forEach(function(s){h+='<tr><td>'+dt(s.date)+'</td><td><strong>'+s.site+'</strong></td><td>'+badgePlan(s.plan)+'</td><td>'+euro(s.amount)+'</td><td class="muted">'+(s.adminEmail||'—')+'</td><td class="code">'+(s.code||'—')+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}
+function renderSessions(items){var el=document.getElementById('sessions-wrap');if(!items||!items.length){el.innerHTML='<div class="empty">Aucune session active.</div>';return}var h='';items.forEach(function(s){h+='<div class="session-card"><div><div style="font-weight:800">'+s.agent+'</div><div class="mini muted">'+s.site+' · '+s.code+'</div><div class="mini muted">'+(s.deviceName||'Appareil inconnu')+'</div><div class="mini muted">Dernière activité : '+dt(s.lastSeenAt)+'</div></div><div><button class="btn btn-red btn-sm" onclick="kickSession(\''+s.code+'\',\''+s.agent.replace(/'/g,"\\'")+'\')">Forcer la déconnexion</button></div></div>'});el.innerHTML=h}
+function renderSites(items){var el=document.getElementById('sites-list');if(!items||!items.length){el.innerHTML='<div class="empty">Aucun site enregistré.</div>';return}var h='<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">';items.forEach(function(s){var state=s.active?'<span class="badge b-active">Actif</span>':'<span class="badge b-off">Désactivé</span>';h+='<div class="site"><div class="site-head"><div><div style="font-size:18px;font-weight:900">'+s.site+'</div><div class="code">'+s.code+'</div></div><div style="display:flex;gap:6px;flex-wrap:wrap">'+badgePlan(s.plan)+state+'</div></div>';if(s.contact)h+='<div class="mini muted">Contact : '+s.contact+'</div>';if(s.notes)h+='<div class="mini muted">Notes : '+s.notes+'</div>';h+='<div class="mini muted" style="margin-top:6px">Créé : '+dt(s.created)+'</div>';h+='<div class="agents">';if((s.agentsList||[]).length){s.agentsList.forEach(function(a){var suffix='';if(a.activeSession&&a.activeSession.lastSeenAt)suffix=' · 🟢 '+(a.activeSession.deviceName||'Appareil');h+='<span class="agent">👤 '+a.name+suffix+' <button onclick="removeAgent(\''+s.code+'\',\''+a.name.replace(/'/g,"\\'")+'\')" style="border:none;background:none;color:#dc2626;font-weight:800;cursor:pointer">✕</button></span>'})}else h+='<span class="mini muted">Aucun agent</span>';h+='</div>';h+='<div style="display:flex;gap:8px;margin-top:12px"><input id="add-agent-'+s.code+'" placeholder="Nom du nouvel agent" style="margin:0"></div>';h+='<div class="site-actions"><button class="btn btn-green btn-sm" onclick="addAgent(\''+s.code+'\')">+ Agent</button>'+(s.active?'<button class="btn btn-red btn-sm" onclick="deactivate(\''+s.code+'\')">Désactiver</button>':'<button class="btn btn-green btn-sm" onclick="activate(\''+s.code+'\')">Réactiver</button>')+'<select onchange="changePlan(\''+s.code+'\',this.value)" style="width:auto;padding:8px 10px"><option value="free"'+(s.plan==='free'?' selected':'')+'>Accès Base</option><option value="pro"'+(s.plan==='pro'?' selected':'')+'>Pro Site</option><option value="multisite"'+(s.plan==='multisite'?' selected':'')+'>Multi-sites</option><option value="enterprise"'+(s.plan==='enterprise'?' selected':'')+'>Entreprise</option></select><button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteSite(\''+s.code+'\')">Supprimer</button></div></div>'});h+='</div>';el.innerHTML=h}
+function renderDashboard(d){document.getElementById('kpi-sites').textContent=d.stats.activeSites||0;document.getElementById('kpi-sessions').textContent=d.stats.activeSessions||0;document.getElementById('kpi-sales').textContent=d.stats.totalSales||0;document.getElementById('kpi-mrr').textContent=euro(d.stats.mrr||0);document.getElementById('kpi-brands').textContent=d.stats.totalBrands||0;renderSales(d.sales||[]);renderSessions(d.sessions||[]);renderSites(d.sites||[])}
+function loadDashboard(){api('dashboard').then(renderDashboard).catch(function(e){toast('Erreur: '+e.message)})}
+window.deactivate=function(code){api('update',{code:code,active:false}).then(function(){toast('Site désactivé');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+window.activate=function(code){api('update',{code:code,active:true}).then(function(){toast('Site réactivé');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+window.changePlan=function(code,plan){api('update',{code:code,plan:plan}).then(function(){toast('Plan mis à jour');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+window.deleteSite=function(code){if(!confirm('Supprimer définitivement '+code+' ?'))return;api('delete',{code:code}).then(function(){toast('Site supprimé');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+window.addAgent=function(code){var inp=document.getElementById('add-agent-'+code);var name=(inp?inp.value:'').trim();if(!name){toast('Entrez un nom d\'agent');return}api('add-agent',{code:code,agent:name}).then(function(){toast('Agent ajouté');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+window.removeAgent=function(code,name){if(!confirm('Retirer '+name+' ?'))return;api('remove-agent',{code:code,agent:name}).then(function(){toast('Agent retiré');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+window.kickSession=function(code,name){if(!confirm('Forcer la déconnexion de '+name+' ?'))return;api('kick-session',{code:code,agent:name}).then(function(){toast('Session fermée');loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})};
+document.getElementById('btn-auth').addEventListener('click',function(){KEY=document.getElementById('in-key').value.trim();if(!KEY){document.getElementById('auth-err').textContent='Entrez la clé admin';document.getElementById('auth-err').style.display='block';return}api('dashboard').then(function(d){document.getElementById('login-panel').classList.add('hidden');document.getElementById('main-panel').classList.remove('hidden');document.getElementById('auth-err').style.display='none';renderDashboard(d)}).catch(function(e){document.getElementById('auth-err').textContent=e.message||'Clé invalide';document.getElementById('auth-err').style.display='block'})});
+document.getElementById('in-key').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-auth').click()});
+document.getElementById('btn-refresh').addEventListener('click',loadDashboard);document.getElementById('btn-logout').addEventListener('click',function(){KEY='';document.getElementById('main-panel').classList.add('hidden');document.getElementById('login-panel').classList.remove('hidden');document.getElementById('in-key').value=''})
+document.getElementById('btn-create').addEventListener('click',function(){var code=document.getElementById('new-code').value.trim();var site=document.getElementById('new-site').value.trim();var plan=document.getElementById('new-plan').value;var contact=document.getElementById('new-contact').value.trim();var notes=document.getElementById('new-notes').value.trim();if(!code||!site){toast('Code et nom du site requis');return}api('create',{code:code,site:site,plan:plan,contact:contact,notes:notes}).then(function(){toast('Accès créé');document.getElementById('new-code').value='';document.getElementById('new-site').value='';document.getElementById('new-contact').value='';document.getElementById('new-notes').value='';loadDashboard()}).catch(function(e){toast('Erreur: '+e.message)})});
 })();
 </script>
 </body>

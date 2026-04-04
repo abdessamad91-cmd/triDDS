@@ -332,35 +332,63 @@ var FM={E:"EcoDDS",H:"Hors EcoDDS",C:"Cas spécial",I:"Interdit"};
 var P=DB.map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});
 
 // ===== AUTH & SESSION =====
-var sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0};
+var sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};
 function loadSess(){try{var d=JSON.parse(localStorage.getItem("tridds_sess"));if(d&&d.code)sess=d}catch(e){}}
 function saveSess(){localStorage.setItem("tridds_sess",JSON.stringify(sess))}
 function isLoggedIn(){return!!sess.code}
-
-function doLogin(code,agent){
+function clearSess(){sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};saveSess()}
+function deviceName(){var ua=navigator.userAgent||"";if(/iPhone/i.test(ua))return"iPhone";if(/iPad/i.test(ua))return"iPad";if(/Android/i.test(ua))return"Android";if(/Windows/i.test(ua))return"PC Windows";if(/Macintosh/i.test(ua))return"Mac";return"Navigateur web"}
+function authPost(payload){
   if(!needApi("la connexion"))return Promise.reject(new Error("Backend non configuré"));
-  return fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({action:"login",code:code})
-  }).then(function(r){return r.json()}).then(function(d){
-    if(d.error)throw new Error(d.error);
-    sess.code=d.code;sess.site=d.site;sess.agent=agent;sess.plan=d.plan;
-    sess.memoryEnabled=d.memoryEnabled;sess.aiEnabled=d.aiEnabled;
+  return fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+    .then(function(r){return r.json().then(function(d){d.__status=r.status;return d})});
+}
+function startAgentSession(code,agent,force){
+  return authPost({action:"start-session",code:code,agent:agent,sessionId:sess.sessionId||"",deviceName:deviceName(),force:!!force}).then(function(d){
+    if(d.__status===409&&d.error==="SESSION_ACTIVE")return d;
+    if(d.error)throw new Error(d.message||d.error);
+    sess.code=d.code;sess.site=d.site;sess.agent=agent;sess.plan=d.plan;sess.memoryEnabled=d.memoryEnabled;sess.aiEnabled=d.aiEnabled;
     sess.trialTotal=d.trialTotal||0;sess.trialUsed=d.trialUsed||0;sess.trialRemaining=d.trialRemaining||0;
     sess.monthlyLimit=d.monthlyLimit||0;sess.monthlyUsed=d.monthlyUsed||0;sess.monthlyRemaining=d.monthlyRemaining||0;
+    sess.sessionId=d.sessionId||sess.sessionId||"";sess.deviceName=(d.activeSession&&d.activeSession.deviceName)||deviceName();
     saveSess();
-    // Register agent
-    fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"register-agent",code:d.code,agent:agent})});
     return d;
-  }).catch(function(e){goHome();alert(e&&e.message?e.message:"Analyse impossible");});
+  });
 }
-
+function resumeCurrentSession(){
+  if(!isLoggedIn()||sess.code==="DEMO"||!sess.sessionId)return Promise.resolve();
+  return authPost({action:"resume-session",code:sess.code,agent:sess.agent,sessionId:sess.sessionId,deviceName:sess.deviceName||deviceName()}).then(function(d){
+    if(d.error){clearSess();alert("Votre session a été fermée ou reprise sur un autre appareil.");location.reload();return;}
+    applyUsage(d);
+    sess.sessionId=d.sessionId||sess.sessionId;saveSess();
+  }).catch(function(){clearSess();location.reload()});
+}
+var lastHeartbeat=0;
+function heartbeat(force){
+  if(!isLoggedIn()||sess.code==="DEMO"||!sess.sessionId)return;
+  var now=Date.now();
+  if(!force&&now-lastHeartbeat<60000)return;
+  lastHeartbeat=now;
+  authPost({action:"heartbeat",code:sess.code,agent:sess.agent,sessionId:sess.sessionId,deviceName:sess.deviceName||deviceName()}).then(function(d){
+    if(d&&d.error){clearSess();alert("Votre session a expiré ou a été reprise sur un autre appareil.");location.reload();}
+  }).catch(function(){});
+}
+function registerActivity(){heartbeat(false)}
+function doLogin(code,agent){
+  return authPost({action:"login",code:code}).then(function(d){
+    if(d.error)throw new Error(d.error);
+    return authPost({action:"register-agent",code:d.code,agent:agent}).catch(function(){return {ok:true}}).then(function(){return d});
+  }).catch(function(e){goHome();alert(e&&e.message?e.message:"Connexion impossible");});
+}
 function demoLogin(){
-  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:0,trialUsed:0,trialRemaining:0,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0};
+  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:0,trialUsed:0,trialRemaining:0,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"DEMO",deviceName:deviceName()};
   saveSess();
 }
-
-function logout(){sess={code:"",site:"",agent:"",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0};saveSess();location.reload()}
+function logout(){
+  if(sess.code&&sess.code!=="DEMO"&&sess.sessionId){authPost({action:"logout-session",code:sess.code,agent:sess.agent,sessionId:sess.sessionId}).catch(function(){});}
+  clearSess();
+  location.reload();
+}
 
 // ===== SHARED MEMORY =====
 var mem={brands:{},version:0,stats:{total:0,corrected:0}};
@@ -746,18 +774,24 @@ document.getElementById("btn-login").addEventListener("click",function(){
   if(!pendingLogin)return;
   var agent=document.getElementById("sel-agent").value;
   if(!agent){document.getElementById("login-err").textContent="Sélectionnez un agent";document.getElementById("login-err").style.display="block";return}
-  
-  sess.code=pendingLogin.code;sess.site=pendingLogin.site;sess.agent=agent;
-  sess.plan=pendingLogin.plan;sess.memoryEnabled=pendingLogin.memoryEnabled;sess.aiEnabled=pendingLogin.aiEnabled;
-  sess.trialTotal=pendingLogin.trialTotal||0;sess.trialUsed=pendingLogin.trialUsed||0;sess.trialRemaining=pendingLogin.trialRemaining||0;
-  sess.monthlyLimit=pendingLogin.monthlyLimit||0;sess.monthlyUsed=pendingLogin.monthlyUsed||0;sess.monthlyRemaining=pendingLogin.monthlyRemaining||0;
-  saveSess();
-  
-  // Update lastSeen
-  fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({action:"login",code:pendingLogin.code,agent:agent})}).catch(function(){});
-  
-  pendingLogin=null;show("home");updHome();syncMemory();
+  document.getElementById("login-err").style.display="none";
+  startAgentSession(pendingLogin.code,agent,false).then(function(d){
+    if(d&&d.error==="SESSION_ACTIVE"){
+      var info=d.activeSession||{};
+      var msg="Cet agent est déjà connecté sur "+(info.deviceName||"un autre appareil")+".";
+      if(info.lastSeenAt) msg+="\nDernière activité: "+new Date(info.lastSeenAt).toLocaleString("fr-FR");
+      msg+="\n\nPrendre la main sur cette session ?";
+      if(confirm(msg)){
+        startAgentSession(pendingLogin.code,agent,true).then(function(ok){
+          if(ok&&ok.error)throw new Error(ok.message||ok.error);
+          pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);
+        }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block";});
+      }
+      return;
+    }
+    if(d&&d.error)throw new Error(d.message||d.error);
+    pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);
+  }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block";});
 });
 document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome()});
 document.getElementById("btn-logout").addEventListener("click",logout);
@@ -796,7 +830,13 @@ document.querySelectorAll("#main-tabs button").forEach(function(b){
 
 // ===== INIT =====
 loadSess();loadJournal();
-if(isLoggedIn()){show("home");updHome();syncMemory()}else{show("login")}
+if(isLoggedIn()){
+  if(sess.code==="DEMO"){show("home");updHome();}
+  else {show("home");updHome();syncMemory();resumeCurrentSession();}
+}else{show("login")}
+["click","keydown","touchstart","input"].forEach(function(ev){document.addEventListener(ev,registerActivity,{passive:true})});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")heartbeat(true)});
+window.addEventListener("focus",function(){heartbeat(true)});
 
 })();
 </script>
