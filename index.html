@@ -409,7 +409,20 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
       <div class="lbl" style="margin-top:12px">Plan</div><div id="prof-plan" style="font-weight:700;font-size:16px"></div>
       <div class="lbl" style="margin-top:12px">Quota IA</div><div id="prof-photos" style="font-weight:700;font-size:16px"></div>
     </div>
-    <div id="prof-manage" class="manage-grid" style="display:none"><button id="btn-manage-team" class="manage-btn">👥 Gérer mon équipe<div class="manage-note">Gérer le responsable du site et les agents.</div></button><button id="btn-manage-catalog" class="manage-btn">🗂️ Gérer ma base produits<div class="manage-note">Ajouter, modifier ou retirer des fiches personnalisées pour le site.</div></button></div><button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
+    <div id="prof-manage" class="manage-grid" style="display:none"><button id="btn-manage-sites" class="manage-btn">🏢 Mes sites<div class="manage-note">Voir les sites rattachés au client et le responsable de chaque site.</div></button><button id="btn-manage-team" class="manage-btn">👥 Mon équipe<div class="manage-note">Gérer le responsable du site et les agents.</div></button><button id="btn-manage-catalog" class="manage-btn">🗂️ Base produits<div class="manage-note">Ajouter, modifier ou retirer des fiches personnalisées pour le site.</div></button></div><button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
+  </div>
+</div>
+
+
+<!-- ===== CLIENT SITES ===== -->
+<div id="s-sites" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>🏢 Mes sites</h2></div>
+  <div style="padding:16px">
+    <div class="card" style="margin-bottom:12px">
+      <div class="lbl">Organisation</div>
+      <div id="client-summary" class="muted" style="line-height:1.7"></div>
+    </div>
+    <div id="client-sites-list"></div>
   </div>
 </div>
 
@@ -924,6 +937,8 @@ function createTrialAccess(){
 function loadCustomCatalog(){if(!isLoggedIn()||sess.code==="DEMO"||!sess.canManageCatalog)return Promise.resolve();return siteAdminPost("catalog-list").then(function(d){customCatalog=d.items||[];mergeCatalog();return d}).catch(function(){customCatalog=[];mergeCatalog();});}
 function renderTeam(items){var el=document.getElementById("team-list");if(!el)return;if(!(items||[]).length){el.innerHTML='<div class="card muted">Aucun profil enregistré.</div>';return}var h="";(items||[]).forEach(function(u){var last=u.lastSeen?new Date(u.lastSeen).toLocaleString('fr-FR'):'—';var safeName=JSON.stringify(u.name);h+='<div class="team-row"><div class="team-left"><strong>'+u.name+'</strong><span class="muted" style="font-size:12px">Dernière activité : '+last+'</span></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select class="select" style="width:auto" onchange="teamSetRole('+safeName+',this.value)"><option value="responsable"'+(u.role==='responsable'?' selected':'')+'>Responsable</option><option value="agent"'+(u.role==='agent'?' selected':'')+'>Agent</option></select><button class="btn btn-outline" onclick="teamRemove('+safeName+')">Supprimer</button></div></div>';});el.innerHTML=h}
 function loadTeam(){siteAdminPost("team").then(function(d){renderTeam(d.team||[]);show("team")}).catch(function(e){alert(e.message||"Impossible de charger l'équipe.")})}
+function renderClientSites(data){var box=document.getElementById("client-summary");if(box)box.innerHTML='<strong>'+(data.client||sess.clientName||'Client')+'</strong>'+(data.principal?' · Contact principal : '+data.principal:'')+(data.principalEmail?' · '+data.principalEmail:'');var el=document.getElementById("client-sites-list");if(!el)return;var items=data.items||[];if(!items.length){el.innerHTML='<div class="card muted">Aucun site rattaché à ce client.</div>';return}var h='';items.forEach(function(s){var badge={free:'Accès Base',pro:'Pro Site',multisite:'Multi-sites',enterprise:'Entreprise'}[s.plan]||s.plan;h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div style="font-weight:800;font-size:16px">'+s.site+'</div><div class="muted" style="font-size:13px">Responsable : '+(s.responsable||'—')+'</div><div class="muted" style="font-size:13px">Code : '+s.code+'</div></div><div><span class="plan-badge '+({free:'plan-free',pro:'plan-pro',multisite:'plan-ent',enterprise:'plan-ent'}[s.plan]||'plan-free')+'">'+badge+'</span></div></div></div>'});el.innerHTML=h}
+function loadClientSites(){siteAdminPost("client-sites").then(function(d){renderClientSites(d);show("sites")}).catch(function(e){alert(e.message||"Impossible de charger les sites.")})}
 function renderCatalog(items){var el=document.getElementById("cat-list");if(!el)return;if(!(items||[]).length){el.innerHTML='<div class="card muted">Aucune fiche personnalisée.</div>';return}var h="";(items||[]).forEach(function(it){var safeId=JSON.stringify(it.id);h+='<div class="cat-row"><div class="cat-left"><strong>'+it.n+'</strong><span class="muted" style="font-size:12px">'+(it.x||'')+' · '+(FM[it.f]||it.f)+'</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="catalogEdit('+safeId+')">Modifier</button><button class="btn btn-outline" style="color:var(--int);border-color:var(--int-bd)" onclick="catalogDelete('+safeId+')">Supprimer</button></div></div>';});el.innerHTML=h}
 function loadCatalog(){siteAdminPost("catalog-list").then(function(d){customCatalog=d.items||[];mergeCatalog();renderCatalog(customCatalog);show("catalog")}).catch(function(e){alert(e.message||"Impossible de charger la base.")})}
 window.teamSetRole=function(name,role){if(role==="responsable"){var keep=confirm("Définir "+name+" comme responsable unique du site ? L'ancien responsable sera passé en agent.");if(!keep)return;}siteAdminPost("set-user-role",{name:name,role:role}).then(loadTeam).catch(function(e){alert(e.message||"Erreur rôle.")})}
