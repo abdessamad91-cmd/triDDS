@@ -93,6 +93,11 @@ button{cursor:pointer;border:none;background:none;color:inherit}
     <p style="color:var(--tx2);font-size:14px;margin-top:4px">Assistant IA · Tri des DDS</p>
     <div style="width:100%;max-width:340px;margin-top:32px">
       <div class="card" style="padding:24px">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+          <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Créer mon accès</button>
+          <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Essayer gratuitement</button>
+          <div style="text-align:center;font-size:12px;color:var(--tx3);font-weight:700">Déjà client ? Entrez votre code d'accès</div>
+        </div>
         <!-- Step 1: Code -->
         <div id="login-step1">
           <div class="lbl">Code du site</div>
@@ -112,7 +117,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
         </div>
         <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
       </div>
-      <button id="btn-demo" style="display:block;margin:16px auto 0;color:var(--tx2);font-size:13px;text-decoration:underline">Accès gratuit + 5 scans IA offerts</button>
+      <button id="btn-demo" style="display:block;margin:16px auto 0;color:var(--tx2);font-size:13px;text-decoration:underline">Continuer en accès gratuit</button>
     </div>
   </div>
   <div style="text-align:center;padding:16px;font-size:10px;color:var(--tx3)">TriDDS v5 · 482 produits · 21 flux</div>
@@ -683,6 +688,9 @@ function showMemory(){
 function startVoice(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("Non disponible");return}var r=new SR();r.lang="fr-FR";r.continuous=false;r.interimResults=true;r.onresult=function(e){var res=e.results[0],txt=res[0].transcript;document.getElementById("in-search").value=txt;document.getElementById("btn-srch").style.display=txt?"block":"none";if(res.isFinal&&txt.length>2){st.query=txt;setTimeout(doSearch,300)}};r.onerror=function(){};r.start()}
 
 // ===== EVENTS =====
+document.getElementById("btn-create-access").addEventListener("click",function(){ location.href="./pricing.html"; });
+document.getElementById("btn-free-access").addEventListener("click",function(){ document.getElementById("btn-demo").click(); });
+
 // Login: 2-step flow
 var pendingLogin = null; // holds response from step 1
 
