@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TriDDS Admin — Base de connaissance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef4ff;--panel:#fff;--line:#e7eef8;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--blue2:#1d4ed8;--green:#059669;--red:#dc2626;--purple:#7c3aed;--shadow:0 16px 40px rgba(15,23,42,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top left,#1e3a8a,#0f172a 55%)}.card{width:min(460px,100%);background:#fff;border-radius:28px;padding:28px;box-shadow:var(--shadow)}.logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:28px;margin-bottom:16px}.title{font-size:32px;font-weight:900;letter-spacing:-1px;margin:0}.sub{margin:10px 0 20px;color:var(--muted);line-height:1.55}.label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}.field{margin-bottom:14px}.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:16px;border:1.5px solid #dbe3f0;font:inherit;background:#fff;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}.field textarea{min-height:96px;resize:vertical}.btn{border:none;border-radius:16px;padding:13px 18px;font:inherit;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 12px 24px rgba(37,99,235,.22)}.btn-soft{background:#fff;border:1px solid var(--line);color:var(--text)}.btn-red{background:#fef2f2;border:1px solid #fecaca;color:var(--red)}.btn-green{background:#ecfdf5;border:1px solid #a7f3d0;color:var(--green)}.btn-sm{padding:10px 12px;border-radius:12px;font-size:12px}.err{display:none;color:var(--red);font-size:13px;font-weight:700;margin-top:8px}.main{padding:24px}.shell{max-width:1440px;margin:0 auto}.topbar{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:28px;padding:28px;display:flex;justify-content:space-between;gap:18px;align-items:flex-start;box-shadow:var(--shadow);margin-bottom:18px}.topbar h1{margin:0;font-size:34px;font-weight:900;letter-spacing:-1px}.topbar p{margin:10px 0 0;color:#dbeafe;max-width:760px;line-height:1.6}.actions{display:flex;gap:10px;flex-wrap:wrap}.actions .btn-soft{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16);color:#fff}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:18px}.kpi{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}.kpi .tag{font-size:12px;font-weight:800;text-transform:uppercase;color:var(--muted);letter-spacing:.08em}.kpi .num{font-size:34px;font-weight:900;margin-top:10px}.grid{display:grid;grid-template-columns:1.25fr .95fr;gap:18px}.panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)}.panel-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panel-title h2{margin:0;font-size:20px;font-weight:900}.panel-sub{font-size:13px;color:var(--muted);margin-top:4px}.toolbar{display:grid;grid-template-columns:220px 1fr auto;gap:10px;margin-bottom:14px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:13px;vertical-align:top}.table th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}.pill-blue{background:#dbeafe;color:#1d4ed8}.pill-green{background:#ecfdf5;color:#047857}.pill-orange{background:#ffedd5;color:#c2410c}.empty{padding:18px 0;color:var(--muted)}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:800;display:none;z-index:999}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}.mini{font-size:12px;color:var(--muted)}@media(max-width:980px){.grid,.toolbar,.form-grid{grid-template-columns:1fr}.topbar{flex-direction:column}.main{padding:16px}}
+</style>
+</head>
+<body>
+<section id="login" class="login">
+  <div class="card">
+    <div class="logo">T</div>
+    <h1 class="title">Base de connaissance</h1>
+    <p class="sub">Pilotez ce que l’IA apprend réellement : marques, cas fréquents, catégories, flux et promotion vers le catalogue officiel.</p>
+    <div class="field"><div class="label">Clé administrateur</div><input id="in-key" type="password" placeholder="Entrez votre clé admin"></div>
+    <button id="btn-login" class="btn btn-primary" style="width:100%">Ouvrir la base de connaissance</button>
+    <div id="login-err" class="err"></div>
+  </div>
+</section>
+<main id="app" class="main hidden">
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <div class="pill pill-blue">🧠 Mémoire TriDDS</div>
+        <h1>Base de connaissance</h1>
+        <p>Consultez les marques apprises par site, corrigez-les, supprimez-les ou transformez-les en fiches produit officielles.</p>
+      </div>
+      <div class="actions">
+        <a href="./admin.html" class="btn btn-soft">Retour admin</a>
+        <a href="./admin-base.html" class="btn btn-soft">Base produits</a>
+        <button id="btn-refresh" class="btn btn-soft">Actualiser</button>
+        <button id="btn-logout" class="btn btn-soft">Déconnexion</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="tag">Entrées</div><div class="num" id="kpi-items">0</div></div>
+      <div class="kpi"><div class="tag">Sites concernés</div><div class="num" id="kpi-sites">0</div></div>
+      <div class="kpi"><div class="tag">Marques uniques</div><div class="num" id="kpi-brands">0</div></div>
+    </div>
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-title"><div><h2>Entrées apprises</h2><div class="panel-sub">Vue consolidée de la mémoire partagée par client et par site.</div></div></div>
+        <div class="toolbar">
+          <select id="flt-site"><option value="">Tous les sites</option></select>
+          <input id="flt-search" placeholder="Rechercher une marque, un produit, une catégorie, un client...">
+          <button id="btn-new" class="btn btn-primary btn-sm">+ Nouvelle entrée</button>
+        </div>
+        <div id="knowledge-table" class="table-wrap"></div>
+      </section>
+      <aside class="panel">
+        <div class="panel-title"><div><h2 id="form-title">Nouvelle entrée</h2><div class="panel-sub">Corrigez la mémoire ou préparez une promotion vers le catalogue.</div></div></div>
+        <div class="form-grid">
+          <div class="field full"><div class="label">Site</div><select id="f-code"></select></div>
+          <div class="field full"><div class="label">Marque / libellé appris</div><input id="f-brand" placeholder="Ex. Décapex"></div>
+          <div class="field full"><div class="label">Produit associé</div><input id="f-product" placeholder="Ex. Décapant gel façade"></div>
+          <div class="field"><div class="label">Flux</div><select id="f-flux"><option value="H">Hors EcoDDS</option><option value="E">EcoDDS</option><option value="D">Déchets dangereux</option><option value="R">Réemploi</option></select></div>
+          <div class="field"><div class="label">Catégorie</div><input id="f-category" placeholder="Ex. Solvants"></div>
+          <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+            <button id="btn-save" class="btn btn-primary">Enregistrer</button>
+            <button id="btn-promote" class="btn btn-green hidden">Envoyer vers la base produits</button>
+            <button id="btn-delete" class="btn btn-red hidden">Supprimer</button>
+            <button id="btn-cancel" class="btn btn-soft hidden">Annuler l’édition</button>
+          </div>
+          <div id="form-meta" class="mini full"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+<div id="toast" class="toast"></div>
+<script src="config.js"></script>
+<script>
+(function(){
+let KEY=''; let editing=null; let state={sites:[],items:[]};
+const API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||'').replace(/\/$/,'');
+const API=API_BASE?API_BASE+'/admin':'';
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2600)}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]))}
+function api(action,data){if(!API)return Promise.reject(new Error('Backend non configuré dans config.js'));return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action},data||{}))}).then(async r=>{const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch(e){d={error:t||('HTTP '+r.status)}}if(!r.ok||d.error)throw new Error(d.error||('HTTP '+r.status));return d;})}
+function dt(v){if(!v)return '—';try{return new Date(v).toLocaleString('fr-FR')}catch(e){return v}}
+function fillSiteSelect(){const opts=['<option value="">Choisir un site</option>'].concat(state.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`));$('f-code').innerHTML=opts.join('');$('flt-site').innerHTML='<option value="">Tous les sites</option>'+state.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`).join('')}
+function filteredItems(){const site=$('flt-site').value;const q=$('flt-search').value.trim().toLowerCase();return state.items.filter(i=>{if(site&&i.code!==site)return false;if(!q)return true;const hay=[i.brand,i.p,i.c,i.site,i.client,(i.by||[]).join(',')].join(' ').toLowerCase();return hay.includes(q)})}
+function resetForm(){editing=null;$('form-title').textContent='Nouvelle entrée';$('f-code').value=state.sites[0]?.code||'';$('f-brand').value='';$('f-product').value='';$('f-flux').value='H';$('f-category').value='';$('btn-promote').classList.add('hidden');$('btn-delete').classList.add('hidden');$('btn-cancel').classList.add('hidden');$('form-meta').textContent=''}
+function renderTable(){const items=filteredItems();$('kpi-items').textContent=state.items.length;$('kpi-sites').textContent=new Set(state.items.map(i=>i.code)).size;$('kpi-brands').textContent=new Set(state.items.map(i=>i.brand)).size;if(!items.length){$('knowledge-table').innerHTML='<div class="empty">Aucune entrée apprise.</div>';return;}let h='<table class="table"><thead><tr><th>Marque</th><th>Produit</th><th>Site</th><th>Flux</th><th>Catégorie</th><th>Occur.</th><th>Mise à jour</th><th></th></tr></thead><tbody>';items.forEach(i=>{h+=`<tr><td><strong>${esc(i.brand)}</strong><div class="mini">${esc((i.by||[]).join(', '))}</div></td><td>${esc(i.p||'—')}</td><td>${esc(i.site||'—')}<div class="mini">${esc(i.client||'—')}</div></td><td><span class="pill pill-orange">${esc(i.f||'—')}</span></td><td>${esc(i.c||'—')}</td><td>${esc(i.n||0)}</td><td>${esc(i.d||dt(i.lastUpdate))}</td><td><button class="btn btn-soft btn-sm js-edit" data-code="${esc(i.code)}" data-brand="${esc(i.brand)}">Modifier</button></td></tr>`});h+='</tbody></table>';$('knowledge-table').innerHTML=h}
+function load(){api('knowledge-admin-list').then(d=>{state=d;fillSiteSelect();renderTable();if(!editing)resetForm()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function startEdit(code,brand){const item=state.items.find(x=>x.code===code&&x.brand===brand);if(!item)return;editing={code,brand};$('form-title').textContent='Modifier l’entrée';$('f-code').value=item.code||'';$('f-brand').value=item.brand||'';$('f-product').value=item.p||'';$('f-flux').value=item.f||'H';$('f-category').value=item.c||'';$('btn-promote').classList.remove('hidden');$('btn-delete').classList.remove('hidden');$('btn-cancel').classList.remove('hidden');$('form-meta').textContent='Occurrences : '+(item.n||0)+' · Dernière mise à jour : '+(item.d||dt(item.lastUpdate))}
+function save(){const code=$('f-code').value;const item={brand:$('f-brand').value.trim(),product:$('f-product').value.trim(),flux:$('f-flux').value,category:$('f-category').value.trim()};if(!code||!item.brand){toast('Site et marque requis');alert('Site et marque requis');return;}api('knowledge-admin-save',{code,originalBrand:editing?editing.brand:'',item}).then(()=>{toast(editing?'Entrée mise à jour':'Entrée créée');resetForm();load()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function removeItem(){if(!editing)return;if(!confirm('Supprimer cette entrée de connaissance ?'))return;api('knowledge-admin-delete',{code:editing.code,brand:editing.brand}).then(()=>{toast('Entrée supprimée');resetForm();load()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function promote(){if(!editing)return;api('knowledge-admin-promote',{code:editing.code,brand:editing.brand}).then(()=>{toast('Entrée envoyée vers la base produits');}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+$('btn-login').addEventListener('click',()=>{KEY=$('in-key').value.trim();if(!KEY){$('login-err').textContent='Entrez la clé admin';$('login-err').style.display='block';return;} api('knowledge-admin-list').then(d=>{state=d;$('login').classList.add('hidden');$('app').classList.remove('hidden');$('login-err').style.display='none';fillSiteSelect();renderTable();resetForm()}).catch(e=>{$('login-err').textContent=e.message||'Clé invalide';$('login-err').style.display='block'})});
+$('in-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('btn-login').click()});
+$('btn-refresh').addEventListener('click',load);$('btn-logout').addEventListener('click',()=>{KEY='';$('app').classList.add('hidden');$('login').classList.remove('hidden');$('in-key').value='';});
+$('btn-save').addEventListener('click',save);$('btn-delete').addEventListener('click',removeItem);$('btn-promote').addEventListener('click',promote);$('btn-cancel').addEventListener('click',resetForm);$('btn-new').addEventListener('click',resetForm);$('flt-site').addEventListener('change',renderTable);$('flt-search').addEventListener('input',renderTable);document.addEventListener('click',e=>{const btn=e.target.closest('.js-edit');if(!btn)return;startEdit(btn.dataset.code,btn.dataset.brand)});
+})();
+</script>
+</body>
+</html>
