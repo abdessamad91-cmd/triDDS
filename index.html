@@ -141,6 +141,41 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 .landing-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:#94a3b8}.landing-foot a{color:#475569;text-decoration:none;font-weight:700}
 @media(max-width:1080px){.landing-grid{grid-template-columns:1fr}.landing-copy h1{font-size:42px}.landing-points{grid-template-columns:1fr}.landing-wrap{gap:18px}}
 @media(max-width:720px){#s-login{padding:14px 12px 18px!important}.landing-copy,.landing-login{padding:22px!important}.landing-copy h1{font-size:34px}.landing-nav{justify-content:center}.landing-nav-actions{width:100%;justify-content:center}.landing-link{flex:1;min-width:140px}.landing-cta{flex-direction:column}.landing-pill{width:100%}}
+
+.landing-link.info{background:rgba(255,255,255,.08);color:#fff}
+.landing-pill.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff}
+.landing-pill.ghost{background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff}
+.landing-cta-note{margin-top:12px;color:#bfdbfe;font-size:12px;font-weight:700}
+.landing-login-actions{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.btn-base{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.btn-ghost{background:#fff;color:#0f172a;border:1px solid #dbe4f0}
+.landing-mini-note{margin-top:-2px;margin-bottom:14px;color:#64748b;font-size:12px;line-height:1.5}
+.landing-info{background:#fff;border:1px solid #e6edf8;border-radius:32px;padding:28px;box-shadow:0 24px 60px rgba(2,6,23,.08)}
+.landing-info-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+.landing-info-head h2{margin:0;font-size:34px;letter-spacing:-1.3px;color:#0f172a}
+.landing-info-head p{margin:8px 0 0;color:#64748b;max-width:760px;line-height:1.7}
+.landing-step-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.landing-step{background:linear-gradient(180deg,#f8fbff,#ffffff);border:1px solid #dbe4f0;border-radius:22px;padding:18px}
+.landing-step-no{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:13px;font-weight:900;margin-bottom:12px}
+.landing-step strong{display:block;font-size:16px;color:#0f172a}
+.landing-step span{display:block;margin-top:8px;color:#64748b;font-size:14px;line-height:1.6}
+.landing-family-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.landing-family{border-radius:20px;padding:16px;border:1px solid #e2e8f0;background:#f8fafc}
+.landing-family strong{display:block;font-size:14px;color:#0f172a}
+.landing-family span{display:block;margin-top:6px;font-size:12px;color:#64748b;line-height:1.5}
+.landing-family.eco{background:#ecfdf5;border-color:#a7f3d0}
+.landing-family.warn{background:#fffbeb;border-color:#fde68a}
+.landing-family.danger{background:#fef2f2;border-color:#fecaca}
+.landing-focus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:8px}
+.landing-focus{border:1px solid #e2e8f0;border-radius:22px;padding:18px;background:#fff}
+.landing-focus h3{margin:0;font-size:18px;letter-spacing:-.4px;color:#0f172a}
+.landing-focus p{margin:10px 0 0;color:#64748b;line-height:1.6;font-size:14px}
+.landing-list{display:grid;gap:8px;margin-top:12px}
+.landing-list div{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:16px;background:#f8fafc;color:#334155;font-size:13px;line-height:1.5}
+.landing-list b{color:#0f172a}
+.landing-source{margin-top:18px;padding:14px 16px;border-radius:18px;background:#f8fafc;border:1px dashed #cbd5e1;color:#475569;font-size:13px;line-height:1.6}
+@media(max-width:1080px){.landing-step-grid,.landing-family-grid,.landing-focus-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.landing-step-grid,.landing-family-grid,.landing-focus-grid{grid-template-columns:1fr}.landing-info{padding:22px}.landing-info-head h2{font-size:28px}}
 </style>
 
 
@@ -176,8 +211,9 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         <div><strong>TriDDS</strong><span>Assistant IA de tri des DDS</span></div>
       </div>
       <div class="landing-nav-actions">
+        <a class="landing-link info" href="#info-tri">Informations</a>
         <a class="landing-link" href="./pricing.html">Tarifs</a>
-        <a class="landing-link primary" href="./pricing.html">Créer mon accès</a>
+        <a class="landing-link primary" href="./pricing.html">Choisir mon accès</a>
       </div>
     </div>
 
@@ -187,25 +223,29 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         <h1>Un assistant de tri plus clair, plus fiable et plus rapide.</h1>
         <p>TriDDS aide les agents à identifier et orienter correctement les déchets grâce à la recherche, à l’analyse photo et à une base métier centralisée.</p>
         <div class="landing-cta">
-          <a class="landing-pill primary" href="./pricing.html">Créer mon accès</a>
+          <a class="landing-pill primary" href="./pricing.html">Voir les offres</a>
           <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Tester l’IA gratuitement</button>
+          <a class="landing-pill ghost" href="#info-tri">Voir les informations métier</a>
         </div>
+        <div class="landing-cta-note">La création d’accès commence par le choix d’une formule sur la page Tarifs.</div>
         <div class="landing-points">
-          <div class="landing-point"><strong>Prise en main rapide</strong><span>L’accès, l’essai IA et la connexion sont présentés clairement dès l’arrivée sur le site.</span></div>
-          <div class="landing-point"><strong>Analyse assistée</strong><span>Recherche, photo IA et mémoire partagée pour traiter plus vite les cas fréquents.</span></div>
-          <div class="landing-point"><strong>Gestion centralisée</strong><span>Gestion des accès, des agents, des quotas IA et du pilotage des sites depuis un seul espace.</span></div>
+          <div class="landing-point"><strong>Prise en main rapide</strong><span>Parcours distinct entre consultation, essai IA et création d’accès pour éviter toute confusion dès l’arrivée.</span></div>
+          <div class="landing-point"><strong>Analyse assistée</strong><span>Recherche texte, photo IA et repères métier pour traiter plus vite les cas fréquents.</span></div>
+          <div class="landing-point"><strong>Gestion centralisée</strong><span>Accès, agents, quotas IA et base produits regroupés dans une interface unique et plus lisible.</span></div>
         </div>
       </section>
 
       <section class="landing-login card">
         <div class="landing-login-top">
           <div class="landing-login-title">Se connecter</div>
-          <div class="landing-login-sub">Déjà client ? Entrez votre code d’accès. Nouveau visiteur ? Testez l’IA gratuitement depuis le bandeau principal, ou utilisez l’accès Base sans IA.</div>
+          <div class="landing-login-sub">Déjà client ? Entrez votre code d’accès. Nouveau visiteur ? Consultez les repères métier, testez l’IA gratuitement ou choisissez ensuite une formule adaptée.</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-          <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Créer mon accès</button>
-          <button id="btn-free-access" class="btn btn-green btn-f" style="padding:14px;font-size:15px">Continuer sans IA</button>
+        <div class="landing-login-actions">
+          <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Voir les tarifs et créer mon accès</button>
+          <button id="btn-free-access" class="btn btn-base btn-f" style="padding:14px;font-size:15px">Accès Base sans IA</button>
+          <a class="btn btn-ghost btn-f" href="#info-tri" style="padding:14px;font-size:15px;text-decoration:none">Consulter les informations métier</a>
         </div>
+        <div class="landing-mini-note">Vous pouvez consulter les repères de tri sans créer de compte, puis choisir une offre seulement si vous souhaitez activer l’IA ou gérer un site.</div>
         <div class="landing-sep">J’ai déjà un code</div>
         <div id="login-step1">
           <div class="lbl">Code du site</div>
@@ -224,11 +264,74 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
         </div>
         <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
         <div class="landing-foot">
-          <span>Accès Base disponible</span>
-          <button id="btn-demo" style="background:none;border:none;padding:0;color:#334155;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer">Continuer en accès Base sans IA</button>
+          <span>Consultation immédiate possible</span>
+          <button id="btn-demo" style="background:none;border:none;padding:0;color:#334155;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer">Ouvrir l’accès Base sans IA</button>
         </div>
       </section>
     </div>
+
+    <section id="info-tri" class="landing-info">
+      <div class="landing-info-head">
+        <div>
+          <h2>Informations métier</h2>
+          <p>Une synthèse visuelle des repères essentiels issus de vos supports EcoDDS, pour aider un agent à faire un premier tri avant même la recherche détaillée.</p>
+        </div>
+      </div>
+
+      <div class="landing-step-grid">
+        <div class="landing-step">
+          <div class="landing-step-no">01</div>
+          <strong>Identifier le bon univers</strong>
+          <span>Commencer par la famille produit  : pâteux, aérosols, autres DDS liquides, phytosanitaires et biocides, filtres, acides, bases ou comburants.</span>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-no">02</div>
+          <strong>Vérifier le conditionnement</strong>
+          <span>Avant validation, contrôler le seuil du contenant. Plusieurs familles ont des limites spécifiques en litres ou en kilos.</span>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-no">03</div>
+          <strong>Écarter les faux amis</strong>
+          <span>Les produits non identifiés, hors seuils ou hors périmètre reviennent souvent dans les refus. Cette rubrique met ces cas en avant dès l’accueil.</span>
+        </div>
+      </div>
+
+      <div class="landing-family-grid">
+        <div class="landing-family eco"><strong>Pâteux</strong><span>Peintures, sous-couches, enduits, mastics, colles mur et carrelage, dans les seuils autorisés.</span></div>
+        <div class="landing-family eco"><strong>Aérosols</strong><span>Peinture, insecticide, dégrippant, imperméabilisant, mousse expansive, stop-feu ≤ 1 L.</span></div>
+        <div class="landing-family eco"><strong>Autres DDS liquides</strong><span>Solvants bricolage, traitement du bois, liquide de refroidissement, antigel, polish, diluants.</span></div>
+        <div class="landing-family eco"><strong>Phytos & biocides</strong><span>Produits jardin et maison, selon nature, usage et seuil, avec repères spécifiques pour certains produits piscine.</span></div>
+        <div class="landing-family eco"><strong>Acides</strong><span>Acides identifiés et compatibles, à séparer des bases et à manipuler avec vigilance.</span></div>
+        <div class="landing-family eco"><strong>Bases</strong><span>Soude, ammoniaque, certains déboucheurs et traitements piscine comme le chlore liquide ou le pH+.</span></div>
+        <div class="landing-family eco"><strong>Comburants</strong><span>Chlore solide, brome, oxygène actif, certains durcisseurs et produits piscine comburants.</span></div>
+        <div class="landing-family warn"><strong>Cas séparés</strong><span>Filtres à huile et bidons vides de combustible de chauffage ont des règles dédiées et ne se gèrent pas comme les autres familles.</span></div>
+      </div>
+
+      <div class="landing-focus-grid">
+        <div class="landing-focus">
+          <h3>À refuser ou à sortir du flux EcoDDS</h3>
+          <p>Les cas les plus fréquents à mettre en évidence dès l’entrée pour éviter les erreurs de tri.</p>
+          <div class="landing-list">
+            <div><span>⛔</span><span><b>Hors périmètre fréquent :</b> détergents classiques, savons, huiles moteur et liquides de frein, radiographies, médicaments, produits de laboratoire, cartouches de gaz, extincteurs et bombes anti-crevaison.</span></div>
+            <div><span>⚠️</span><span><b>Non conformités récurrentes :</b> produits non identifiés, produits hors seuils, matériel de peinture souillé, plâtre, mortier, béton et produits alimentaires.</span></div>
+            <div><span>🔒</span><span><b>Règle sécurité :</b> ne pas mélanger acides et bases, et isoler les comburants ou produits fuyards.</span></div>
+          </div>
+        </div>
+
+        <div class="landing-focus">
+          <h3>Repères pratiques terrain</h3>
+          <p>Quelques cas utiles issus des documents fournis pour aider les agents à s’orienter plus vite.</p>
+          <div class="landing-list">
+            <div><span>🏊</span><span><b>Piscine :</b> algicide, hivernage, pH+, pH-, floculant ou anti-phosphate peuvent entrer dans les familles EcoDDS selon leur nature et leur seuil, alors que nettoyant ligne d’eau, détartrant piscine ou testeur pH sont hors périmètre.</span></div>
+            <div><span>🚗</span><span><b>Voiture :</b> antigel, liquide de refroidissement, dégivrant, polish, anti-goudron, peinture carrosserie et filtres à huile font partie des cas à reconnaître rapidement.</span></div>
+            <div><span>🖌️</span><span><b>Outillages du peintre :</b> pinceaux, rouleaux, couteaux, bacs plats, bacs et camions à peinture, recharges et grilles sont acceptés, mais pas les chiffons souillés, sacs, bassines, taloches ou pinceaux d’artiste.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="landing-source">Cette rubrique reprend les grandes familles de bacs, les exclusions fréquentes, les seuils de conditionnement, l’univers auto/piscine et la filière des outillages du peintre afin de rendre l’accueil plus utile dès la première visite.</div>
+    </section>
+
   </div>
 </div>
 
