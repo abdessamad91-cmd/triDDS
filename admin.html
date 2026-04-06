@@ -51,6 +51,7 @@
       <button class="tab" data-tab="sessions">Sessions</button>
       <button class="tab" data-tab="catalog">Base produits</button>
       <button class="tab" data-tab="knowledge">Base de connaissance</button>
+      <button class="tab" data-tab="images">Images</button>
       <button class="tab" data-tab="mainbase">Base principale</button>
     </div>
 
@@ -106,6 +107,41 @@
       </div>
     </section>
 
+    
+    <section data-section="images" class="hidden">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title"><div><h2>Images produits</h2><div class="panel-sub">Gestion multi-images par produit. Ajoutez, ordonnez et définissez l'image principale.</div></div></div>
+          <div class="toolbar">
+            <select id="flt-img-site"><option value="">Tous les sites</option></select>
+            <input id="flt-img-search" placeholder="Rechercher un produit...">
+            <button id="btn-img-new" class="btn btn-primary btn-sm">+ Nouvelle image</button>
+          </div>
+          <div id="images-table"></div>
+        </div>
+        <aside class="panel">
+          <div class="panel-title"><div><h2 id="img-form-title">Nouvelle image</h2><div class="panel-sub">Associez une image URL à un produit du catalogue.</div></div></div>
+          <div class="helper-box"><div class="helper-title">Format attendu</div><div class="helper-text">Collez l'URL d'une image hébergée (Cloudflare R2, Imgur, etc.). Formats supportés : JPG, PNG, WebP. Taille recommandée : 400x400 minimum.</div></div>
+          <div class="form-grid">
+            <div class="field full"><div class="label">Site</div><select id="img-code"></select></div>
+            <div class="field full"><div class="label">Nom du produit</div><input id="img-product" placeholder="Ex. White spirit"></div>
+            <div class="field full"><div class="label">URL de l'image</div><input id="img-url" placeholder="https://..."></div>
+            <div class="field full"><div class="label">Texte alternatif</div><input id="img-alt" placeholder="Description de l'image"></div>
+            <div class="field"><div class="label">Source</div><input id="img-source" placeholder="Ex. EcoDDS, Photo terrain"></div>
+            <div class="field"><div class="label">Ordre</div><input id="img-order" type="number" value="0" min="0"></div>
+            <div class="field full" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="img-primary" style="width:18px;height:18px"> <label for="img-primary" style="font-size:13px;font-weight:700">Image principale</label></div>
+            <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button id="btn-img-save" class="btn btn-primary">Enregistrer</button>
+              <button id="btn-img-delete" class="btn btn-red hidden">Supprimer</button>
+              <button id="btn-img-cancel" class="btn btn-soft hidden">Annuler</button>
+            </div>
+            <div id="img-preview" class="full" style="margin-top:8px"></div>
+            <div id="img-meta" class="mini full"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
     <section data-section="mainbase" class="hidden">
       <div class="panel">
         <div class="panel-title"><div><h2>Base principale officielle</h2><div class="panel-sub">Référence centrale importée depuis le fichier maître.</div></div></div>
@@ -153,7 +189,7 @@ function planBadge(p){return {free:'<span class="badge b-free">Accès Base</span
 function statusBadge(active){return active?'<span class="badge b-on">Actif</span>':'<span class="badge b-off">Désactivé</span>'}
 function roleBadge(role){return role==='responsable'?'<span class="role role-resp">Responsable</span>':'<span class="role role-agent">Agent</span>'}
 function setTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('[data-section]').forEach(s=>s.classList.toggle('hidden',s.dataset.section!==name));window.scrollTo({top:0,behavior:'smooth'})}
-async function loadAll(){const [dash,cat,kn,mb]=await Promise.all([api('dashboard'),api('catalog-admin-list'),api('knowledge-admin-list'),fetch('./base-principale.json').then(r=>r.json())]);state.dashboard=dash;state.catalog=cat;state.knowledge=kn;state.mainbase=mb;renderAll()}
+async function loadAll(){const [dash,cat,kn,mb]=await Promise.all([api('dashboard'),api('catalog-admin-list'),api('knowledge-admin-list'),fetch('./base-principale.json').then(r=>r.json())]);state.dashboard=dash;state.catalog=cat;state.knowledge=kn;state.mainbase=mb;renderAll();loadImages().catch(()=>{})}
 function renderOverview(){const s=state.dashboard.stats||{};$('kpi-sites').textContent=s.activeSites||0;$('kpi-sessions').textContent=s.activeSessions||0;$('kpi-sales').textContent=s.totalSales||0;$('kpi-mrr').textContent=euro(s.mrr||0);$('kpi-brands').textContent=s.totalBrands||0;renderSalesTable((state.dashboard.sales||[]).slice(0,5),'sales-preview');renderSalesTable(state.dashboard.sales||[],'sales-full');renderSessions((state.dashboard.sessions||[]).slice(0,4),'sessions-preview');renderSessions(state.dashboard.sessions||[],'sessions-full')}
 function renderSalesTable(items,target){const el=$(target);if(!items.length){el.innerHTML='<div class="empty">Aucune vente enregistrée.</div>';return;}let h='<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Site</th><th>Plan</th><th>Montant</th><th>Email</th><th>Code</th></tr></thead><tbody>';items.forEach(s=>h+=`<tr><td>${esc(dt(s.date))}</td><td><strong>${esc(s.site)}</strong></td><td>${planBadge(s.plan)}</td><td>${esc(euro(s.amount))}</td><td class="mini">${esc(s.adminEmail||'—')}</td><td class="code">${esc(s.code||'—')}</td></tr>`);h+='</tbody></table></div>';el.innerHTML=h}
 function renderSessions(items,target){const el=$(target);if(!items.length){el.innerHTML='<div class="empty">Aucune session active.</div>';return;}let h='';items.forEach(s=>h+=`<div class="session"><div><div style="font-weight:900">${esc(s.agent)}</div><div class="mini">${esc(s.site)} · ${esc(s.code)}</div><div class="mini">${esc(s.deviceName||'Appareil inconnu')}</div><div class="mini">Dernière activité : ${esc(dt(s.lastSeenAt))}</div></div><div><button class="btn btn-red btn-sm js-site-action" data-action="kick-session" data-code="${esc(s.code)}" data-agent="${esc(s.agent)}">Forcer la déconnexion</button></div></div>`);el.innerHTML=h}
@@ -182,6 +218,134 @@ $('btn-cat-save').addEventListener('click',saveCat);$('btn-cat-delete').addEvent
 $('btn-kn-save').addEventListener('click',saveKn);$('flt-main-sheet').addEventListener('change',()=>{mainbasePage=1;renderMainBase()});$('flt-main-search').addEventListener('input',()=>{mainbasePage=1;renderMainBase()});$('flt-main-page-size').addEventListener('change',()=>{mainbasePage=1;renderMainBase()});$('btn-main-prev').addEventListener('click',()=>{if(mainbasePage>1){mainbasePage--;renderMainBase()}});$('btn-main-next').addEventListener('click',()=>{mainbasePage++;renderMainBase()});$('btn-kn-delete').addEventListener('click',deleteKn);$('btn-kn-promote').addEventListener('click',promoteKn);$('btn-kn-cancel').addEventListener('click',()=>{editKn=null;resetKn()});$('btn-kn-new').addEventListener('click',()=>{editKn=null;resetKn()});$('flt-kn-site').addEventListener('change',renderKnowledge);$('flt-kn-search').addEventListener('input',renderKnowledge);
 document.addEventListener('click',e=>{const siteBtn=e.target.closest('.js-site-action');if(siteBtn){const a=siteBtn.dataset.action,code=siteBtn.dataset.code,agent=siteBtn.dataset.agent||'';if(a==='add-agent'){const name=$('add-agent-'+code)?.value.trim()||'';const role=$('add-role-'+code)?.value||'agent';if(!name){toast('Entrez un nom de profil');alert('Entrez un nom de profil');return}if(role==='responsable'&&!confirm("Définir ce profil comme responsable unique du site ? L'ancien responsable sera passé en agent."))return;api('add-agent',{code,agent:name,role}).then(()=>{toast('Profil ajouté');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='remove-agent'){if(!confirm('Retirer '+agent+' ?'))return;api('remove-agent',{code,agent}).then(()=>{toast('Profil retiré');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='deactivate'){api('update',{code,active:false}).then(()=>{toast('Site désactivé');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='activate'){api('update',{code,active:true}).then(()=>{toast('Site réactivé');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='delete-site'){if(!confirm('Supprimer définitivement '+code+' ?'))return;api('delete',{code}).then(()=>{toast('Site supprimé');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='kick-session'){if(!confirm('Forcer la déconnexion de '+agent+' ?'))return;api('kick-session',{code,agent}).then(()=>{toast('Session fermée');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}return;} const catEdit=e.target.closest('.js-cat-edit'); if(catEdit){startCat(catEdit.dataset.code,catEdit.dataset.id);return;} const knEdit=e.target.closest('.js-kn-edit'); if(knEdit){startKn(knEdit.dataset.code,knEdit.dataset.brand);return;}});
 document.addEventListener('change',e=>{if(e.target.matches('.js-role-select')){const code=e.target.dataset.code||'';const agent=e.target.dataset.agent||'';const role=e.target.value;if(role==='responsable'&&!confirm("Définir "+agent+" comme responsable unique du site ? L'ancien responsable sera passé en agent.")){loadAll();return;}api('set-agent-role',{code,agent,role}).then(()=>{toast('Rôle mis à jour');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} if(e.target.matches('.js-plan-select')){const code=e.target.dataset.code||'';api('update',{code,plan:e.target.value}).then(()=>{toast('Plan mis à jour');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}});
+
+// ===== IMAGES =====
+let editImg=null;
+let imagesState={sites:[],items:[]};
+
+async function loadImages(){
+  const sitesData=state.dashboard?state.dashboard.sites:[];
+  const allItems=[];
+  for(const site of sitesData){
+    try{
+      const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:site.code,action:'list-all'})});
+      const d=await res.json();
+      if(d.items)(d.items||[]).forEach(i=>{allItems.push(Object.assign({code:site.code,site:site.site,client:site.client||''},i))});
+    }catch(e){}
+  }
+  imagesState={sites:sitesData.map(s=>({code:s.code,site:s.site,client:s.client||''})),items:allItems};
+  fillImgSelects();
+  renderImages();
+}
+
+function fillImgSelects(){
+  const opts=['<option value="">Choisir un site</option>'].concat(imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client)}</option>`));
+  $('img-code').innerHTML=opts.join('');
+  $('flt-img-site').innerHTML='<option value="">Tous les sites</option>'+imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)}</option>`).join('');
+}
+
+function filteredImages(){
+  const site=$('flt-img-site').value;
+  const q=$('flt-img-search').value.trim().toLowerCase();
+  return imagesState.items.filter(i=>{
+    if(site&&i.code!==site)return false;
+    if(!q)return true;
+    return [i.productName,i.alt,i.source,i.site,i.client].join(' ').toLowerCase().includes(q);
+  });
+}
+
+function renderImages(){
+  const items=filteredImages();
+  const el=$('images-table');
+  if(!items.length){el.innerHTML='<div class="empty">Aucune image enregistrée.</div>';return;}
+  let h='<div class="table-wrap"><table class="table"><thead><tr><th style="width:60px">Aperçu</th><th>Produit</th><th>Site</th><th>Source</th><th>Ordre</th><th>Principale</th><th></th></tr></thead><tbody>';
+  items.forEach(i=>{
+    h+=`<tr>
+      <td><img src="${esc(i.url)}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect fill=%22%23f1f5f9%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2228%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2212%22>?</text></svg>'"></td>
+      <td><strong>${esc(i.productName)}</strong><div class="mini">${esc(i.alt||'')}</div></td>
+      <td>${esc(i.site||'—')}<div class="mini">${esc(i.client||'')}</div></td>
+      <td><span class="pill pill-gray">${esc(i.source||'—')}</span></td>
+      <td>${esc(i.order||0)}</td>
+      <td>${i.isPrimary?'<span class="badge b-on" style="font-size:10px">★ Principale</span>':'<span class="mini">—</span>'}</td>
+      <td><button class="btn btn-soft btn-sm js-img-edit" data-code="${esc(i.code)}" data-id="${esc(i.id)}">Modifier</button></td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  el.innerHTML=h;
+}
+
+function resetImg(){
+  editImg=null;
+  $('img-form-title').textContent='Nouvelle image';
+  $('img-code').value=$('flt-img-site').value||imagesState.sites[0]?.code||'';
+  $('img-product').value='';$('img-url').value='';$('img-alt').value='';
+  $('img-source').value='';$('img-order').value='0';$('img-primary').checked=false;
+  $('btn-img-delete').classList.add('hidden');$('btn-img-cancel').classList.add('hidden');
+  $('img-preview').innerHTML='';$('img-meta').textContent='';
+}
+
+function startImgEdit(code,id){
+  const item=imagesState.items.find(x=>x.code===code&&x.id===id);
+  if(!item)return;
+  editImg={code,id};
+  $('img-form-title').textContent='Modifier l\'image';
+  $('img-code').value=item.code;$('img-product').value=item.productName||'';
+  $('img-url').value=item.url||'';$('img-alt').value=item.alt||'';
+  $('img-source').value=item.source||'';$('img-order').value=item.order||0;
+  $('img-primary').checked=!!item.isPrimary;
+  $('btn-img-delete').classList.remove('hidden');$('btn-img-cancel').classList.remove('hidden');
+  $('img-preview').innerHTML=item.url?`<img src="${esc(item.url)}" style="max-width:200px;max-height:150px;border-radius:12px;border:1px solid #e2e8f0">`:'';
+  $('img-meta').textContent='Dernière mise à jour : '+dt(item.updatedAt);
+}
+
+async function saveImg(){
+  const code=$('img-code').value;
+  const item={
+    id:editImg?editImg.id:'',
+    productName:$('img-product').value.trim(),
+    url:$('img-url').value.trim(),
+    alt:$('img-alt').value.trim(),
+    source:$('img-source').value.trim(),
+    order:parseInt($('img-order').value)||0,
+    isPrimary:$('img-primary').checked
+  };
+  if(!code||!item.productName||!item.url){toast('Site, produit et URL requis');return;}
+  try{
+    const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,action:'save',item,agent:'superadmin'})});
+    const d=await res.json();
+    if(d.error)throw new Error(d.error);
+    toast(editImg?'Image mise à jour':'Image ajoutée');
+    editImg=null;resetImg();loadImages();
+  }catch(e){toast('Erreur: '+e.message)}
+}
+
+async function deleteImg(){
+  if(!editImg||!confirm('Supprimer cette image ?'))return;
+  try{
+    const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:editImg.code,action:'delete',id:editImg.id})});
+    const d=await res.json();
+    if(d.error)throw new Error(d.error);
+    toast('Image supprimée');editImg=null;resetImg();loadImages();
+  }catch(e){toast('Erreur: '+e.message)}
+}
+
+// Image URL preview
+$('img-url').addEventListener('input',function(){
+  const url=this.value.trim();
+  $('img-preview').innerHTML=url?`<img src="${esc(url)}" style="max-width:200px;max-height:150px;border-radius:12px;border:1px solid #e2e8f0" onerror="this.parentElement.innerHTML='<span class=mini>Image non accessible</span>'">`:'';
+});
+
+$('btn-img-save').addEventListener('click',saveImg);
+$('btn-img-delete').addEventListener('click',deleteImg);
+$('btn-img-cancel').addEventListener('click',()=>{editImg=null;resetImg()});
+$('btn-img-new').addEventListener('click',()=>{editImg=null;resetImg()});
+$('flt-img-site').addEventListener('change',renderImages);
+$('flt-img-search').addEventListener('input',renderImages);
+document.addEventListener('click',e=>{
+  const imgEdit=e.target.closest('.js-img-edit');
+  if(imgEdit){startImgEdit(imgEdit.dataset.code,imgEdit.dataset.id);return;}
+});
+
 })();
 </script>
 </body>
