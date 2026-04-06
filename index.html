@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f5f7fa">
+<meta name="theme-color" content="#f5f7f2">
+<meta name="description" content="TriDDS — Assistant IA de tri des DDS en déchetterie. Recherche, photo IA, base métier centralisée.">
 <link rel="icon" type="image/x-icon" href="./favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png">
@@ -13,433 +14,203 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <title>TriDDS</title>
 <style>
-:root{--bg:#f5f7fa;--white:#fff;--card:#fff;--bd:#e5e7eb;--tx:#111827;--tx2:#6b7280;--tx3:#9ca3af;
---eco:#059669;--eco-bg:#ecfdf5;--eco-bd:#6ee7b7;--eco-tx:#065f46;
---hors:#d97706;--hors-bg:#fffbeb;--hors-bd:#fcd34d;--hors-tx:#92400e;
---int:#dc2626;--int-bg:#fef2f2;--int-bd:#fca5a5;--int-tx:#991b1b;
---blue:#1a56db;--blue-bg:#eff6ff;--purple:#7c3aed;--r:16px;--rs:10px;--font:'DM Sans',system-ui,sans-serif}
+:root{
+  --bg:#f5f7f2;--white:#fff;--card:#fff;--bd:#e0e4d9;--tx:#1a1a1a;--tx2:#5c5e57;--tx3:#8a8d84;
+  --eco:#059669;--eco-bg:#ecfdf5;--eco-bd:#6ee7b7;--eco-tx:#065f46;
+  --hors:#d97706;--hors-bg:#fffbeb;--hors-bd:#fcd34d;--hors-tx:#92400e;
+  --int:#dc2626;--int-bg:#fef2f2;--int-bd:#fca5a5;--int-tx:#991b1b;
+  --brand-red:#c22829;--brand-green:#5a8a19;--brand-green2:#4d7c0f;
+  --accent:#c22829;--accent-bg:#fef2f2;
+  --r:14px;--rs:10px;--font:'DM Sans',system-ui,sans-serif
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--tx);overscroll-behavior:none;-webkit-font-smoothing:antialiased}
-input,button,textarea{font-family:var(--font);font-size:16px}
+input,button,textarea,select{font-family:var(--font);font-size:16px}
 button{cursor:pointer;border:none;background:none;color:inherit}
 .S{display:none;min-height:100dvh;flex-direction:column}.S.on{display:flex}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .spin{animation:spin .7s linear infinite}
-.fu{animation:fadeUp .3s ease both}
+.fu{animation:fadeUp .25s ease both}
 
-/* Flux banners - the KEY visual element */
-.flux-banner{padding:20px;text-align:center;color:#fff;font-weight:900;font-size:20px;letter-spacing:.5px;text-transform:uppercase}
-.flux-banner.eco{background:linear-gradient(135deg,#059669,#10b981)}
-.flux-banner.hors{background:linear-gradient(135deg,#d97706,#f59e0b)}
-.flux-banner.int{background:linear-gradient(135deg,#dc2626,#ef4444)}
-.flux-cat{font-size:14px;font-weight:600;opacity:.85;margin-top:4px;text-transform:none;letter-spacing:0}
+/* Flux banners */
+.flux-banner{padding:18px;text-align:center;color:#fff;font-weight:800;font-size:18px;letter-spacing:.3px;text-transform:uppercase}
+.flux-banner.eco{background:var(--eco)}
+.flux-banner.hors{background:var(--hors)}
+.flux-banner.int{background:var(--int)}
+.flux-cat{font-size:13px;font-weight:600;opacity:.85;margin-top:3px;text-transform:none;letter-spacing:0}
 
-/* Cards */
-.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
 .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:4px}
-
-/* Buttons */
 .btn{padding:12px 20px;border-radius:var(--rs);font-weight:700;font-size:14px;text-align:center;transition:all .12s}
-.btn-blue{background:var(--blue);color:#fff}.btn-blue:active{opacity:.85}
+.btn-brand{background:var(--brand-red);color:#fff}.btn-brand:active{opacity:.85}
+.btn-green{background:var(--brand-green);color:#fff}
 .btn-eco{background:var(--eco);color:#fff}
 .btn-outline{background:var(--white);border:1.5px solid var(--bd);color:var(--tx)}
 .btn-f{width:100%;display:block}
-
-/* Badge */
 .badge{display:inline-flex;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800}
 .b-eco{background:var(--eco-bg);color:var(--eco);border:1.5px solid var(--eco-bd)}
 .b-hors{background:var(--hors-bg);color:var(--hors);border:1.5px solid var(--hors-bd)}
 .b-int{background:var(--int-bg);color:var(--int);border:1.5px solid var(--int-bd)}
 
 /* Search bar */
-.search-bar{display:flex;align-items:center;background:var(--white);border:2px solid var(--bd);border-radius:60px;padding:4px 4px 4px 16px;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:border-color .2s}
-.search-bar:focus-within{border-color:var(--blue)}
-.search-bar input{flex:1;border:none;outline:none;font-size:15px;padding:10px 8px;background:none;color:var(--tx)}
-.search-bar button{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.sb-voice{background:var(--blue);color:#fff}
-.sb-cam{background:var(--eco);color:#fff;margin-left:4px}
+.search-wrap{position:sticky;top:0;z-index:50;background:var(--bg);padding:10px 14px 8px;border-bottom:1px solid var(--bd)}
+.search-bar{display:flex;align-items:center;background:var(--white);border:2px solid var(--bd);border-radius:16px;padding:4px 4px 4px 14px;transition:border-color .2s}
+.search-bar:focus-within{border-color:var(--brand-green)}
+.search-bar input{flex:1;border:none;outline:none;font-size:15px;padding:10px 6px;background:none;color:var(--tx)}
+.search-bar button{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sb-voice{background:var(--white);border:1.5px solid var(--bd);color:var(--tx2)}
+.sb-cam{background:var(--brand-green);color:#fff;margin-left:4px}
 
 /* Header */
-.hdr{padding:12px 16px;display:flex;align-items:center;gap:10px}
-.hdr .bk{font-size:18px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center}
-.hdr h2{font-size:16px;font-weight:700;flex:1}
+.hdr{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.hdr .bk{font-size:16px;width:34px;height:34px;border-radius:10px;background:rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center}
+.hdr h2{font-size:15px;font-weight:700;flex:1}
 
 /* Tabs */
-.tabs{display:flex;background:var(--white);border-top:1px solid var(--bd);padding:4px 0 max(4px,env(safe-area-inset-bottom))}
-.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0;font-size:10px;font-weight:600;color:var(--tx3)}
-.tabs button.act{color:var(--blue)}
-.tabs button .ti{font-size:20px}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:600px;border-top:1px solid var(--bd);padding:6px 10px max(6px,env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(12px);z-index:90;display:flex}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:10px;font-weight:600;color:var(--tx3);border-radius:10px}
+.tabs button.act{color:var(--brand-green);background:rgba(90,138,25,.06)}
+.tabs button svg{width:20px;height:20px}
 
-/* Confidence */
-.cb{height:6px;border-radius:99px;background:#f0f0f5;overflow:hidden;margin-top:6px}
+/* Confidence bar */
+.cb{height:5px;border-radius:99px;background:#f0f0f0;overflow:hidden;margin-top:5px}
 .cb>div{height:100%;border-radius:99px}
 
 /* Overlay */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:flex-end;justify-content:center}
 .ov.on{display:flex}
-.ov-body{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:fadeUp .25s ease}
+.ov-body{background:var(--white);border-radius:18px 18px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:fadeUp .2s ease}
 
-/* Plan badge */
-.plan-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase}
-.plan-free{background:#f0f0f5;color:var(--tx2)}
-.plan-pro{background:#dbeafe;color:#1e40af}
-.plan-ent{background:#f5f3ff;color:#6d28d9}
+/* Result cards - enriched with flux banner */
+.res-card{display:flex;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);background:var(--white);margin-bottom:6px}
+.res-card .rc-info{flex:1;padding:10px 12px;min-width:0}
+.res-card .rc-info h4{font-size:14px;font-weight:700;margin:0}
+.res-card .rc-info p{font-size:12px;color:var(--tx2);margin:3px 0 0}
+.res-card .rc-flux{width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;flex-shrink:0;color:#fff}
+.res-card .rc-flux .rf-label{font-size:14px;font-weight:700;text-align:center;line-height:1.15}
+.res-card .rc-flux .rf-bac{font-size:11px;margin-top:3px;opacity:.82;text-align:center}
+.rc-eco{background:var(--eco)}.rc-hors{background:var(--hors)}.rc-int{background:var(--int)}
+
+/* Login */
+#s-login{background:#1c1917!important;padding:0!important}
+.login-shell{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px}
+.login-card{width:min(400px,100%);background:var(--white);border-radius:24px;padding:28px;text-align:center}
+.login-card img{height:54px;margin-bottom:16px}
+.login-card h1{font-size:13px;color:var(--tx2);font-weight:600;margin-bottom:20px}
+.login-links{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.login-links a,.login-links button{flex:1;min-width:120px;font-size:12px;padding:10px;border-radius:10px;text-decoration:none;font-weight:700;text-align:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7)}
+
+/* Home */
+.home-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:10px}
+.home-bar-left{display:flex;align-items:center;gap:8px}
+.home-bar-left img{height:28px}
+.home-bar-site{font-size:13px;font-weight:700;color:var(--tx)}
+.home-bar-agent{font-size:11px;color:var(--tx3)}
+.home-bar-plan{font-size:10px;padding:3px 8px;border-radius:6px;font-weight:800;background:rgba(90,138,25,.1);color:var(--brand-green)}
+#home-content{flex:1;overflow-y:auto;padding:0 14px 100px}
+.home-empty{text-align:center;padding:60px 20px;color:var(--tx3)}
+.home-empty svg{margin-bottom:10px}
+.home-empty p{font-size:13px;margin-top:4px}
+
+/* Manage */
+.manage-grid{display:grid;gap:10px;margin-top:12px}
+.manage-btn{display:block;width:100%;text-align:left;padding:14px;border-radius:14px;border:1px solid var(--bd);background:#fff;font-weight:700}
+.manage-note{font-size:12px;color:var(--tx2);margin-top:4px}
+.team-row,.cat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:#fff;margin-bottom:6px}
+.input,.select{width:100%;padding:12px;border:1.5px solid var(--bd);border-radius:10px;background:#fff;outline:none}
+.toolbar{display:grid;grid-template-columns:1fr 140px;gap:8px;margin-bottom:10px}
+.cat-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.cat-form .full{grid-column:1/-1}
+
+/* Trial modal */
+.trial-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:18px;z-index:120}
+.trial-modal.on{display:flex}
+.trial-box{width:min(480px,100%);background:#fff;border-radius:22px;padding:24px}
+.trial-box h2{margin:0;font-size:24px;letter-spacing:-.5px}
+.trial-box p{margin:8px 0 0;color:var(--tx2);font-size:14px;line-height:1.5}
+.trial-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.trial-grid .full{grid-column:1/-1}
+.trial-grid input{width:100%;padding:12px;border:1.5px solid var(--bd);border-radius:12px;outline:none}
+.trial-grid input:focus{border-color:var(--brand-green)}
+.trial-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.trial-msg{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:700;display:none}
+.trial-msg.err{display:block;background:var(--int-bg);border:1px solid var(--int-bd);color:var(--int-tx)}
+.trial-msg.ok{display:block;background:var(--eco-bg);border:1px solid var(--eco-bd);color:var(--eco-tx)}
+
+/* Guide */
+.guide-section{padding:16px}
+.guide-card{background:var(--white);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.guide-card h3{font-size:15px;font-weight:800;margin:0 0 6px}
+.guide-card p{font-size:13px;color:var(--tx2);line-height:1.5;margin:0}
+.guide-family{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.guide-fam{border-radius:12px;padding:10px 12px;border:1px solid var(--bd)}
+.guide-fam strong{display:block;font-size:13px;margin-bottom:3px}
+.guide-fam span{font-size:11px;color:var(--tx2);line-height:1.4}
+
+@media(max-width:600px){.trial-grid,.cat-form{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}}
 </style>
-
-<style>
-body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
-#s-home{background:linear-gradient(180deg,#edf3ff,#f5f8ff 35%,#eef2f8)}
-.home-shell{max-width:1360px;width:100%;margin:0 auto;padding:22px 16px 120px;display:flex;flex-direction:column;gap:18px}
-.home-hero{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:28px;padding:24px;box-shadow:0 18px 50px rgba(15,23,42,.14)}
-.home-hero-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}
-.home-kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:800;color:#fff;margin-bottom:12px}
-.home-title{font-size:36px;font-weight:900;letter-spacing:-1.4px;line-height:1.05;margin:0}
-.home-sub{max-width:760px;color:#dbeafe;font-size:15px;line-height:1.65;margin-top:10px}
-.home-status{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
-#home-plan{border:none!important;box-shadow:none!important;padding:7px 12px;border-radius:999px!important}
-.home-quota{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:12px 14px;min-width:132px;text-align:right}
-.home-quota #q-label{font-size:11px;color:#dbeafe;font-weight:700}
-.home-quota #q-disp{font-size:22px;font-weight:900;letter-spacing:-.6px;color:#fff!important}
-.home-search-card{margin-top:18px;background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.6);border-radius:22px;padding:14px;box-shadow:0 14px 30px rgba(15,23,42,.10)}
-.home-search-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.search-bar{box-shadow:none;border:1.5px solid #dbe4f0;padding:6px 6px 6px 16px;background:#fff}
-.search-bar:focus-within{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.08)}
-.home-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
-.home-quick>div{border-radius:18px!important;padding:16px 14px!important;box-shadow:0 10px 24px rgba(15,23,42,.05);backdrop-filter:blur(8px)}
-#home-mem{margin:14px 0 0!important;border-radius:16px!important;padding:12px 14px!important;background:rgba(124,58,237,.08)!important;border:1px solid rgba(124,58,237,.22)!important;color:#6d28d9!important}
-.home-history{background:#fff;border:1px solid #e6edf8;border-radius:26px;padding:18px;box-shadow:0 14px 36px rgba(15,23,42,.06)}
-.home-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap}
-.home-history-head h3{font-size:24px;letter-spacing:-.6px;margin:0}
-.home-history-head p{margin:4px 0 0;color:#64748b;font-size:13px}
-#hist-list{padding:0!important;overflow:visible!important;min-height:220px}
-.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;width:min(720px,calc(100% - 24px));border:1px solid rgba(255,255,255,.6);border-radius:24px;padding:8px 10px;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);box-shadow:0 20px 40px rgba(15,23,42,.12);z-index:90}
-.tabs button{border-radius:16px;padding:10px 0;color:#64748b}
-.tabs button.act{background:#eff6ff;color:#1d4ed8}
-#s-login{background:radial-gradient(circle at top left,#1e3a8a,#0f172a 58%)!important}
-#s-login .card{background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.4);border-radius:26px;box-shadow:0 24px 60px rgba(2,6,23,.22)}
-#s-login h1{font-size:34px!important;color:#fff0}
-#s-login h1:before{content:'TriDDS';display:block;color:#fff;font-size:34px;font-weight:900;letter-spacing:-1px}
-#s-login p{color:#dbeafe!important}
-#s-login > div > div:first-child{filter:drop-shadow(0 10px 16px rgba(16,185,129,.22))}
-#s-login .lbl{color:#94a3b8}
-#s-login input,#s-login select{background:#fff}
-@media(max-width:900px){.home-title{font-size:28px}.home-shell{padding:16px 12px 110px}.home-search-row{flex-direction:column;align-items:stretch}.home-quick{grid-template-columns:1fr}.home-history{padding:14px}.tabs{bottom:12px}}
-</style>
-
-
-<style>
-#s-login{padding:24px 18px 26px!important;background:radial-gradient(circle at top left,#1e3a8a,#0f172a 58%)!important}
-.landing-wrap{max-width:1380px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:22px}
-.landing-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.landing-brand{display:flex;flex-direction:column;align-items:flex-start;gap:8px;color:#fff}.landing-brand-wordmark{height:54px;width:auto;display:block}.landing-brand span{display:block;color:#c7d2fe;font-size:13px;margin-top:0}
-.landing-nav-actions{display:flex;gap:10px;flex-wrap:wrap}.landing-link{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-weight:800;text-decoration:none}.landing-link.primary{background:#fff;color:#0f172a;border-color:#fff}
-.landing-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:22px;align-items:stretch}.landing-copy{background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.15);border-radius:32px;padding:34px;color:#fff;backdrop-filter:blur(10px);box-shadow:0 24px 60px rgba(2,6,23,.18)}
-.landing-kicker{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:800;color:#fff;margin-bottom:16px}.landing-copy h1{font-size:58px;line-height:1.02;letter-spacing:-2px;margin:0;color:#fff!important}.landing-copy h1:before{content:none!important}.landing-copy p{font-size:18px;line-height:1.65;color:#dbeafe!important;margin:18px 0 0!important}
-.landing-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.landing-pill{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;font-weight:900;text-decoration:none}.landing-pill.primary{background:#fff;color:#0f172a}.landing-pill.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff}
-.landing-points{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:24px}.landing-point{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:16px}.landing-point strong{display:block;font-size:15px;margin-bottom:6px}.landing-point span{display:block;color:#dbeafe;font-size:13px;line-height:1.5}
-.landing-login{background:rgba(255,255,255,.96)!important;border:1px solid rgba(255,255,255,.45)!important;border-radius:32px!important;padding:28px!important;box-shadow:0 24px 60px rgba(2,6,23,.22)!important}
-.landing-login-top{margin-bottom:18px}.landing-login-title{font-size:32px;font-weight:900;letter-spacing:-1.2px;color:#0f172a}.landing-login-sub{margin-top:8px;color:#64748b;font-size:14px;line-height:1.6}
-.landing-sep{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:#94a3b8;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.landing-sep:before,.landing-sep:after{content:'';height:1px;background:#e2e8f0;flex:1}
-.landing-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:#94a3b8}.landing-foot a{color:#475569;text-decoration:none;font-weight:700}
-@media(max-width:1080px){.landing-grid{grid-template-columns:1fr}.landing-copy h1{font-size:42px}.landing-points{grid-template-columns:1fr}.landing-wrap{gap:18px}}
-@media(max-width:720px){#s-login{padding:14px 12px 18px!important}.landing-copy,.landing-login{padding:22px!important}.landing-copy h1{font-size:34px}.landing-nav{justify-content:center}.landing-nav-actions{width:100%;justify-content:center}.landing-link{flex:1;min-width:140px}.landing-cta{flex-direction:column}.landing-pill{width:100%}}
-
-.landing-link.info{background:rgba(255,255,255,.08);color:#fff}
-.landing-pill.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff}
-.landing-pill.ghost{background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff}
-.landing-cta-note{margin-top:12px;color:#bfdbfe;font-size:12px;font-weight:700}
-.landing-login-actions{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.btn-base{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
-.btn-ghost{background:#fff;color:#0f172a;border:1px solid #dbe4f0}
-.landing-mini-note{margin-top:-2px;margin-bottom:14px;color:#64748b;font-size:12px;line-height:1.5}
-.landing-info{background:#fff;border:1px solid #e6edf8;border-radius:32px;padding:28px;box-shadow:0 24px 60px rgba(2,6,23,.08)}
-.landing-info-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
-.landing-info-head h2{margin:0;font-size:34px;letter-spacing:-1.3px;color:#0f172a}
-.landing-info-head p{margin:8px 0 0;color:#64748b;max-width:760px;line-height:1.7}
-.landing-step-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
-.landing-step{background:linear-gradient(180deg,#f8fbff,#ffffff);border:1px solid #dbe4f0;border-radius:22px;padding:18px}
-.landing-step-no{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:13px;font-weight:900;margin-bottom:12px}
-.landing-step strong{display:block;font-size:16px;color:#0f172a}
-.landing-step span{display:block;margin-top:8px;color:#64748b;font-size:14px;line-height:1.6}
-.landing-family-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
-.landing-family{border-radius:20px;padding:16px;border:1px solid #e2e8f0;background:#f8fafc}
-.landing-family strong{display:block;font-size:14px;color:#0f172a}
-.landing-family span{display:block;margin-top:6px;font-size:12px;color:#64748b;line-height:1.5}
-.landing-family.eco{background:#ecfdf5;border-color:#a7f3d0}
-.landing-family.warn{background:#fffbeb;border-color:#fde68a}
-.landing-family.danger{background:#fef2f2;border-color:#fecaca}
-.landing-focus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:8px}
-.landing-focus{border:1px solid #e2e8f0;border-radius:22px;padding:18px;background:#fff}
-.landing-focus h3{margin:0;font-size:18px;letter-spacing:-.4px;color:#0f172a}
-.landing-focus p{margin:10px 0 0;color:#64748b;line-height:1.6;font-size:14px}
-.landing-list{display:grid;gap:8px;margin-top:12px}
-.landing-list div{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:16px;background:#f8fafc;color:#334155;font-size:13px;line-height:1.5}
-.landing-list b{color:#0f172a}
-.landing-source{margin-top:18px;padding:14px 16px;border-radius:18px;background:#f8fafc;border:1px dashed #cbd5e1;color:#475569;font-size:13px;line-height:1.6}
-@media(max-width:1080px){.landing-step-grid,.landing-family-grid,.landing-focus-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){.landing-step-grid,.landing-family-grid,.landing-focus-grid{grid-template-columns:1fr}.landing-info{padding:22px}.landing-info-head h2{font-size:28px}}
-</style>
-
-
-<style>
-.trial-modal{position:fixed;inset:0;background:rgba(2,6,23,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:120}
-.trial-modal.on{display:flex}.trial-box{width:min(560px,100%);background:#fff;border:1px solid #e6edf8;border-radius:28px;padding:24px;box-shadow:0 30px 70px rgba(2,6,23,.22)}
-.trial-box h2{margin:0;font-size:30px;letter-spacing:-1px}.trial-box p{margin:10px 0 0;color:#64748b;line-height:1.6}.trial-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.trial-grid .full{grid-column:1/-1}.trial-grid input{width:100%;padding:13px 14px;border:1.5px solid #d7e0ec;border-radius:14px;outline:none}.trial-grid input:focus{border-color:#2563eb}.trial-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.trial-msg{margin-top:12px;padding:12px 14px;border-radius:14px;font-size:13px;font-weight:700;display:none}.trial-msg.err{display:block;background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.trial-msg.ok{display:block;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75}
-@media(max-width:720px){.trial-grid{grid-template-columns:1fr}.trial-box{padding:20px}}
-</style>
-
-
-<style>
-.manage-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-.manage-btn{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:16px;border:1px solid var(--bd);background:#fff;font-weight:800}
-.manage-note{font-size:12px;color:var(--tx2);margin-top:6px}
-.team-row,.cat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border:1px solid var(--bd);border-radius:14px;background:#fff;margin-bottom:8px}
-.team-left,.cat-left{display:flex;flex-direction:column;gap:4px}
-.input,.select{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;background:#fff;outline:none}
-.toolbar{display:grid;grid-template-columns:1fr 140px;gap:8px;margin-bottom:12px}
-.cat-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.cat-form .full{grid-column:1/-1}
-@media(max-width:800px){.cat-form,.toolbar{grid-template-columns:1fr}}
-</style>
-
 </head>
 <body>
 
 <!-- ===== LOGIN ===== -->
 <div id="s-login" class="S on">
-  <div class="landing-wrap">
-    <div class="landing-nav">
-      <div class="landing-brand">
-        <img class="landing-brand-wordmark" src="./assets/tridds-wordmark.png" alt="TriDDS">
-        <span>Assistant IA de tri des DDS</span>
+  <div class="login-shell">
+    <div class="login-card">
+      <img src="./assets/tridds-wordmark.png" alt="TriDDS">
+      <h1>Assistant de tri des DDS en déchetterie</h1>
+      <div style="margin-bottom:14px">
+        <div class="lbl">Code du site</div>
+        <input id="in-code" type="text" placeholder="Ex: FAU-2025-PRO" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:12px;font-size:16px;font-weight:600;text-transform:uppercase;text-align:center;outline:none" autocomplete="off">
       </div>
-      <div class="landing-nav-actions">
-        <a class="landing-link info" href="#info-tri">Informations</a>
-        <a class="landing-link" href="./pricing.html">Tarifs</a>
-        <a class="landing-link primary" href="./pricing.html">Choisir mon accès</a>
+      <div id="login-step1">
+        <button id="btn-check" class="btn btn-brand btn-f" style="padding:14px;font-size:15px">Se connecter</button>
       </div>
+      <div id="login-step2" style="display:none">
+        <div style="text-align:center;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--eco)">Site vérifié ✅</div>
+          <div id="login-site-name" style="font-size:16px;font-weight:800;margin-top:2px"></div>
+        </div>
+        <div class="lbl">Sélectionnez votre nom</div>
+        <select id="sel-agent" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:12px;font-size:16px;font-weight:600;outline:none;margin-bottom:10px;background:var(--card)"></select>
+        <button id="btn-login" class="btn btn-brand btn-f" style="padding:14px;font-size:15px">Entrer</button>
+        <button id="btn-back-code" style="display:block;margin:8px auto 0;color:var(--tx2);font-size:12px;text-decoration:underline">← Changer de code</button>
+      </div>
+      <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:8px;display:none"></div>
     </div>
-
-    <div class="landing-grid">
-      <section class="landing-copy">
-        <div class="landing-kicker">Produit métier • Déchetteries • Agents terrain</div>
-        <h1>Un assistant de tri plus clair, plus fiable et plus rapide.</h1>
-        <p>TriDDS aide les agents à identifier et orienter correctement les déchets grâce à la recherche, à l’analyse photo et à une base métier centralisée.</p>
-        <div class="landing-cta">
-          <a class="landing-pill primary" href="./pricing.html">Voir les offres</a>
-          <button id="btn-free-access-hero" class="landing-pill secondary" type="button">Tester l’IA gratuitement</button>
-          <a class="landing-pill ghost" href="#info-tri">Voir les informations métier</a>
-        </div>
-        <div class="landing-cta-note">La création d’accès commence par le choix d’une formule sur la page Tarifs.</div>
-        <div class="landing-points">
-          <div class="landing-point"><strong>Prise en main rapide</strong><span>Parcours distinct entre consultation, essai IA et création d’accès pour éviter toute confusion dès l’arrivée.</span></div>
-          <div class="landing-point"><strong>Analyse assistée</strong><span>Recherche texte, photo IA et repères métier pour traiter plus vite les cas fréquents.</span></div>
-          <div class="landing-point"><strong>Gestion centralisée</strong><span>Accès, agents, quotas IA et base produits regroupés dans une interface unique et plus lisible.</span></div>
-        </div>
-      </section>
-
-      <section class="landing-login card">
-        <div class="landing-login-top">
-          <div class="landing-login-title">Se connecter</div>
-          <div class="landing-login-sub">Déjà client ? Entrez votre code d’accès. Nouveau visiteur ? Consultez les repères métier, testez l’IA gratuitement ou choisissez ensuite une formule adaptée.</div>
-        </div>
-        <div class="landing-login-actions">
-          <button id="btn-create-access" class="btn btn-blue btn-f" style="padding:14px;font-size:15px">Voir les tarifs et créer mon accès</button>
-          <button id="btn-free-access" class="btn btn-base btn-f" style="padding:14px;font-size:15px">Accès Base sans IA</button>
-          <a class="btn btn-ghost btn-f" href="#info-tri" style="padding:14px;font-size:15px;text-decoration:none">Consulter les informations métier</a>
-        </div>
-        <div class="landing-mini-note">Vous pouvez consulter les repères de tri sans créer de compte, puis choisir une offre seulement si vous souhaitez activer l’IA ou gérer un site.</div>
-        <div class="landing-sep">J’ai déjà un code</div>
-        <div id="login-step1">
-          <div class="lbl">Code du site</div>
-          <input id="in-code" type="text" placeholder="Ex: FAU-2025-PRO" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:var(--rs);font-size:16px;font-weight:600;text-transform:uppercase;text-align:center;outline:none;margin-bottom:12px" autocomplete="off">
-          <button id="btn-check" class="btn btn-blue btn-f" style="padding:16px;font-size:16px">Vérifier le code</button>
-        </div>
-        <div id="login-step2" style="display:none">
-          <div style="text-align:center;margin-bottom:14px">
-            <div style="font-size:13px;color:var(--tx2)">Site vérifié ✅</div>
-            <div id="login-site-name" style="font-size:18px;font-weight:800;margin-top:2px"></div>
-          </div>
-          <div class="lbl">Sélectionnez votre nom</div>
-          <select id="sel-agent" style="width:100%;padding:14px;border:2px solid var(--bd);border-radius:var(--rs);font-size:16px;font-weight:600;outline:none;margin-bottom:12px;background:var(--card)"></select>
-          <button id="btn-login" class="btn btn-blue btn-f" style="padding:16px;font-size:16px">Se connecter</button>
-          <button id="btn-back-code" style="display:block;margin:10px auto 0;color:var(--tx2);font-size:12px;text-decoration:underline;background:none;border:none;cursor:pointer">← Changer de code</button>
-        </div>
-        <div id="login-err" style="color:var(--int);font-size:12px;font-weight:600;text-align:center;margin-top:10px;display:none"></div>
-        <div class="landing-foot">
-          <span>Consultation immédiate possible</span>
-          <button id="btn-demo" style="background:none;border:none;padding:0;color:#334155;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer">Ouvrir l’accès Base sans IA</button>
-        </div>
-      </section>
+    <div class="login-links">
+      <button id="btn-free-access-hero" type="button">Essayer l'IA</button>
+      <a href="./pricing.html">Voir les tarifs</a>
+      <button id="btn-demo" type="button">Consulter sans compte</button>
     </div>
-
-    <section id="info-tri" class="landing-info">
-      <div class="landing-info-head">
-        <div>
-          <h2>Informations métier</h2>
-          <p>Une synthèse visuelle des repères essentiels issus de vos supports EcoDDS, pour aider un agent à faire un premier tri avant même la recherche détaillée.</p>
-        </div>
-      </div>
-
-      <div class="landing-step-grid">
-        <div class="landing-step">
-          <div class="landing-step-no">01</div>
-          <strong>Identifier le bon univers</strong>
-          <span>Commencer par la famille produit  : pâteux, aérosols, autres DDS liquides, phytosanitaires et biocides, filtres, acides, bases ou comburants.</span>
-        </div>
-        <div class="landing-step">
-          <div class="landing-step-no">02</div>
-          <strong>Vérifier le conditionnement</strong>
-          <span>Avant validation, contrôler le seuil du contenant. Plusieurs familles ont des limites spécifiques en litres ou en kilos.</span>
-        </div>
-        <div class="landing-step">
-          <div class="landing-step-no">03</div>
-          <strong>Écarter les faux amis</strong>
-          <span>Les produits non identifiés, hors seuils ou hors périmètre reviennent souvent dans les refus. Cette rubrique met ces cas en avant dès l’accueil.</span>
-        </div>
-      </div>
-
-      <div class="landing-family-grid">
-        <div class="landing-family eco"><strong>Pâteux</strong><span>Peintures, sous-couches, enduits, mastics, colles mur et carrelage, dans les seuils autorisés.</span></div>
-        <div class="landing-family eco"><strong>Aérosols</strong><span>Peinture, insecticide, dégrippant, imperméabilisant, mousse expansive, stop-feu ≤ 1 L.</span></div>
-        <div class="landing-family eco"><strong>Autres DDS liquides</strong><span>Solvants bricolage, traitement du bois, liquide de refroidissement, antigel, polish, diluants.</span></div>
-        <div class="landing-family eco"><strong>Phytos & biocides</strong><span>Produits jardin et maison, selon nature, usage et seuil, avec repères spécifiques pour certains produits piscine.</span></div>
-        <div class="landing-family eco"><strong>Acides</strong><span>Acides identifiés et compatibles, à séparer des bases et à manipuler avec vigilance.</span></div>
-        <div class="landing-family eco"><strong>Bases</strong><span>Soude, ammoniaque, certains déboucheurs et traitements piscine comme le chlore liquide ou le pH+.</span></div>
-        <div class="landing-family eco"><strong>Comburants</strong><span>Chlore solide, brome, oxygène actif, certains durcisseurs et produits piscine comburants.</span></div>
-        <div class="landing-family warn"><strong>Cas séparés</strong><span>Filtres à huile et bidons vides de combustible de chauffage ont des règles dédiées et ne se gèrent pas comme les autres familles.</span></div>
-      </div>
-
-      <div class="landing-focus-grid">
-        <div class="landing-focus">
-          <h3>À refuser ou à sortir du flux EcoDDS</h3>
-          <p>Les cas les plus fréquents à mettre en évidence dès l’entrée pour éviter les erreurs de tri.</p>
-          <div class="landing-list">
-            <div><span>⛔</span><span><b>Hors périmètre fréquent :</b> détergents classiques, savons, huiles moteur et liquides de frein, radiographies, médicaments, produits de laboratoire, cartouches de gaz, extincteurs et bombes anti-crevaison.</span></div>
-            <div><span>⚠️</span><span><b>Non conformités récurrentes :</b> produits non identifiés, produits hors seuils, matériel de peinture souillé, plâtre, mortier, béton et produits alimentaires.</span></div>
-            <div><span>🔒</span><span><b>Règle sécurité :</b> ne pas mélanger acides et bases, et isoler les comburants ou produits fuyards.</span></div>
-          </div>
-        </div>
-
-        <div class="landing-focus">
-          <h3>Repères pratiques terrain</h3>
-          <p>Quelques cas utiles issus des documents fournis pour aider les agents à s’orienter plus vite.</p>
-          <div class="landing-list">
-            <div><span>🏊</span><span><b>Piscine :</b> algicide, hivernage, pH+, pH-, floculant ou anti-phosphate peuvent entrer dans les familles EcoDDS selon leur nature et leur seuil, alors que nettoyant ligne d’eau, détartrant piscine ou testeur pH sont hors périmètre.</span></div>
-            <div><span>🚗</span><span><b>Voiture :</b> antigel, liquide de refroidissement, dégivrant, polish, anti-goudron, peinture carrosserie et filtres à huile font partie des cas à reconnaître rapidement.</span></div>
-            <div><span>🖌️</span><span><b>Outillages du peintre :</b> pinceaux, rouleaux, couteaux, bacs plats, bacs et camions à peinture, recharges et grilles sont acceptés, mais pas les chiffons souillés, sacs, bassines, taloches ou pinceaux d’artiste.</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="landing-source">Cette rubrique reprend les grandes familles de bacs, les exclusions fréquentes, les seuils de conditionnement, l’univers auto/piscine et la filière des outillages du peintre afin de rendre l’accueil plus utile dès la première visite.</div>
-    </section>
-
   </div>
 </div>
 
-<!-- ===== HOME ===== -->
 <!-- ===== HOME ===== -->
 <div id="s-home" class="S">
-  <div class="home-shell">
-    <section class="home-hero">
-      <div class="home-hero-top">
-        <div>
-          <div id="home-site" class="home-kicker">TriDDS</div>
-          <h1 class="home-title">Assistant de tri intelligent</h1>
-          <div class="home-sub">Une interface plus propre, plus pro et plus rassurante pour les agents. Recherchez un produit, utilisez la photo IA et obtenez rapidement la bonne orientation de tri.</div>
-        </div>
-        <div class="home-status">
-          <span id="home-plan" class="plan-badge plan-free">Accès Base</span>
-          <div class="home-quota"><div id="q-label">Essai IA</div><div id="q-disp">5/5</div></div>
-        </div>
-      </div>
-      <div class="home-search-card">
-        <div class="home-search-row">
-          <div class="search-bar" style="flex:1">
-            <button id="btn-voice" class="sb-voice" title="Dicter">🎤</button>
-            <input id="in-search" type="text" placeholder="Nom du produit...">
-            <button id="btn-srch" style="display:none;background:var(--blue);color:#fff;font-size:13px;font-weight:800;border-radius:20px;width:auto;padding:0 16px">OK</button>
-            <button id="btn-photo" class="sb-cam" title="Photo IA">📸</button>
-          </div>
-        </div>
-        <div class="home-quick">
-          <div style="background:linear-gradient(180deg,#ecfdf5,#f7fffb);border:1px solid #a7f3d0;text-align:center"><div style="font-size:11px;font-weight:800;color:#047857">EcoDDS</div><div style="font-size:11px;color:#065f46;margin-top:4px">Bacs dédiés</div></div>
-          <div style="background:linear-gradient(180deg,#fffbeb,#fffdfa);border:1px solid #fcd34d;text-align:center"><div style="font-size:11px;font-weight:800;color:#b45309">Hors EcoDDS</div><div style="font-size:11px;color:#92400e;margin-top:4px">Bacs CHIMIREC</div></div>
-          <div style="background:linear-gradient(180deg,#fef2f2,#fffafa);border:1px solid #fca5a5;text-align:center"><div style="font-size:11px;font-weight:800;color:#dc2626">Interdit</div><div style="font-size:11px;color:#991b1b;margin-top:4px">Refuser</div></div>
-        </div>
-        <div id="home-mem" style="display:none">
-          <span>🧠</span> <span id="mem-shared-count">0</span> marques apprises (partagées)
-        </div>
-      </div>
-    </section>
-
-    <section class="home-history">
-      <div class="home-history-head">
-        <div><h3>Historique récent</h3><p>Retrouvez les dernières recherches et orientez plus vite les produits récurrents.</p></div>
-      </div>
-      <div id="hist-list"></div>
-    </section>
+  <div class="home-bar">
+    <div class="home-bar-left">
+      <img src="./assets/tridds-symbol.png" alt="" style="height:28px;width:28px;border-radius:7px">
+      <div><div id="home-site" class="home-bar-site">TriDDS</div><div id="home-agent" class="home-bar-agent"></div></div>
+    </div>
+    <span id="home-plan" class="home-bar-plan">Accès Base</span>
+  </div>
+  <div class="search-wrap">
+    <div class="search-bar">
+      <button id="btn-voice" class="sb-voice" title="Dicter">🎤</button>
+      <input id="in-search" type="text" placeholder="Taper ou dicter un nom..." autocomplete="off">
+      <button id="btn-photo" class="sb-cam" title="Photo IA">📷</button>
+    </div>
+  </div>
+  <div id="home-content">
+    <div id="search-results"></div>
+    <div id="hist-list"></div>
   </div>
   <div class="tabs" id="main-tabs">
-    <button class="act" data-t="home"><span class="ti">🏠</span>Accueil</button>
-    <button data-t="journal"><span class="ti">📋</span>Journal</button>
-    <button data-t="memory"><span class="ti">🧠</span>Mémoire</button>
-    <button data-t="profile"><span class="ti">👤</span>Profil</button>
+    <button class="act" data-t="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Recherche</button>
+    <button data-t="journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Journal</button>
+    <button data-t="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Guide</button>
+    <button data-t="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
   </div>
-</div>
-
-<!-- ===== NOT FOUND ===== -->
-<div id="s-nf" class="S">
-  <div class="hdr" style="background:var(--hors);color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Produit non trouvé</h2></div>
-  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:12px">
-    <div class="card" style="text-align:center;padding:28px;border-color:var(--hors-bd);background:var(--hors-bg)">
-      <div style="font-size:32px;margin-bottom:6px">🔍</div>
-      <div style="font-weight:800;color:var(--hors-tx);font-size:16px">Aucun résultat</div>
-      <div id="nf-name" style="font-weight:600;color:var(--hors);font-size:14px;margin-top:4px"></div>
-    </div>
-    <button id="btn-nf-photo" class="btn btn-eco btn-f" style="padding:16px">📸 Analyser par photo IA</button>
-    <button id="btn-nf-nonid" class="btn btn-outline btn-f">✅ Classer "Produits non ID"</button>
-    <button class="btn-back" style="color:var(--tx3);font-size:12px;text-decoration:underline;padding:8px">← Autre recherche</button>
-  </div>
-</div>
-
-<!-- ===== DISAMBIG ===== -->
-<div id="s-dis" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2>Plusieurs résultats</h2><span id="dis-cnt" style="font-size:12px;color:var(--tx2)"></span></div>
-  <div id="dis-info" style="background:var(--blue-bg);border-bottom:1px solid #bfdbfe;padding:10px 16px;font-size:12px;color:#1e40af"></div>
-  <div id="dis-list" style="flex:1;overflow-y:auto;padding:12px"></div>
-</div>
-
-<!-- ===== VOLUME ===== -->
-<div id="s-vol" class="S">
-  <div id="vol-hdr" class="hdr" style="color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Vérification volume</h2></div>
-  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:14px">
-    <div id="vol-prod" class="card" style="text-align:center;padding:22px">
-      <div style="font-size:24px;margin-bottom:4px">📦</div>
-      <div id="vol-name" style="font-size:16px;font-weight:900"></div>
-      <div id="vol-flux" style="color:var(--tx2);font-size:12px;margin-top:4px"></div>
-    </div>
-    <div class="card" style="text-align:center;padding:22px">
-      <div style="color:var(--tx2);font-size:12px;margin-bottom:6px">Seuil EcoDDS</div>
-      <div id="vol-seuil" style="font-size:24px;font-weight:900;margin-bottom:14px"></div>
-      <div style="color:var(--tx);font-weight:600;font-size:14px;margin-bottom:12px">Le contenant respecte ce seuil ?</div>
-      <div style="display:flex;gap:10px">
-        <button id="btn-vol-ok" class="btn btn-eco" style="flex:1">✅ Oui</button>
-        <button id="btn-vol-over" class="btn" style="flex:1;background:var(--hors);color:#fff">❌ Dépasse</button>
-      </div>
-    </div>
-    <button id="btn-vol-unk" style="color:var(--tx3);font-size:11px;text-decoration:underline;text-align:center;padding:6px">Volume inconnu</button>
-  </div>
-</div>
-
-<!-- ===== RESULT (single) ===== -->
-<div id="s-res" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2 id="res-title"></h2></div>
-  <!-- FLUX BANNER - the dominant element -->
-  <div id="res-flux-banner" class="flux-banner eco"></div>
-  <div id="res-body" style="flex:1;overflow-y:auto;padding:14px"></div>
-  <div style="padding:12px 16px;background:var(--white);border-top:1px solid var(--bd)"><button class="btn btn-outline btn-f btn-back">Nouvelle recherche</button></div>
 </div>
 
 <!-- ===== CAMERA ===== -->
@@ -456,21 +227,19 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
     <img id="cam-img" style="width:100%;height:100%;object-fit:contain;background:#111">
   </div>
   <div id="cam-ctrl" style="padding:18px;display:flex;align-items:center;justify-content:center;gap:22px">
-    <label style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2)">
-      📁<input id="cam-file" type="file" accept="image/*" style="display:none">
-    </label>
+    <label style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2)">📁<input id="cam-file" type="file" accept="image/*" style="display:none"></label>
     <button id="btn-cap" style="width:66px;height:66px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center"><div style="width:54px;height:54px;border-radius:50%;background:#fff"></div></button>
     <div style="width:46px"></div>
   </div>
   <div id="cam-act" style="padding:14px 18px;display:none;gap:10px">
     <button id="btn-retake" class="btn btn-outline" style="flex:1;color:#fff;border-color:rgba(255,255,255,.2)">🔄 Reprendre</button>
-    <button id="btn-anl" class="btn btn-blue" style="flex:1">🔍 Analyser</button>
+    <button id="btn-anl" class="btn btn-brand" style="flex:1">🔍 Analyser</button>
   </div>
 </div>
 
 <!-- ===== LOADING ===== -->
 <div id="s-load" class="S" style="background:var(--bg);align-items:center;justify-content:center;padding:32px">
-  <div style="width:44px;height:44px;border-radius:50%;border:3px solid #e0e7ff;border-top-color:var(--blue);margin-bottom:18px" class="spin"></div>
+  <div style="width:44px;height:44px;border-radius:50%;border:3px solid #e8ece0;border-top-color:var(--brand-green);margin-bottom:18px" class="spin"></div>
   <p id="load-msg" style="font-weight:700;font-size:15px">Analyse IA en cours...</p>
   <p id="load-sub" style="color:var(--tx2);font-size:11px;margin-top:5px"></p>
   <img id="load-thumb" style="width:70px;height:70px;object-fit:cover;border-radius:var(--rs);margin-top:16px;opacity:.3;display:none">
@@ -479,68 +248,156 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 <!-- ===== MULTI RESULTS ===== -->
 <div id="s-mul" class="S">
   <div class="hdr"><button class="bk btn-back">←</button><h2 id="mul-title"></h2></div>
-  <div id="mul-img" style="margin:0 16px 8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);display:none"><img id="mul-photo" style="width:100%;max-height:100px;object-fit:contain;background:#f0f0f5"></div>
-  <div id="mul-model" style="margin:0 16px 8px"></div>
+  <div id="mul-img" style="margin:0 14px 8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);display:none"><img id="mul-photo" style="width:100%;max-height:100px;object-fit:contain;background:#f5f5f0"></div>
+  <div id="mul-model" style="margin:0 14px 8px"></div>
   <div id="mul-list" style="flex:1;overflow-y:auto;padding:0 12px 12px"></div>
-  <div style="padding:12px 16px;background:var(--white);border-top:1px solid var(--bd)"><button class="btn btn-outline btn-f btn-back">Nouvelle recherche</button></div>
+  <div style="padding:12px 14px;background:var(--white);border-top:1px solid var(--bd)"><button class="btn btn-outline btn-f btn-back">Nouvelle recherche</button></div>
+</div>
+
+<!-- ===== DISAMBIG ===== -->
+<div id="s-dis" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Plusieurs résultats</h2><span id="dis-cnt" style="font-size:12px;color:var(--tx2)"></span></div>
+  <div id="dis-info" style="background:rgba(90,138,25,.06);border-bottom:1px solid rgba(90,138,25,.15);padding:8px 14px;font-size:12px;color:var(--brand-green2)"></div>
+  <div id="dis-list" style="flex:1;overflow-y:auto;padding:12px"></div>
+</div>
+
+<!-- ===== VOLUME ===== -->
+<div id="s-vol" class="S">
+  <div id="vol-hdr" class="hdr" style="color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Vérification volume</h2></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:14px">
+    <div id="vol-prod" class="card" style="text-align:center;padding:20px">
+      <div style="font-size:22px;margin-bottom:4px">📦</div>
+      <div id="vol-name" style="font-size:16px;font-weight:800"></div>
+      <div id="vol-flux" style="color:var(--tx2);font-size:12px;margin-top:4px"></div>
+    </div>
+    <div class="card" style="text-align:center;padding:20px">
+      <div style="color:var(--tx2);font-size:12px;margin-bottom:6px">Seuil EcoDDS</div>
+      <div id="vol-seuil" style="font-size:22px;font-weight:800;margin-bottom:12px"></div>
+      <div style="color:var(--tx);font-weight:600;font-size:14px;margin-bottom:10px">Le contenant respecte ce seuil ?</div>
+      <div style="display:flex;gap:10px">
+        <button id="btn-vol-ok" class="btn btn-eco" style="flex:1">✅ Oui</button>
+        <button id="btn-vol-over" class="btn" style="flex:1;background:var(--hors);color:#fff">❌ Dépasse</button>
+      </div>
+    </div>
+    <button id="btn-vol-unk" style="color:var(--tx3);font-size:11px;text-decoration:underline;text-align:center;padding:6px">Volume inconnu</button>
+  </div>
+</div>
+
+<!-- ===== RESULT (single detail) ===== -->
+<div id="s-res" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2 id="res-title"></h2></div>
+  <div id="res-flux-banner" class="flux-banner eco"></div>
+  <div id="res-body" style="flex:1;overflow-y:auto;padding:14px"></div>
+  <div style="padding:10px 14px;background:var(--white);border-top:1px solid var(--bd)"><button class="btn btn-outline btn-f btn-back">Nouvelle recherche</button></div>
+</div>
+
+<!-- ===== NOT FOUND ===== -->
+<div id="s-nf" class="S">
+  <div class="hdr" style="background:var(--hors);color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Produit non trouvé</h2></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:12px">
+    <div class="card" style="text-align:center;padding:24px;border-color:var(--hors-bd);background:var(--hors-bg)">
+      <div style="font-size:28px;margin-bottom:6px">🔍</div>
+      <div style="font-weight:800;color:var(--hors-tx);font-size:15px">Aucun résultat</div>
+      <div id="nf-name" style="font-weight:600;color:var(--hors);font-size:14px;margin-top:4px"></div>
+    </div>
+    <button id="btn-nf-photo" class="btn btn-eco btn-f" style="padding:14px">📸 Analyser par photo IA</button>
+    <button id="btn-nf-nonid" class="btn btn-outline btn-f">Classer "Produits non ID"</button>
+    <button class="btn-back" style="color:var(--tx3);font-size:12px;text-decoration:underline;padding:8px">← Autre recherche</button>
+  </div>
 </div>
 
 <!-- ===== JOURNAL ===== -->
 <div id="s-jrn" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2>📋 Journal</h2><span id="jrn-cnt" style="font-size:12px;color:var(--tx2)"></span></div>
-  <div style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--bd);overflow-x:auto">
-    <button class="jf act" data-f="all" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;background:var(--blue);color:#fff;border:none;white-space:nowrap">Tous</button>
-    <button class="jf" data-f="review" style="font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;background:var(--white);color:var(--hors);border:1px solid var(--hors-bd);white-space:nowrap">⚠ À vérifier</button>
-    <button class="jf" data-f="ok" style="font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;background:var(--white);color:var(--eco);border:1px solid var(--eco-bd);white-space:nowrap">✅ Validés</button>
-    <button class="jf" data-f="corrected" style="font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;background:var(--white);color:var(--purple);border:1px solid #c4b5fd;white-space:nowrap">✏ Corrigés</button>
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Journal</h2><span id="jrn-cnt" style="font-size:12px;color:var(--tx2)"></span></div>
+  <div style="display:flex;gap:6px;padding:6px 12px;border-bottom:1px solid var(--bd);overflow-x:auto">
+    <button class="jf act" data-f="all" style="font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--brand-green);color:#fff;border:none;white-space:nowrap">Tous</button>
+    <button class="jf" data-f="review" style="font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;background:var(--white);color:var(--hors);border:1px solid var(--hors-bd);white-space:nowrap">⚠ À vérifier</button>
+    <button class="jf" data-f="ok" style="font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;background:var(--white);color:var(--eco);border:1px solid var(--eco-bd);white-space:nowrap">✅ Validés</button>
+    <button class="jf" data-f="corrected" style="font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;background:var(--white);color:#7c3aed;border:1px solid #c4b5fd;white-space:nowrap">✏ Corrigés</button>
   </div>
   <div id="jrn-list" style="flex:1;overflow-y:auto;padding:12px"></div>
 </div>
 
-<!-- ===== MEMORY ===== -->
+<!-- ===== GUIDE ===== -->
+<div id="s-guide" class="S">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Guide de tri</h2></div>
+  <div class="guide-section" style="flex:1;overflow-y:auto;padding-bottom:100px">
+    <div class="guide-card">
+      <h3>Les 3 étapes du tri</h3>
+      <p><strong>1.</strong> Identifier la famille produit (pâteux, aérosols, liquides, phytos…)<br>
+      <strong>2.</strong> Vérifier le seuil du contenant<br>
+      <strong>3.</strong> Écarter les faux amis et les produits hors périmètre</p>
+    </div>
+    <div class="guide-card">
+      <h3>Familles acceptées EcoDDS</h3>
+      <div class="guide-family">
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>Pâteux</strong><span>Peintures, enduits, mastics, colles</span></div>
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>Aérosols</strong><span>Peinture, insecticide, dégrippant ≤ 1L</span></div>
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>DDS liquides</strong><span>Solvants, traitement bois, antigel, diluants</span></div>
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>Phytos</strong><span>Produits jardin et maison, certains piscine</span></div>
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>Acides</strong><span>Acides identifiés, séparer des bases</span></div>
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>Bases</strong><span>Soude, ammoniaque, déboucheurs, pH+</span></div>
+        <div class="guide-fam" style="background:var(--eco-bg);border-color:var(--eco-bd)"><strong>Comburants</strong><span>Chlore solide, brome, oxygène actif</span></div>
+        <div class="guide-fam" style="background:var(--hors-bg);border-color:var(--hors-bd)"><strong>Cas séparés</strong><span>Filtres à huile, bidons combustible</span></div>
+      </div>
+    </div>
+    <div class="guide-card">
+      <h3>À refuser / hors périmètre</h3>
+      <p>Détergents classiques, savons, huiles moteur, liquides de frein, radiographies, médicaments, cartouches de gaz, extincteurs, bombes anti-crevaison.</p>
+    </div>
+    <div class="guide-card">
+      <h3>Règles sécurité</h3>
+      <p>Ne pas mélanger acides et bases. Isoler les comburants et les produits fuyards. Porter les EPI.</p>
+    </div>
+    <div class="guide-card">
+      <h3>Cas pratiques</h3>
+      <p><strong>Piscine :</strong> algicide, pH+/-, floculant → selon nature et seuil. Nettoyant ligne d'eau, détartrant → hors périmètre.<br><br>
+      <strong>Voiture :</strong> antigel, dégivrant, polish, peinture carrosserie → à reconnaître.<br><br>
+      <strong>Peintre :</strong> pinceaux, rouleaux, bacs → acceptés. Chiffons souillés, bassines → refuser.</p>
+    </div>
+    <div id="guide-mem" style="display:none" class="guide-card">
+      <h3>Mémoire partagée</h3>
+      <p><span id="mem-shared-count">0</span> marques apprises par l'équipe.</p>
+      <div id="mem-list-mini" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MEMORY (full) ===== -->
 <div id="s-mem" class="S">
-  <div class="hdr" style="background:#7c3aed;color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>🧠 Mémoire partagée</h2></div>
-  <div id="mem-stats" style="background:#f5f3ff;border-bottom:1px solid #ddd6fe;padding:10px 16px;font-size:12px;color:#5b21b6"></div>
+  <div class="hdr" style="background:var(--brand-green);color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Mémoire partagée</h2></div>
+  <div id="mem-stats" style="background:rgba(90,138,25,.06);border-bottom:1px solid rgba(90,138,25,.15);padding:8px 14px;font-size:12px;color:var(--brand-green2)"></div>
   <div id="mem-list" style="flex:1;overflow-y:auto;padding:12px"></div>
 </div>
 
 <!-- ===== PROFILE ===== -->
 <div id="s-prof" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2>👤 Profil</h2></div>
-  <div style="padding:16px">
-    <div class="card" style="margin-bottom:12px">
-      <div class="lbl">Site</div><div id="prof-site" style="font-weight:700;font-size:16px"></div>
-      <div class="lbl" style="margin-top:12px">Client</div><div id="prof-client" style="font-weight:700;font-size:16px"></div>
-      <div class="lbl" style="margin-top:12px">Agent</div><div id="prof-agent" style="font-weight:700;font-size:16px"></div>
-      <div class="lbl" style="margin-top:12px">Plan</div><div id="prof-plan" style="font-weight:700;font-size:16px"></div>
-      <div class="lbl" style="margin-top:12px">Quota IA</div><div id="prof-photos" style="font-weight:700;font-size:16px"></div>
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Profil</h2></div>
+  <div style="padding:14px;flex:1;overflow-y:auto;padding-bottom:100px">
+    <div class="card" style="margin-bottom:10px">
+      <div class="lbl">Site</div><div id="prof-site" style="font-weight:700;font-size:15px"></div>
+      <div class="lbl" style="margin-top:10px">Client</div><div id="prof-client" style="font-weight:700;font-size:15px"></div>
+      <div class="lbl" style="margin-top:10px">Agent</div><div id="prof-agent" style="font-weight:700;font-size:15px"></div>
+      <div class="lbl" style="margin-top:10px">Plan</div><div id="prof-plan" style="font-weight:700;font-size:15px"></div>
+      <div class="lbl" style="margin-top:10px">Quota IA</div><div id="prof-photos" style="font-weight:700;font-size:15px"></div>
     </div>
-    <div id="prof-manage" class="manage-grid" style="display:none"><button id="btn-manage-sites" class="manage-btn">🏢 Mes sites<div class="manage-note">Voir les sites rattachés au client et le responsable de chaque site.</div></button><button id="btn-manage-team" class="manage-btn">👥 Mon équipe<div class="manage-note">Gérer le responsable du site et les agents.</div></button><button id="btn-manage-catalog" class="manage-btn">🗂️ Base produits<div class="manage-note">Ajouter, modifier ou retirer des fiches personnalisées pour le site.</div></button></div><button id="btn-logout" class="btn btn-f" style="background:#fef2f2;color:var(--int);border:1px solid var(--int-bd)">Déconnexion</button>
-  </div>
-</div>
-
-
-<!-- ===== CLIENT SITES ===== -->
-<div id="s-sites" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2>🏢 Mes sites</h2></div>
-  <div style="padding:16px">
-    <div class="card" style="margin-bottom:12px">
-      <div class="lbl">Organisation</div>
-      <div id="client-summary" class="muted" style="line-height:1.7"></div>
+    <div id="prof-manage" class="manage-grid" style="display:none">
+      <button id="btn-manage-team" class="manage-btn">👥 Mon équipe<div class="manage-note">Gérer le responsable et les agents.</div></button>
+      <button id="btn-manage-catalog" class="manage-btn">🗂️ Base produits<div class="manage-note">Ajouter ou modifier des fiches pour ce site.</div></button>
     </div>
-    <div id="client-sites-list"></div>
+    <button id="btn-logout" class="btn btn-f" style="background:var(--int-bg);color:var(--int);border:1px solid var(--int-bd);margin-top:10px">Déconnexion</button>
   </div>
 </div>
 
 <!-- ===== TEAM ===== -->
 <div id="s-team" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2>👥 Mon équipe</h2></div>
-  <div style="padding:16px">
-    <div class="card" style="margin-bottom:12px">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Mon équipe</h2></div>
+  <div style="padding:14px">
+    <div class="card" style="margin-bottom:10px">
       <div class="lbl">Gestion des profils</div>
       <div class="toolbar"><input id="team-new-name" class="input" placeholder="Nom du nouveau profil"><select id="team-new-role" class="select"><option value="agent">Agent</option><option value="responsable">Responsable</option></select></div>
-      <button id="btn-team-add" class="btn btn-blue btn-f">Ajouter un profil</button>
-      <div class="manage-note">Le site doit toujours conserver un responsable unique.</div>
+      <button id="btn-team-add" class="btn btn-brand btn-f">Ajouter un profil</button>
+      <div class="manage-note">Le site conserve un responsable unique.</div>
     </div>
     <div id="team-list"></div>
   </div>
@@ -548,21 +405,21 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 
 <!-- ===== CATALOG ===== -->
 <div id="s-catalog" class="S">
-  <div class="hdr"><button class="bk btn-back">←</button><h2>🗂️ Base produits</h2></div>
-  <div style="padding:16px">
-    <div class="card" style="margin-bottom:12px">
+  <div class="hdr"><button class="bk btn-back">←</button><h2>Base produits</h2></div>
+  <div style="padding:14px">
+    <div class="card" style="margin-bottom:10px">
       <div class="lbl">Ajouter / modifier une fiche</div>
       <div class="cat-form">
-        <input id="cat-id" class="input full" placeholder="ID technique (laisser vide pour création)">
+        <input id="cat-id" class="input full" placeholder="ID technique (vide = création)">
         <input id="cat-name" class="input" placeholder="Nom du produit">
         <select id="cat-flux" class="select"><option value="E">EcoDDS</option><option value="H">Hors EcoDDS</option><option value="C">Cas spécial</option><option value="I">Interdit</option></select>
         <input id="cat-cat" class="input full" placeholder="Catégorie / orientation">
         <input id="cat-consigne" class="input full" placeholder="Consigne">
         <input id="cat-seuil" class="input" placeholder="Seuil (optionnel)">
-        <input id="cat-syn" class="input" placeholder="Synonymes séparés par des virgules">
+        <input id="cat-syn" class="input" placeholder="Synonymes (virgules)">
       </div>
-      <button id="btn-cat-save" class="btn btn-blue btn-f">Enregistrer la fiche</button>
-      <div class="manage-note">Les fiches ajoutées ici deviennent disponibles dans la recherche pour ce site.</div>
+      <button id="btn-cat-save" class="btn btn-brand btn-f">Enregistrer</button>
+      <div class="manage-note">Les fiches ajoutées sont disponibles dans la recherche pour ce site.</div>
     </div>
     <div id="cat-list"></div>
   </div>
@@ -571,15 +428,12 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 <!-- ===== CORRECTION OVERLAY ===== -->
 <div id="ov-cor" class="ov">
   <div class="ov-body">
-    <div style="padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)">
+    <div style="padding:14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)">
       <button id="btn-cor-close" style="font-size:18px;color:var(--tx2)">✕</button>
-      <div style="flex:1"><div style="font-weight:700;font-size:15px">Corriger</div><div id="cor-orig" style="font-size:12px;color:var(--tx2)"></div></div>
+      <div style="flex:1"><div style="font-weight:700;font-size:14px">Corriger</div><div id="cor-orig" style="font-size:12px;color:var(--tx2)"></div></div>
     </div>
-    <div style="padding:10px 16px;border-bottom:1px solid var(--bd)">
-      <div class="search-bar" style="box-shadow:none;border-width:1.5px">
-        <span style="color:var(--tx3)">🔍</span>
-        <input id="cor-input" type="text" placeholder="Chercher le bon produit...">
-      </div>
+    <div style="padding:10px 14px;border-bottom:1px solid var(--bd)">
+      <div class="search-bar" style="border-width:1.5px"><span style="color:var(--tx3)">🔍</span><input id="cor-input" type="text" placeholder="Chercher le bon produit..."></div>
     </div>
     <div id="cor-results" style="flex:1;overflow-y:auto;padding:12px;max-height:50vh"></div>
   </div>
@@ -589,24 +443,24 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 <script src="config.js"></script>
 <script src="data.js"></script>
 
-<!-- ===== APP ===== -->
+<!-- ===== TRIAL MODAL ===== -->
 <div id="trial-modal" class="trial-modal">
   <div class="trial-box">
-    <h2>Tester l’IA gratuitement</h2>
-    <p>Créez un accès d’essai avec <strong>5 scans IA</strong>. L’essai est accordé une seule fois par email administrateur.</p>
+    <h2>Tester l'IA</h2>
+    <p>Créez un accès d'essai avec <strong>2 scans IA</strong>. L'essai est accordé une seule fois par email.</p>
     <div class="trial-grid">
-      <div><div class="lbl">Nom du site</div><input id="trial-site" placeholder="Ex. Déchèterie de test"></div>
-      <div><div class="lbl">Nom administrateur</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
-      <div class="full"><div class="lbl">Email administrateur</div><input id="trial-email" type="email" placeholder="Ex. admin@site.fr"></div>
-      <div class="full"><div class="lbl">Contact (optionnel)</div><input id="trial-contact" placeholder="Téléphone ou email"></div>
+      <div><div class="lbl">Nom du site</div><input id="trial-site" placeholder="Ex. Déchèterie test"></div>
+      <div><div class="lbl">Votre nom</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
+      <div class="full"><div class="lbl">Email</div><input id="trial-email" type="email" placeholder="admin@site.fr"></div>
     </div>
     <div class="trial-actions">
-      <button id="btn-trial-submit" class="btn btn-blue">Créer mon essai IA</button>
+      <button id="btn-trial-submit" class="btn btn-brand" style="flex:1">Créer mon essai</button>
       <button id="btn-trial-close" class="btn btn-outline">Annuler</button>
     </div>
     <div id="trial-msg" class="trial-msg"></div>
   </div>
 </div>
+
 
 <script>
 (function(){
@@ -617,19 +471,19 @@ var API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||"").replace(/\/$/
 function apiUrl(name){return API_BASE?API_BASE+"/"+name:""}
 function needApi(feature){
   if(API_BASE)return true;
-  alert("Le backend n'est pas configuré pour GitHub Pages. Renseigne config.js (API_BASE) pour utiliser : "+feature);
+  alert("Backend non configuré. Renseignez config.js (API_BASE) pour : "+feature);
   return false;
 }
 var FM={E:"EcoDDS",H:"Hors EcoDDS",C:"Cas spécial",I:"Interdit"};
 var P=DB.map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});
 
 // ===== AUTH & SESSION =====
-var sess={code:"",site:"",clientName:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};
+var sess={code:"",site:"",clientName:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:2,trialUsed:0,trialRemaining:2,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};
 var customCatalog=[];
 function loadSess(){try{var d=JSON.parse(localStorage.getItem("tridds_sess"));if(d&&d.code)sess=d}catch(e){}}
 function saveSess(){localStorage.setItem("tridds_sess",JSON.stringify(sess))}
 function isLoggedIn(){return!!sess.code}
-function clearSess(){sess={code:"",site:"",clientName:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:5,trialUsed:0,trialRemaining:5,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};customCatalog=[];saveSess()}
+function clearSess(){sess={code:"",site:"",clientName:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:2,trialUsed:0,trialRemaining:2,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};customCatalog=[];saveSess()}
 function deviceName(){var ua=navigator.userAgent||"";if(/iPhone/i.test(ua))return"iPhone";if(/iPad/i.test(ua))return"iPad";if(/Android/i.test(ua))return"Android";if(/Windows/i.test(ua))return"PC Windows";if(/Macintosh/i.test(ua))return"Mac";return"Navigateur web"}
 function authPost(payload){
   if(!needApi("la connexion"))return Promise.reject(new Error("Backend non configuré"));
@@ -643,6 +497,10 @@ function siteAdminPost(action,data){
     .then(function(d){if(d.error)throw new Error(d.error);return d});
 }
 function mergeCatalog(){var base=(window.TRIDDS_DB||[]).map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5]||"",a:p[6]||"",i:p[7]||"",y:p[8]||[]}});var extras=(customCatalog||[]).map(function(p){return{n:p.n,q:(p.q||p.n||"").toLowerCase(),f:p.f,x:p.x||"",c:p.c||"",s:p.s||"",a:"",i:"",y:p.y||[]}});P=base.concat(extras)}
+function loadCustomCatalog(){
+  if(!sess.code||sess.code==="DEMO"||!API_BASE)return;
+  siteAdminPost("catalog-list").then(function(d){if(d&&d.items){customCatalog=d.items;mergeCatalog()}}).catch(function(){});
+}
 function startAgentSession(code,agent,force){
   return authPost({action:"start-session",code:code,agent:agent,sessionId:sess.sessionId||"",deviceName:deviceName(),force:!!force}).then(function(d){
     if(d.__status===409&&d.error==="SESSION_ACTIVE")return d;
@@ -651,48 +509,36 @@ function startAgentSession(code,agent,force){
     sess.trialTotal=d.trialTotal||0;sess.trialUsed=d.trialUsed||0;sess.trialRemaining=d.trialRemaining||0;
     sess.monthlyLimit=d.monthlyLimit||0;sess.monthlyUsed=d.monthlyUsed||0;sess.monthlyRemaining=d.monthlyRemaining||0;
     sess.sessionId=d.sessionId||sess.sessionId||"";sess.deviceName=(d.activeSession&&d.activeSession.deviceName)||deviceName();
-    saveSess();
-    return d;
+    saveSess();return d;
   });
 }
 function resumeCurrentSession(){
   if(!isLoggedIn()||sess.code==="DEMO"||!sess.sessionId)return Promise.resolve();
   return authPost({action:"resume-session",code:sess.code,agent:sess.agent,sessionId:sess.sessionId,deviceName:sess.deviceName||deviceName()}).then(function(d){
-    if(d.error){clearSess();alert("Votre session a été fermée ou reprise sur un autre appareil.");location.reload();return;}
-    applyUsage(d);
-    sess.sessionId=d.sessionId||sess.sessionId;saveSess();
+    if(d.error){clearSess();alert("Session fermée ou reprise sur un autre appareil.");location.reload();return;}
+    applyUsage(d);sess.sessionId=d.sessionId||sess.sessionId;saveSess();
   }).catch(function(){clearSess();location.reload()});
 }
 var lastHeartbeat=0;
 function heartbeat(force){
   if(!isLoggedIn()||sess.code==="DEMO"||!sess.sessionId)return;
-  var now=Date.now();
-  if(!force&&now-lastHeartbeat<60000)return;
-  lastHeartbeat=now;
+  var now=Date.now();if(!force&&now-lastHeartbeat<60000)return;lastHeartbeat=now;
   authPost({action:"heartbeat",code:sess.code,agent:sess.agent,sessionId:sess.sessionId,deviceName:sess.deviceName||deviceName()}).then(function(d){
-    if(d&&d.error){clearSess();alert("Votre session a expiré ou a été reprise sur un autre appareil.");location.reload();}
+    if(d&&d.error){clearSess();alert("Session expirée.");location.reload();}
   }).catch(function(){});
 }
 function registerActivity(){heartbeat(false)}
-function doLogin(code,agent){
-  return authPost({action:"login",code:code}).then(function(d){
-    if(d.error)throw new Error(d.error);
-    return authPost({action:"register-agent",code:d.code,agent:agent}).catch(function(){return {ok:true}}).then(function(){return d});
-  }).catch(function(e){goHome();alert(e&&e.message?e.message:"Connexion impossible");});
-}
 function demoLogin(){
-  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:0,trialUsed:0,trialRemaining:0,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"DEMO",deviceName:deviceName()};
+  sess={code:"DEMO",site:"Mode démo",agent:"Visiteur",agentRole:"agent",plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:0,trialUsed:0,trialRemaining:0,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"DEMO",deviceName:deviceName()};
   saveSess();
 }
 function logout(){
   if(sess.code&&sess.code!=="DEMO"&&sess.sessionId){authPost({action:"logout-session",code:sess.code,agent:sess.agent,sessionId:sess.sessionId}).catch(function(){});}
-  clearSess();
-  location.reload();
+  clearSess();location.reload();
 }
 
 // ===== SHARED MEMORY =====
 var mem={brands:{},version:0,stats:{total:0,corrected:0}};
-
 function syncMemory(){
   if(!sess.memoryEnabled)return Promise.resolve();
   if(!needApi("la mémoire partagée"))return Promise.resolve();
@@ -702,39 +548,26 @@ function syncMemory(){
     if(d&&d.brands){mem=d;updMemUI()}
   }).catch(function(){});
 }
-
 function pushLearn(brand,product,flux,category,action){
   if(!sess.memoryEnabled){
-    // Local-only for free plan
-    if(!mem.brands)mem.brands={};
-    var k=brand.toLowerCase().trim();if(k.length<2)return;
-    mem.brands[k]={p:product,f:flux,c:category,n:(mem.brands[k]?mem.brands[k].n:0)+1,d:today()};
-    return;
+    if(!mem.brands)mem.brands={};var k=brand.toLowerCase().trim();if(k.length<2)return;
+    mem.brands[k]={p:product,f:flux,c:category,n:(mem.brands[k]?mem.brands[k].n:0)+1,d:today()};return;
   }
   if(!needApi("la mémoire partagée"))return;
   fetch(apiUrl("memory-set"),{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({code:sess.code,brand:brand,product:product,flux:flux,category:category,
-      agent:sess.agent,action:action||"learn"})
-  }).then(function(r){return r.json()}).then(function(d){
-    if(d.ok)syncMemory();
-  }).catch(function(){});
+    body:JSON.stringify({code:sess.code,brand:brand,product:product,flux:flux,category:category,agent:sess.agent,action:action||"learn"})
+  }).then(function(r){return r.json()}).then(function(d){if(d.ok)syncMemory()}).catch(function(){});
 }
-
 function memKeys(){return Object.keys(mem.brands||{})}
 function updMemUI(){
   var c=memKeys().length;
   var el=document.getElementById("mem-shared-count");if(el)el.textContent=c;
-  var hm=document.getElementById("home-mem");
-  if(hm)hm.style.display=c>0?"flex":"none";
+  var gm=document.getElementById("guide-mem");if(gm)gm.style.display=c>0?"block":"none";
 }
-
 function buildMemCtx(){
   var e=Object.entries(mem.brands||{});if(!e.length)return"";
   e.sort(function(a,b){return(b[1].n||0)-(a[1].n||0)});e=e.slice(0,60);
-  var lines=e.map(function(x){
-    var fl=x[1].f==="E"?"EcoDDS":"Hors EcoDDS";
-    return'- "'+x[0]+'" → '+x[1].p+" ["+x[1].c+" / "+fl+"] (vu "+x[1].n+"x)";
-  });
+  var lines=e.map(function(x){var fl=x[1].f==="E"?"EcoDDS":"Hors EcoDDS";return'- "'+x[0]+'" → '+x[1].p+" ["+x[1].c+" / "+fl+"] (vu "+x[1].n+"x)"});
   return"\n\nAPPRENTISSAGES MÉMOIRE:\n"+lines.join("\n");
 }
 
@@ -751,49 +584,39 @@ function updateJournalEntry(id,p,f,c){for(var i=0;i<journal.length;i++){if(journ
 // ===== STATE =====
 var st={screen:"login",query:"",matches:[],result:null,multi:null,image:null,
   history:JSON.parse(localStorage.getItem("tridds_h")||"[]"),
-  pc:parseInt(localStorage.getItem("tridds_pc_"+today())||"0"),
   stream:null,corIdx:-1,corJrnId:null,jrnFilter:"all",usedModel:null};
 
-function savePc(){localStorage.setItem("tridds_pc_"+today(),st.pc)}
 function usageTotal(){return sess.monthlyLimit>0?sess.monthlyLimit:(sess.trialTotal||0)}
 function usageRemaining(){return sess.monthlyLimit>0?(sess.monthlyRemaining||0):(sess.trialRemaining||0)}
-function usageLabel(){return sess.monthlyLimit>0?"Scans IA/mois":"Essai IA"}
 function hasAiAccess(){return usageRemaining()>0}
 function applyUsage(u){if(!u)return;sess.plan=u.plan||sess.plan;sess.clientName=u.clientName||sess.clientName||"";sess.agentRole=u.agentRole||sess.agentRole||"agent";sess.canManageUsers=!!u.canManageUsers;sess.canManageCatalog=!!u.canManageCatalog;sess.memoryEnabled=!!u.memoryEnabled;sess.aiEnabled=!!u.aiEnabled;sess.trialTotal=u.trialTotal||0;sess.trialUsed=u.trialUsed||0;sess.trialRemaining=u.trialRemaining||0;sess.monthlyLimit=u.monthlyLimit||0;sess.monthlyUsed=u.monthlyUsed||0;sess.monthlyRemaining=u.monthlyRemaining||0;saveSess();}
-function addHist(r){st.history=[{nm:r.n,f:r.f}].concat(st.history).slice(0,10);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
+function addHist(r){st.history=[{nm:r.n,f:r.f,x:r.x||"",s:r.s||"",vol:r.vol||""}].concat(st.history).slice(0,15);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
 
 // ===== SEARCH =====
 function norm(s){return(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim()}
 function simil(a,b){if(!a||!b)return 0;if(a===b)return 1;var la=a.length,lb=b.length;if(la<2||lb<2)return 0;if(b.indexOf(a)>=0)return a.length/b.length*1.1;if(a.indexOf(b)>=0)return b.length/a.length*1.1;var m=[];for(var i=0;i<=la;i++){m[i]=[i]}for(var j=0;j<=lb;j++)m[0][j]=j;for(i=1;i<=la;i++)for(j=1;j<=lb;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return 1-m[la][lb]/Math.max(la,lb)}
 function searchAll(query){var q=norm(query);if(!q)return[];var R=[];for(var i=0;i<P.length;i++){var p=P[i],sc=0;if(p.q===q||p.n.toLowerCase()===query.toLowerCase())sc=100;else if(p.q.indexOf(q)>=0)sc=Math.round(85*q.length/p.q.length+15);else{var tgts=[p.q].concat((p.y||[]).map(norm)),best=0;for(var t=0;t<tgts.length;t++){best=Math.max(best,simil(q,tgts[t]));var qw=q.split(" "),tw=tgts[t].split(" ");for(var a=0;a<qw.length;a++)for(var b=0;b<tw.length;b++)best=Math.max(best,simil(qw[a],tw[b])*.9)}if(best>.65)sc=Math.round(best*70)}if(sc>0)R.push(Object.assign({},p,{score:sc}))}R.sort(function(a,b){return b.score-a.score});return R.slice(0,20)}
-
-// ===== CATEGORY VERIFICATION =====
 var catFluxMap={};P.forEach(function(p){if(!p.x)return;if(!catFluxMap[p.x])catFluxMap[p.x]={};catFluxMap[p.x][p.f]=true});
 var catFix={};Object.keys(catFluxMap).forEach(function(c){var f=Object.keys(catFluxMap[c]);if(f.length===1)catFix[c]=f[0]});
 function deepSearch(terms){var R=[];for(var t=0;t<terms.length;t++){if(!terms[t]||terms[t].length<2)continue;var res=searchAll(terms[t]);for(var i=0;i<res.length;i++){if(!R.find(function(x){return x.n===res[i].n}))R.push(res[i])}var fw=terms[t].split(/\s+/)[0];if(fw.length>=3&&fw!==terms[t]){var r2=searchAll(fw);for(var j=0;j<r2.length;j++){if(!R.find(function(x){return x.n===r2[j].n}))R.push(r2[j])}}}R.sort(function(a,b){return b.score-a.score});return R}
 
 // ===== AI =====
 function apiCall(b64,mime,sys,prompt,model,mode){
-  if(!needApi("l’analyse IA"))return Promise.resolve({text:"",usage:null});
+  if(!needApi("l'analyse IA"))return Promise.resolve({text:"",usage:null});
   return fetch(apiUrl("analyze"),{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({image:b64,mime:mime,system:sys,prompt:prompt,model:model||"haiku",mode:mode||"final",code:sess.code,agent:sess.agent})
   }).then(function(r){return r.json().then(function(d){if(!r.ok||d.error)throw new Error(d.error||"Erreur IA");return{text:(d.content&&d.content[0])?d.content[0].text:"",usage:d.usage||null}})})
 }
 function parseProds(txt){var m=txt.match(/\{[\s\S]*\}/);if(m){try{var p=JSON.parse(m[0]);if(p.produits)return p.produits;if(p.nom||p.texte_lu)return[p]}catch(e){}}return null}
-
 function callSmart(b64,mime,onStatus){
   onStatus("🔍 Pré-scan...");
   return apiCall(b64,mime,'','Compte combien de produits DISTINCTS sont visibles. Réponds en JSON: {"count":N}','haiku','prescan')
   .then(function(pre){
-    var txt=pre.text||"";
-    var count=1;try{var m=txt.match(/\{[\s\S]*?\}/);if(m)count=JSON.parse(m[0]).count||1}catch(e){}
+    var txt=pre.text||"";var count=1;try{var m=txt.match(/\{[\s\S]*?\}/);if(m)count=JSON.parse(m[0]).count||1}catch(e){}
     var complex=count>2,model=complex?"sonnet":"haiku";
-    onStatus("🤖 "+(complex?"Sonnet 4.6 ("+count+" produits)":"Haiku 4.5")+" analyse...");
+    onStatus("🤖 "+(complex?"Sonnet 4.6":"Haiku 4.5")+" analyse...");
     var sysP=SYS+buildMemCtx();
-    var userP="Analyse cette photo de déchetterie. ~"+count+" produits visibles. "+
-      "Pour CHAQUE produit: 1) Lis le texte EXACT sur l'étiquette 2) Déduis le type si packaging reconnaissable 3) Estime le volume 4) Classe dans le référentiel (nom_referentiel, categorie, filiere) "+
-      "5) Position: bbox={x,y,w,h} en % de l'image. "+
-      "Traduis les noms commerciaux vers le référentiel. Réponds UNIQUEMENT en JSON.";
+    var userP="Analyse cette photo de déchetterie. ~"+count+" produits visibles. Pour CHAQUE produit: 1) Lis le texte EXACT sur l'étiquette 2) Déduis le type si packaging reconnaissable 3) Estime le volume 4) Classe dans le référentiel (nom_referentiel, categorie, filiere) 5) Position: bbox={x,y,w,h} en % de l'image. Traduis les noms commerciaux vers le référentiel. Réponds UNIQUEMENT en JSON.";
     return apiCall(b64,mime,sysP,userP,model,"final").then(function(fin){return{prods:parseProds(fin.text||""),model:model,count:count,usage:fin.usage||null}});
   });
 }
@@ -806,20 +629,15 @@ function matchOne(ai){
     var aiF=ai.filiere==="EcoDDS"?"E":(ai.filiere==="Cas spécial"||ai.filiere==="INTERDIT"?"C":"H");
     var vF=aiF;if(catFix[aiCat]&&catFix[aiCat]!==aiF)vF=catFix[aiCat];
     var db=null,terms=[nomRef,name,aiCat];if(marque)terms.push(marque);
-    var dr=deepSearch(terms);
-    var cm=dr.filter(function(r){return r.x===aiCat});
+    var dr=deepSearch(terms);var cm=dr.filter(function(r){return r.x===aiCat});
     if(cm.length&&cm[0].score>=35)db=cm[0];else if(dr.length&&dr[0].score>=50)db=dr[0];
     var fF=db?db.f:vF,fC=db?db.x:aiCat,conf=ai.confiance||70;
-    var r={n:dName,f:fF,x:fC,c:ai.consigne||(db?db.c:""),s:db?db.s:"",a:db?db.a:"",i:db?db.i:"",
-      conf:conf,nv:conf<70,aiData:ai,vol:ai.volume_estime||ai.volume||"",fluxCorrected:fF!==aiF};
-    if(conf>=60)pushLearn(marque||name,nomRef,r.f,r.x);
-    return r;
+    var r={n:dName,f:fF,x:fC,c:ai.consigne||(db?db.c:""),s:db?db.s:"",a:db?db.a:"",i:db?db.i:"",conf:conf,nv:conf<70,aiData:ai,vol:ai.volume_estime||ai.volume||"",fluxCorrected:fF!==aiF};
+    if(conf>=60)pushLearn(marque||name,nomRef,r.f,r.x);return r;
   }
-  // Memory lookup
   var mk=(marque||name).toLowerCase().trim(),mh=mem.brands[mk];
   if(mh){var dm=searchAll(mh.p);var dbm=dm.length&&dm[0].score>=40?dm[0]:null;
     return{n:dName,f:mh.f,x:mh.c,c:dbm?dbm.c:"",s:dbm?dbm.s:"",conf:Math.max(ai.confiance||60,75),nv:false,aiData:ai,fromMemory:true}}
-  // Fuzzy
   if(name.length<2&&marque.length<2)return{n:"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",conf:0,nv:true,aiData:ai};
   var R2=deepSearch([name,marque,name+" "+marque]);
   if(R2.length&&R2[0].score>=55){var b2=R2[0],c3=Math.min(b2.score,ai.confiance||75);
@@ -827,88 +645,119 @@ function matchOne(ai){
     return Object.assign({},b2,{conf:c3,nv:c3<70,aiData:ai})}
   return{n:dName,f:"H",x:"Produits non ID ou Laboratoire",conf:0,nv:true,aiData:ai};
 }
-
 function toJpeg(d){return new Promise(function(r){var i=new Image;i.onload=function(){var c=document.createElement("canvas");var s=Math.min(1024/i.width,1024/i.height,1);c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.85).split(",")[1])};i.src=d})}
 function cropImage(src,bb){return new Promise(function(r){if(!bb||!bb.w||!bb.h){r(null);return}var i=new Image;i.onload=function(){var sx=Math.round(i.width*Math.max(0,bb.x-2)/100),sy=Math.round(i.height*Math.max(0,bb.y-2)/100),sw=Math.round(i.width*Math.min(bb.w+4,100)/100),sh=Math.round(i.height*Math.min(bb.h+4,100)/100);if(sx+sw>i.width)sw=i.width-sx;if(sy+sh>i.height)sh=i.height-sy;if(sw<10||sh<10){r(null);return}var c=document.createElement("canvas");c.width=sw;c.height=sh;c.getContext("2d").drawImage(i,sx,sy,sw,sh,0,0,sw,sh);r(c.toDataURL("image/jpeg",.8))};i.onerror=function(){r(null)};i.src=src})}
 function cropAll(src,prods){return Promise.all(prods.map(function(p){var bb=(p.aiData||{}).bbox||(p.aiData||{}).position;return bb?cropImage(src,bb):Promise.resolve(null)}))}
 
 // ===== STYLING =====
 function fSt(f){
-  if(f==="E")return{bg:"var(--eco-bg)",bd:"var(--eco-bd)",bn:"var(--eco)",tx:"var(--eco-tx)",lb:"EcoDDS",bc:"b-eco",cls:"eco"};
-  if(f==="C"||f==="I")return{bg:"var(--int-bg)",bd:"var(--int-bd)",bn:"var(--int)",tx:"var(--int-tx)",lb:"INTERDIT",bc:"b-int",cls:"int"};
-  return{bg:"var(--hors-bg)",bd:"var(--hors-bd)",bn:"var(--hors)",tx:"var(--hors-tx)",lb:"Hors EcoDDS",bc:"b-hors",cls:"hors"};
+  if(f==="E")return{bg:"var(--eco-bg)",bd:"var(--eco-bd)",bn:"var(--eco)",tx:"var(--eco-tx)",lb:"EcoDDS",bc:"b-eco",cls:"eco",rc:"rc-eco"};
+  if(f==="C"||f==="I")return{bg:"var(--int-bg)",bd:"var(--int-bd)",bn:"var(--int)",tx:"var(--int-tx)",lb:"INTERDIT",bc:"b-int",cls:"int",rc:"rc-int"};
+  return{bg:"var(--hors-bg)",bd:"var(--hors-bd)",bn:"var(--hors)",tx:"var(--hors-tx)",lb:"Hors EcoDDS",bc:"b-hors",cls:"hors",rc:"rc-hors"};
 }
 function confCol(v){return v>=80?"#059669":v>=60?"#d97706":v>=40?"#ea580c":"#dc2626"}
 function badge(f){var s=fSt(f);return'<span class="badge '+s.bc+'">'+s.lb+'</span>'}
-function confBar(v){if(v<=0)return"";var c=confCol(v);return'<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:6px"><span style="color:var(--tx3)">Confiance</span><span style="color:'+c+';font-weight:700">'+v+'%</span></div><div class="cb"><div style="width:'+v+'%;background:'+c+'"></div></div>'}
+function confBar(v){if(v<=0)return"";var c=confCol(v);return'<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:5px"><span style="color:var(--tx3)">Confiance</span><span style="color:'+c+';font-weight:700">'+v+'%</span></div><div class="cb"><div style="width:'+v+'%;background:'+c+'"></div></div>'}
+
+// ===== RESULT CARD (enriched with flux banner right) =====
+function resCard(r,extra){
+  var s=fSt(r.f);
+  var details=[];
+  if(r.x)details.push(r.x);
+  if(r.s)details.push(r.s);
+  if(r.vol)details.push(r.vol);
+  var bacName=r.x?r.x.split("/")[0].trim():"";
+  return '<div class="res-card fu"'+(extra||'')+'><div class="rc-info"><h4>'+r.n+'</h4><p>'+details.join(' · ')+'</p></div><div class="rc-flux '+s.rc+'"><div class="rf-label">'+s.lb+'</div>'+(bacName?'<div class="rf-bac">'+bacName+'</div>':'')+'</div></div>';
+}
 
 // ===== SCREENS =====
 function show(id){document.querySelectorAll(".S").forEach(function(e){e.classList.remove("on")});var e=document.getElementById("s-"+id);if(e)e.classList.add("on");st.screen=id}
-function goHome(){show("home");st.result=null;st.image=null;st.matches=[];st.multi=null;st.query="";st.corIdx=-1;st.corJrnId=null;st.usedModel=null;document.getElementById("in-search").value="";stopCam();updHome()}
+function goHome(){show("home");st.result=null;st.image=null;st.matches=[];st.multi=null;st.query="";st.corIdx=-1;st.corJrnId=null;st.usedModel=null;document.getElementById("in-search").value="";document.getElementById("search-results").innerHTML="";stopCam();updHome()}
 
-// ===== HOME =====
 function updHome(){
   document.getElementById("home-site").textContent=sess.site||"TriDDS";
-  var planCls={free:"plan-free",pro:"plan-pro",multisite:"plan-ent",enterprise:"plan-ent"};
+  document.getElementById("home-agent").textContent=sess.agent||"";
   var planEl=document.getElementById("home-plan");
-  planEl.className="plan-badge "+(planCls[sess.plan]||"plan-free");
   planEl.textContent={free:"Accès Base",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||"Accès Base";
-  var r=usageRemaining();document.getElementById("q-label").textContent=usageLabel();
-  document.getElementById("q-disp").textContent=usageTotal()?r+"/"+usageTotal():"Off";
-  document.getElementById("q-disp").style.color=r>2?"var(--eco)":"var(--int)";
+  renderHistory();
+}
+
+function renderHistory(){
   var hl=document.getElementById("hist-list");
-  if(!st.history.length){hl.innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)"><div style="font-size:28px;margin-bottom:6px">♻️</div><div style="font-size:13px">Recherchez ou photographiez un produit</div></div>';return}
-  var h='<div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:6px">Historique récent</div>';
+  if(!st.history.length){
+    hl.innerHTML='<div class="home-empty"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Recherchez ou photographiez un produit</p></div>';
+    return;
+  }
+  var h='<div style="font-size:11px;font-weight:600;color:var(--tx3);margin:12px 0 6px">Dernières recherches</div>';
   st.history.forEach(function(x){
     var s=fSt(x.f);
-    h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--white);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:4px"><div style="width:4px;height:28px;border-radius:2px;background:'+s.bn+';flex-shrink:0"></div><span style="font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.nm+'</span>'+badge(x.f)+'</div>';
+    var details=[];if(x.x)details.push(x.x);if(x.s)details.push(x.s);if(x.vol)details.push(x.vol);
+    var bacName=x.x?x.x.split("/")[0].trim():"";
+    h+='<div class="res-card" style="margin-bottom:5px"><div class="rc-info"><h4>'+x.nm+'</h4><p>'+(details.length?details.join(' · '):'')+'</p></div><div class="rc-flux '+s.rc+'"><div class="rf-label">'+s.lb+'</div>'+(bacName?'<div class="rf-bac">'+bacName+'</div>':'')+'</div></div>';
   });
   hl.innerHTML=h;
 }
 
-// ===== SEARCH/DISAMBIG/VOLUME (same logic as v4) =====
-function doSearch(){var q=(document.getElementById("in-search").value||"").trim();if(!q)return;st.query=q;var res=searchAll(q);if(!res.length){show("nf");document.getElementById("nf-name").textContent='"'+q+'"'}else if(res.length===1||(res[0].score>=95&&(res.length<2||res[1].score<80)))selectProd(res[0]);else{st.matches=res;showDis()}}
-function showDis(){show("dis");document.getElementById("dis-cnt").textContent=st.matches.length;document.getElementById("dis-info").innerHTML="<strong>"+st.matches.length+"</strong> produits correspondent";var h="";st.matches.forEach(function(m,i){var s=fSt(m.f);h+='<button data-i="'+i+'" class="di" style="width:100%;text-align:left;background:'+s.bg+';border:2px solid '+s.bd+';border-radius:var(--r);padding:14px;margin-bottom:6px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;color:'+s.tx+';font-size:14px">'+m.n+'</div>'+badge(m.f)+'</div><div style="font-size:12px;color:var(--tx2);margin-top:4px;font-weight:600">→ '+m.x+'</div>'+(m.s?'<div style="font-size:11px;color:var(--tx3);margin-top:2px">Seuil: '+m.s+'</div>':'')+'</button>'});document.getElementById("dis-list").innerHTML=h;document.querySelectorAll(".di").forEach(function(b){b.addEventListener("click",function(){selectProd(st.matches[parseInt(b.dataset.i)])})})}
+// ===== LIVE SEARCH =====
+var searchTimer=null;
+function doLiveSearch(){
+  var q=(document.getElementById("in-search").value||"").trim();
+  var box=document.getElementById("search-results");
+  if(q.length<2){box.innerHTML="";return}
+  var res=searchAll(q);
+  if(!res.length){box.innerHTML='<div style="text-align:center;padding:18px;color:var(--tx3);font-size:13px">Aucun résultat pour "'+q+'"</div>';return}
+  // If exact match, show directly
+  if(res.length===1||(res[0].score>=95&&(res.length<2||res[1].score<80))){
+    var r=res[0];
+    box.innerHTML=resCard(r,' onclick="window._selectLive(0)" style="cursor:pointer"');
+    window._liveResults=[r];
+    return;
+  }
+  var h="";window._liveResults=res.slice(0,8);
+  res.slice(0,8).forEach(function(r,i){
+    h+=resCard(r,' onclick="window._selectLive('+i+')" style="cursor:pointer"');
+  });
+  box.innerHTML=h;
+}
+window._selectLive=function(i){
+  if(!window._liveResults||!window._liveResults[i])return;
+  selectProd(window._liveResults[i]);
+};
+function doSearch(){
+  var q=(document.getElementById("in-search").value||"").trim();
+  if(!q)return;st.query=q;
+  var res=searchAll(q);
+  if(!res.length){show("nf");document.getElementById("nf-name").textContent='"'+q+'"'}
+  else if(res.length===1||(res[0].score>=95&&(res.length<2||res[1].score<80)))selectProd(res[0]);
+  else{st.matches=res;showDis()}
+}
+
+// ===== DISAMBIG/VOLUME =====
+function showDis(){show("dis");document.getElementById("dis-cnt").textContent=st.matches.length;document.getElementById("dis-info").innerHTML="<strong>"+st.matches.length+"</strong> produits correspondent";var h="";st.matches.forEach(function(m,i){h+=resCard(m,' data-i="'+i+'" class="res-card fu di" style="cursor:pointer;animation-delay:'+(i*40)+'ms"')});document.getElementById("dis-list").innerHTML=h;document.querySelectorAll(".di").forEach(function(b){b.addEventListener("click",function(){selectProd(st.matches[parseInt(b.dataset.i)])})})}
 function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s}else{st.result=Object.assign({},p,{conf:p.score||85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()}}
 
 // ===== RESULT =====
 function showRes(){
   show("res");var r=st.result,s=fSt(r.f);
   document.getElementById("res-title").textContent=r.n;
-  // BIG FLUX BANNER
-  var fb=document.getElementById("res-flux-banner");
-  fb.className="flux-banner "+s.cls;
+  var fb=document.getElementById("res-flux-banner");fb.className="flux-banner "+s.cls;
   fb.innerHTML='<div>'+FM[r.f]+'</div><div class="flux-cat">→ '+(r.x||"Produits non ID")+'</div>';
-
   var ai=r.aiData||{};var lp=[];if(ai.marque)lp.push(ai.marque);if(ai.nom&&ai.nom!==ai.marque)lp.push(ai.nom);
   var lt=lp.join(" — ");var vol=ai.volume_estime||ai.volume||r.vol||"";
-
-  var h='';
-  // Product card
-  h+='<div class="card" style="border-left:5px solid '+s.bn+'">';
-  if(lt)h+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--tx)">🏷️ '+lt+'</div>';
-  h+='<div style="font-size:16px;font-weight:800;color:'+s.tx+'">→ '+r.n+'</div>';
-  if(vol)h+='<div style="font-size:12px;color:var(--tx2);margin-top:4px">📏 '+vol+'</div>';
+  var h='<div class="card" style="border-left:4px solid '+s.bn+';border-radius:0">';
+  if(lt)h+='<div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:4px">🏷️ '+lt+'</div>';
+  h+='<div style="font-size:15px;font-weight:800;color:'+s.tx+'">→ '+r.n+'</div>';
+  if(vol)h+='<div style="font-size:12px;color:var(--tx2);margin-top:3px">📏 '+vol+'</div>';
   h+=confBar(r.conf);
-  if(r.fromMemory)h+='<div style="margin-top:6px;font-size:10px;color:var(--purple)">🧠 Identifié par mémoire partagée</div>';
-  if(r.fluxCorrected)h+='<div style="margin-top:4px;font-size:10px;color:var(--eco)">🔄 Corrigé par le référentiel</div>';
+  if(r.fromMemory)h+='<div style="margin-top:5px;font-size:10px;color:var(--brand-green)">🧠 Identifié par mémoire partagée</div>';
+  if(r.fluxCorrected)h+='<div style="margin-top:3px;font-size:10px;color:var(--eco)">🔄 Corrigé par le référentiel</div>';
   h+='</div>';
-
-  // Consigne
-  if(r.c)h+='<div class="card" style="margin-top:8px;border-left:5px solid var(--int)"><div style="font-size:10px;font-weight:700;color:var(--int);text-transform:uppercase;margin-bottom:3px">⚠ Sécurité</div><div style="color:var(--int-tx);font-weight:600;font-size:12px">'+r.c+'</div></div>';
-
-  // Seuil
-  if(r.s&&!r.overSeuil)h+='<div style="margin-top:6px;font-size:12px;background:var(--blue-bg);color:#1e40af;padding:8px 12px;border-radius:var(--rs)">📦 Seuil: '+r.s+'</div>';
-  if(r.overSeuil)h+='<div class="card" style="margin-top:8px;background:var(--hors-bg);border-color:var(--hors-bd)"><div style="font-weight:700;color:var(--hors)">⚠️ Volume dépasse le seuil → Hors EcoDDS</div></div>';
-
-  // Crop image
-  if(r.cropImage)h+='<div style="margin-top:8px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:140px;object-fit:contain;background:#f0f0f5"></div>';
-  if(r.image&&!r.cropImage)h+='<div style="margin-top:8px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.image+'" style="width:100%;max-height:100px;object-fit:contain;background:#f0f0f5"></div>';
-
-  // Validation
-  if(r.nv)h+='<div class="card" style="margin-top:8px;background:#fefce8;border-color:#fde047"><div style="font-weight:700;color:var(--hors-tx);margin-bottom:8px">⚠️ Validation requise</div><div style="display:flex;gap:8px"><button onclick="confirmRes()" class="btn btn-eco" style="flex:1;font-size:12px">✅ Confirmer</button><button onclick="correctRes()" class="btn" style="flex:1;font-size:12px;background:var(--purple);color:#fff">✏️ Corriger</button><button onclick="markNonID()" class="btn btn-outline" style="flex:1;font-size:12px">❓ Non ID</button></div></div>';
-  else h+='<div style="margin-top:8px;text-align:center"><button onclick="correctRes()" style="font-size:12px;color:var(--purple);text-decoration:underline;background:none;border:none;cursor:pointer">Corriger ce classement</button></div>';
-
+  if(r.c)h+='<div class="card" style="margin-top:6px;border-left:4px solid var(--int);border-radius:0"><div style="font-size:10px;font-weight:700;color:var(--int);text-transform:uppercase;margin-bottom:2px">⚠ Sécurité</div><div style="color:var(--int-tx);font-weight:600;font-size:12px">'+r.c+'</div></div>';
+  if(r.s&&!r.overSeuil)h+='<div style="margin-top:6px;font-size:12px;background:rgba(90,138,25,.06);color:var(--brand-green2);padding:8px 12px;border-radius:var(--rs)">📦 Seuil: '+r.s+'</div>';
+  if(r.overSeuil)h+='<div class="card" style="margin-top:6px;background:var(--hors-bg);border-color:var(--hors-bd)"><div style="font-weight:700;color:var(--hors)">⚠️ Volume dépasse le seuil → Hors EcoDDS</div></div>';
+  if(r.cropImage)h+='<div style="margin-top:6px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:120px;object-fit:contain;background:#f5f5f0"></div>';
+  if(r.nv)h+='<div class="card" style="margin-top:6px;background:#fefce8;border-color:#fde047"><div style="font-weight:700;color:var(--hors-tx);margin-bottom:6px">⚠️ Validation requise</div><div style="display:flex;gap:8px"><button onclick="confirmRes()" class="btn btn-eco" style="flex:1;font-size:12px">✅ Confirmer</button><button onclick="correctRes()" class="btn" style="flex:1;font-size:12px;background:#7c3aed;color:#fff">✏️ Corriger</button><button onclick="markNonID()" class="btn btn-outline" style="flex:1;font-size:12px">❓ Non ID</button></div></div>';
+  else h+='<div style="margin-top:6px;text-align:center"><button onclick="correctRes()" style="font-size:12px;color:#7c3aed;text-decoration:underline;background:none;border:none;cursor:pointer">Corriger</button></div>';
   document.getElementById("res-body").innerHTML=h;
 }
 
@@ -923,7 +772,7 @@ function applyCorrection(prod){
   else if(st.corIdx>=0&&st.multi&&st.multi[st.corIdx]){var old=st.multi[st.corIdx];var br=old.aiData?(old.aiData.marque||old.aiData.nom||""):old.n;pushLearn(br,prod.n,prod.f,prod.x,"correct");st.multi[st.corIdx]=Object.assign({},prod,{conf:85,nv:false,image:old.image,aiData:old.aiData,cropImage:old.cropImage});st.corIdx=-1;showMulti()}
   else if(st.result){var ai=st.result.aiData;var b2=ai?(ai.marque||ai.nom||""):st.result.n;pushLearn(b2,prod.n,prod.f,prod.x,"correct");st.result=Object.assign({},prod,{conf:85,nv:false,image:st.result.image,aiData:ai,cropImage:st.result.cropImage});addHist(st.result);addJournal({name:prod.n,flux:prod.f,category:prod.x,confidence:85,validationType:"corrected"});showRes()}
 }
-function corSearch(){var q=(document.getElementById("cor-input").value||"").trim(),box=document.getElementById("cor-results");if(q.length<2){box.innerHTML='<div style="text-align:center;color:var(--tx3);padding:30px;font-size:13px">Tapez au moins 2 caractères</div>';return}var res=searchAll(q);if(!res.length){box.innerHTML='<div style="text-align:center;color:var(--tx3);padding:30px;font-size:13px">Aucun résultat</div>';return}var h="";res.forEach(function(r){var s=fSt(r.f);h+='<button class="cp" data-n="'+r.n+'" style="width:100%;text-align:left;background:'+s.bg+';border:1.5px solid '+s.bd+';border-radius:var(--rs);padding:12px;margin-bottom:5px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:13px;color:'+s.tx+'">'+r.n+'</span>'+badge(r.f)+'</div><div style="font-size:11px;color:var(--tx2);margin-top:3px">'+r.x+'</div></button>'});box.innerHTML=h;box.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var f=res.find(function(r){return r.n===b.dataset.n});if(f)applyCorrection(f)})})}
+function corSearch(){var q=(document.getElementById("cor-input").value||"").trim(),box=document.getElementById("cor-results");if(q.length<2){box.innerHTML='<div style="text-align:center;color:var(--tx3);padding:30px;font-size:13px">Tapez au moins 2 caractères</div>';return}var res=searchAll(q);if(!res.length){box.innerHTML='<div style="text-align:center;color:var(--tx3);padding:30px;font-size:13px">Aucun résultat</div>';return}var h="";res.forEach(function(r){h+=resCard(r,' class="res-card cp" data-n="'+r.n+'" style="cursor:pointer;margin-bottom:4px"')});box.innerHTML=h;box.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var f=res.find(function(r){return r.n===b.dataset.n});if(f)applyCorrection(f)})})}
 
 // ===== MULTI RESULTS =====
 function showMulti(){
@@ -931,25 +780,16 @@ function showMulti(){
   document.getElementById("mul-title").textContent=prods.length+" produits";
   if(st.image){document.getElementById("mul-img").style.display="block";document.getElementById("mul-photo").src=st.image}
   var ml=st.usedModel==="sonnet"?"Sonnet 4.6":"Haiku 4.5";
-  document.getElementById("mul-model").innerHTML='<div style="display:flex;align-items:center;gap:5px;padding:6px 10px;background:'+(st.usedModel==="sonnet"?"#f5f3ff":"var(--blue-bg)")+';border-radius:var(--rs);font-size:11px;color:'+(st.usedModel==="sonnet"?"#6d28d9":"#1e40af")+'"><span>🤖</span><strong>'+ml+'</strong></div>';
+  document.getElementById("mul-model").innerHTML='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(90,138,25,.06);border-radius:var(--rs);font-size:11px;color:var(--brand-green)"><span>🤖</span><strong>'+ml+'</strong></div>';
   var h="";
   prods.forEach(function(r,i){
-    var s=fSt(r.f),ai=r.aiData||{};var lp=[];if(ai.marque)lp.push(ai.marque);if(ai.nom&&ai.nom!==ai.marque)lp.push(ai.nom);var lt=lp.join(" — ");
-    var vol=ai.volume_estime||ai.volume||r.vol||"";
-    h+='<div class="fu" style="display:flex;background:var(--white);border:1.5px solid '+s.bd+';border-radius:var(--r);margin-bottom:8px;overflow:hidden;animation-delay:'+(i*60)+'ms">';
-    // Left color strip + optional crop
-    if(r.cropImage)h+='<img src="'+r.cropImage+'" style="width:72px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';
-    else h+='<div style="width:6px;background:'+s.bn+';flex-shrink:0"></div>';
-    // Content
-    h+='<div style="flex:1;padding:10px 12px;min-width:0">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center">'+badge(r.f)+'<span style="font-size:9px;color:var(--tx3)">PRODUIT '+(i+1)+'</span></div>';
-    if(lt)h+='<div style="font-size:11px;font-weight:600;color:var(--tx);margin-top:4px">🏷️ '+lt+'</div>';
-    h+='<div style="font-weight:800;color:'+s.tx+';font-size:13px;margin-top:2px">→ '+r.n+'</div>';
-    h+='<div style="font-size:10px;color:var(--tx2);margin-top:2px;font-weight:600">'+r.x+(vol?" · "+vol:"")+'</div>';
-    h+=confBar(r.conf);
-    if(r.nv)h+='<div style="margin-top:6px;display:flex;gap:6px"><button onclick="confirmM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:6px;background:var(--eco);color:#fff;border:none;cursor:pointer">✅</button><button onclick="correctM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:6px;background:var(--purple);color:#fff;border:none;cursor:pointer">✏️</button></div>';
-    else h+='<button onclick="correctM('+i+')" style="font-size:10px;color:var(--purple);text-decoration:underline;border:none;background:none;cursor:pointer;margin-top:4px">Corriger</button>';
-    h+='</div></div>';
+    var s=fSt(r.f);
+    h+='<div class="res-card fu" style="animation-delay:'+(i*50)+'ms">';
+    if(r.cropImage)h+='<img src="'+r.cropImage+'" style="width:64px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';
+    h+='<div class="rc-info"><h4>'+r.n+'</h4><p>'+(r.x||"")+(r.vol?" · "+r.vol:"")+'</p>'+confBar(r.conf);
+    if(r.nv)h+='<div style="margin-top:5px;display:flex;gap:5px"><button onclick="confirmM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:5px;border-radius:6px;background:var(--eco);color:#fff;border:none;cursor:pointer">✅</button><button onclick="correctM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:5px;border-radius:6px;background:#7c3aed;color:#fff;border:none;cursor:pointer">✏️</button></div>';
+    else h+='<button onclick="correctM('+i+')" style="font-size:10px;color:#7c3aed;text-decoration:underline;border:none;background:none;cursor:pointer;margin-top:3px">Corriger</button>';
+    h+='</div><div class="rc-flux '+s.rc+'" style="width:100px"><div class="rf-label">'+s.lb+'</div></div></div>';
   });
   document.getElementById("mul-list").innerHTML=h;
 }
@@ -957,7 +797,7 @@ window.confirmM=function(i){if(!st.multi||!st.multi[i])return;var r=st.multi[i];
 window.correctM=function(i){st.corIdx=i;st.corJrnId=null;document.getElementById("cor-orig").textContent=st.multi[i].n;document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
 
 // ===== CAMERA & ANALYZE =====
-function openCam(){if(!hasAiAccess()){alert(sess.plan==="free"?"Vos 5 scans IA offerts ont été utilisés. Passez au plan Pro pour continuer.":"Votre quota IA est atteint.");return}st.image=null;show("cam");document.getElementById("cam-view").style.display="block";document.getElementById("cam-prev").style.display="none";document.getElementById("cam-ctrl").style.display="flex";document.getElementById("cam-act").style.display="none";startCam()}
+function openCam(){if(!hasAiAccess()){alert(sess.plan==="free"?"Vos 2 scans IA offerts ont été utilisés. Passez au plan Pro.":"Quota IA atteint.");return}st.image=null;show("cam");document.getElementById("cam-view").style.display="block";document.getElementById("cam-prev").style.display="none";document.getElementById("cam-ctrl").style.display="flex";document.getElementById("cam-act").style.display="none";startCam()}
 function startCam(){navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280},height:{ideal:960}}}).then(function(s){st.stream=s;var v=document.getElementById("cam-vid");v.srcObject=s;v.play()}).catch(function(){})}
 function stopCam(){if(st.stream){st.stream.getTracks().forEach(function(t){t.stop()});st.stream=null}}
 function capture(){var v=document.getElementById("cam-vid");if(!v||!v.videoWidth)return;var c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);st.image=c.toDataURL("image/jpeg",.85);stopCam();document.getElementById("cam-view").style.display="none";document.getElementById("cam-prev").style.display="block";document.getElementById("cam-img").src=st.image;document.getElementById("cam-ctrl").style.display="none";document.getElementById("cam-act").style.display="flex"}
@@ -973,8 +813,8 @@ function analyze(){
     var prods=res.prods,model=res.model;
     if(!prods||!prods.length){st.result={n:"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",c:"Porter les EPI.",conf:0,nv:true,image:st.image};addHist(st.result);addJournal({name:"Non identifié",flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"auto",model:model});showRes();return}
     var seen={},uniq=[];for(var i=0;i<prods.length;i++){var k=(prods[i].nom||prods[i].texte_lu||"").toLowerCase().trim();if(k&&!seen[k]){seen[k]=true;uniq.push(prods[i])}}
-    if(uniq.length===1){var m=matchOne(uniq[0]);m.image=st.image;m.usedModel=model;st.result=m;var bb=uniq[0].bbox||uniq[0].position;if(bb){cropImage(st.image,bb).then(function(c){if(c)st.result.cropImage=c;addHist(m);addJournal({name:m.n,flux:m.f,category:m.x,confidence:m.conf,validationType:m.nv?"auto":"auto",model:model});showRes()})}else{addHist(m);addJournal({name:m.n,flux:m.f,category:m.x,confidence:m.conf,validationType:m.nv?"auto":"auto",model:model});showRes()}}
-    else{st.multi=uniq.map(function(ai){var m2=matchOne(ai);m2.image=st.image;m2.usedModel=model;return m2});st.usedModel=model;document.getElementById("load-msg").textContent="✂️ Découpe...";cropAll(st.image,st.multi).then(function(crops){for(var c=0;c<crops.length;c++){if(crops[c])st.multi[c].cropImage=crops[c]}st.multi.forEach(function(r){addJournal({name:r.n,flux:r.f,category:r.x,confidence:r.conf,validationType:r.nv?"auto":"auto",model:model})});showMulti()})}
+    if(uniq.length===1){var m=matchOne(uniq[0]);m.image=st.image;m.usedModel=model;st.result=m;var bb=uniq[0].bbox||uniq[0].position;if(bb){cropImage(st.image,bb).then(function(c){if(c)st.result.cropImage=c;addHist(m);addJournal({name:m.n,flux:m.f,category:m.x,confidence:m.conf,validationType:"auto",model:model});showRes()})}else{addHist(m);addJournal({name:m.n,flux:m.f,category:m.x,confidence:m.conf,validationType:"auto",model:model});showRes()}}
+    else{st.multi=uniq.map(function(ai){var m2=matchOne(ai);m2.image=st.image;m2.usedModel=model;return m2});st.usedModel=model;document.getElementById("load-msg").textContent="✂️ Découpe...";cropAll(st.image,st.multi).then(function(crops){for(var c=0;c<crops.length;c++){if(crops[c])st.multi[c].cropImage=crops[c]}st.multi.forEach(function(r){addJournal({name:r.n,flux:r.f,category:r.x,confidence:r.conf,validationType:"auto",model:model})});showMulti()})}
   });
 }
 
@@ -985,166 +825,130 @@ function showJournal(){
   else if(st.jrnFilter==="ok")f=journal.filter(function(e){return e.reviewed&&e.validationType!=="corrected"});
   else if(st.jrnFilter==="corrected")f=journal.filter(function(e){return e.validationType==="corrected"});
   document.getElementById("jrn-cnt").textContent=journal.length+" entrées";
-  document.querySelectorAll(".jf").forEach(function(b){var a=b.dataset.f===st.jrnFilter;if(b.dataset.f==="all"){b.style.background=a?"var(--blue)":"var(--white)";b.style.color=a?"#fff":"var(--blue)"}else b.style.fontWeight=a?"800":"600"});
-  if(!f.length){document.getElementById("jrn-list").innerHTML='<div style="text-align:center;padding:50px;color:var(--tx3)"><div style="font-size:24px;margin-bottom:6px">📋</div>Aucune entrée</div>';return}
+  document.querySelectorAll(".jf").forEach(function(b){var a=b.dataset.f===st.jrnFilter;if(b.dataset.f==="all"){b.style.background=a?"var(--brand-green)":"var(--white)";b.style.color=a?"#fff":"var(--brand-green)"}else b.style.fontWeight=a?"800":"600"});
+  if(!f.length){document.getElementById("jrn-list").innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)"><div style="font-size:20px;margin-bottom:6px">📋</div>Aucune entrée</div>';return}
   var h="";f.forEach(function(e){var s=fSt(e.correctedFlux||e.flux);var fn=e.correctedTo||e.name;
     var ti=e.validationType==="confirmed"?"✅":e.validationType==="corrected"?"✏️":e.reviewed?"✅":"⚠️";
-    var tc=e.validationType==="corrected"?"var(--purple)":e.reviewed?"var(--eco)":"var(--hors)";
-    h+='<div class="card" style="margin-bottom:6px;border-left:4px solid '+s.bn+';padding:12px">';
+    var tc=e.validationType==="corrected"?"#7c3aed":e.reviewed?"var(--eco)":"var(--hors)";
+    h+='<div class="card" style="margin-bottom:5px;border-left:4px solid '+s.bn+';padding:10px;border-radius:0">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;font-size:13px">'+fn+'</div>'+badge(e.correctedFlux||e.flux)+'</div>';
     if(e.correctedTo)h+='<div style="font-size:10px;color:var(--int);text-decoration:line-through">'+e.name+'</div>';
-    h+='<div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap"><span style="font-size:10px;color:var(--tx2)">'+(e.category||"")+'</span><span style="font-size:9px;font-weight:700;color:'+tc+'">'+ti+'</span><span style="font-size:9px;color:var(--tx3)">'+e.time+'</span>'+(e.agent?'<span style="font-size:8px;color:var(--tx3)">👤 '+e.agent+'</span>':'')+'</div>';
-    if(!e.reviewed)h+='<div style="display:flex;gap:6px;margin-top:8px"><button onclick="jrnOk(\''+e.id+'\')" class="btn btn-eco" style="flex:1;font-size:10px;padding:6px">✅ Valider</button><button onclick="jrnFix(\''+e.id+'\')" class="btn" style="flex:1;font-size:10px;padding:6px;background:var(--purple);color:#fff">✏️ Corriger</button></div>';
+    h+='<div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap"><span style="font-size:10px;color:var(--tx2)">'+(e.category||"")+'</span><span style="font-size:9px;font-weight:700;color:'+tc+'">'+ti+'</span><span style="font-size:9px;color:var(--tx3)">'+e.time+'</span></div>';
+    if(!e.reviewed)h+='<div style="display:flex;gap:6px;margin-top:6px"><button onclick="jrnOk(\''+e.id+'\')" class="btn btn-eco" style="flex:1;font-size:10px;padding:5px">✅ Valider</button><button onclick="jrnFix(\''+e.id+'\')" class="btn" style="flex:1;font-size:10px;padding:5px;background:#7c3aed;color:#fff">✏️ Corriger</button></div>';
     h+='</div>'});
   document.getElementById("jrn-list").innerHTML=h;
 }
-window.jrnOk=function(id){markReviewed(id);var e=journal.find(function(x){return x.id===id});if(e&&e.brand)pushLearn(e.brand,e.name,e.flux,e.category);showJournal()};
-window.jrnFix=function(id){st.corJrnId=id;var e=journal.find(function(x){return x.id===id});document.getElementById("cor-orig").textContent=e?e.name:"";document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
+window.jrnOk=function(id){markReviewed(id);showJournal()};
+window.jrnFix=function(id){st.corJrnId=id;st.corIdx=-1;var e=journal.find(function(x){return x.id===id});document.getElementById("cor-orig").textContent=e?e.name:"";document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
 
 // ===== MEMORY =====
 function showMemory(){
-  show("mem");var entries=Object.entries(mem.brands||{});
-  document.getElementById("mem-stats").innerHTML="<strong>"+entries.length+"</strong> marques · <strong>"+(mem.stats?mem.stats.corrected:0)+"</strong> corrections"+(sess.memoryEnabled?" · <span style='color:var(--eco)'>☁️ Partagée</span>":" · locale uniquement");
-  if(!entries.length){document.getElementById("mem-list").innerHTML='<div style="text-align:center;padding:50px;color:var(--tx3)">🧠 Mémoire vide</div>';return}
-  entries.sort(function(a,b){return(b[1].n||0)-(a[1].n||0)});
-  var h="";entries.forEach(function(e){var s=fSt(e[1].f);
-    h+='<div class="card" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:10px 12px"><div style="width:4px;height:24px;border-radius:2px;background:'+s.bn+';flex-shrink:0"></div><div style="font-weight:700;font-size:12px;flex-shrink:0;max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[0]+'</div><span style="color:var(--tx3);font-size:10px">→</span><div style="font-size:11px;color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[1].p+'</div>'+badge(e[1].f)+'<span style="font-size:9px;color:var(--tx3)">×'+e[1].n+'</span></div>'});
+  show("mem");var keys=memKeys();
+  document.getElementById("mem-stats").textContent=keys.length+" marques apprises";
+  if(!keys.length){document.getElementById("mem-list").innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)">Aucune marque apprise</div>';return}
+  var entries=keys.map(function(k){return{brand:k,data:mem.brands[k]}}).sort(function(a,b){return(b.data.n||0)-(a.data.n||0)});
+  var h="";entries.forEach(function(e){var s=fSt(e.data.f);
+    h+='<div class="res-card" style="margin-bottom:4px"><div class="rc-info"><h4>'+e.brand+'</h4><p>'+(e.data.p||"")+(e.data.n?" · vu "+e.data.n+"x":"")+'</p></div><div class="rc-flux '+s.rc+'" style="width:90px"><div class="rf-label" style="font-size:12px">'+s.lb+'</div></div></div>';
+  });
   document.getElementById("mem-list").innerHTML=h;
 }
 
-// ===== VOICE =====
-function startVoice(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("Non disponible");return}var r=new SR();r.lang="fr-FR";r.continuous=false;r.interimResults=true;r.onresult=function(e){var res=e.results[0],txt=res[0].transcript;document.getElementById("in-search").value=txt;document.getElementById("btn-srch").style.display=txt?"block":"none";if(res.isFinal&&txt.length>2){st.query=txt;setTimeout(doSearch,300)}};r.onerror=function(){};r.start()}
+// ===== TEAM & CATALOG (kept from original) =====
+function loadTeam(){
+  show("team");document.getElementById("team-list").innerHTML="Chargement...";
+  siteAdminPost("team").then(function(d){
+    var h="";(d.team||[]).forEach(function(a){
+      h+='<div class="team-row"><div><div style="font-weight:700">'+a.name+'</div><div style="font-size:11px;color:var(--tx2)">'+(a.role||"agent")+'</div></div><div style="display:flex;gap:6px"><button onclick="removeUser(\''+a.name+'\')" class="btn btn-outline" style="font-size:11px;padding:6px 10px">Retirer</button></div></div>';
+    });document.getElementById("team-list").innerHTML=h||"Aucun profil.";
+  }).catch(function(e){document.getElementById("team-list").innerHTML="Erreur: "+e.message});
+}
+window.removeUser=function(name){if(!confirm("Retirer "+name+" ?"))return;siteAdminPost("remove-user",{name:name}).then(loadTeam).catch(function(e){alert(e.message)})};
 
+function loadCatalog(){
+  show("catalog");document.getElementById("cat-list").innerHTML="Chargement...";
+  siteAdminPost("catalog-list").then(function(d){
+    var h="";(d.items||[]).forEach(function(it){var s=fSt(it.f);
+      h+='<div class="res-card" style="margin-bottom:4px"><div class="rc-info"><h4>'+it.n+'</h4><p>'+(it.x||"")+'</p></div><div class="rc-flux '+s.rc+'" style="width:80px"><div class="rf-label" style="font-size:11px">'+s.lb+'</div></div></div>';
+    });document.getElementById("cat-list").innerHTML=h||"Aucune fiche.";
+  }).catch(function(e){document.getElementById("cat-list").innerHTML="Erreur: "+e.message});
+}
+function resetCatalogForm(){document.getElementById("cat-id").value="";document.getElementById("cat-name").value="";document.getElementById("cat-cat").value="";document.getElementById("cat-consigne").value="";document.getElementById("cat-seuil").value="";document.getElementById("cat-syn").value=""}
 
-function showTrialModal(){var m=document.getElementById("trial-modal");if(m)m.classList.add("on")}
-function hideTrialModal(){var m=document.getElementById("trial-modal");if(m)m.classList.remove("on");var msg=document.getElementById("trial-msg");if(msg){msg.style.display="none";msg.textContent="";msg.className="trial-msg";}}
-function showTrialMsg(text,type){var msg=document.getElementById("trial-msg");if(!msg)return;msg.className="trial-msg "+(type||"err");msg.style.display="block";msg.textContent=text}
-function startTrialFlow(){showTrialModal()}
+// ===== TRIAL =====
+function showTrialModal(){document.getElementById("trial-modal").classList.add("on")}
+function hideTrialModal(){document.getElementById("trial-modal").classList.remove("on")}
 function createTrialAccess(){
-  if(!needApi("l'essai IA")){showTrialMsg("Backend non configuré","err");return;}
-  var siteName=(document.getElementById("trial-site").value||"").trim();
-  var adminName=(document.getElementById("trial-admin").value||"").trim();
-  var adminEmail=(document.getElementById("trial-email").value||"").trim();
-  var contact=(document.getElementById("trial-contact").value||"").trim();
-  if(!siteName||!adminName||!adminEmail){showTrialMsg("Renseignez au minimum le site, le nom administrateur et l'email.","err");return;}
-  var btn=document.getElementById("btn-trial-submit");btn.disabled=true;btn.textContent="Création de l'essai...";
-  fetch(apiUrl("create-trial"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteName:siteName,adminName:adminName,adminEmail:adminEmail,contact:contact})})
-    .then(function(r){return r.json().then(function(d){d.__status=r.status;return d;})})
-    .then(function(d){
-      btn.disabled=false;btn.textContent="Créer mon essai IA";
-      if(d.error) throw new Error(d.error);
-      showTrialMsg("Essai créé. Votre code est "+d.code+". Un email vient d'être envoyé.","ok");
-      document.getElementById("in-code").value=d.code;
-      setTimeout(function(){hideTrialModal();document.getElementById("btn-check").click();},900);
-    })
-    .catch(function(e){btn.disabled=false;btn.textContent="Créer mon essai IA";showTrialMsg(e&&e.message?e.message:"Impossible de créer l'essai.","err");});
+  var site=(document.getElementById("trial-site").value||"").trim();
+  var admin=(document.getElementById("trial-admin").value||"").trim();
+  var email=(document.getElementById("trial-email").value||"").trim();
+  var msg=document.getElementById("trial-msg");msg.className="trial-msg";msg.style.display="none";
+  if(!site||!admin||!email){msg.className="trial-msg err";msg.textContent="Tous les champs sont requis.";return}
+  var btn=document.getElementById("btn-trial-submit");btn.disabled=true;btn.textContent="Création...";
+  fetch(apiUrl("create-trial"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteName:site,adminName:admin,adminEmail:email})})
+  .then(function(r){return r.json()}).then(function(d){
+    btn.disabled=false;btn.textContent="Créer mon essai";
+    if(d.error){msg.className="trial-msg err";msg.textContent=d.error;return}
+    msg.className="trial-msg ok";msg.textContent="Accès créé ! Code : "+d.code+". Vérifiez votre email.";
+    document.getElementById("in-code").value=d.code;
+  }).catch(function(e){btn.disabled=false;btn.textContent="Créer mon essai";msg.className="trial-msg err";msg.textContent=e.message||"Erreur"});
 }
 
-function loadCustomCatalog(){if(!isLoggedIn()||sess.code==="DEMO"||!sess.canManageCatalog)return Promise.resolve();return siteAdminPost("catalog-list").then(function(d){customCatalog=d.items||[];mergeCatalog();return d}).catch(function(){customCatalog=[];mergeCatalog();});}
-function renderTeam(items){var el=document.getElementById("team-list");if(!el)return;if(!(items||[]).length){el.innerHTML='<div class="card muted">Aucun profil enregistré.</div>';return}var h="";(items||[]).forEach(function(u){var last=u.lastSeen?new Date(u.lastSeen).toLocaleString('fr-FR'):'—';var safeName=JSON.stringify(u.name);h+='<div class="team-row"><div class="team-left"><strong>'+u.name+'</strong><span class="muted" style="font-size:12px">Dernière activité : '+last+'</span></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select class="select" style="width:auto" onchange="teamSetRole('+safeName+',this.value)"><option value="responsable"'+(u.role==='responsable'?' selected':'')+'>Responsable</option><option value="agent"'+(u.role==='agent'?' selected':'')+'>Agent</option></select><button class="btn btn-outline" onclick="teamRemove('+safeName+')">Supprimer</button></div></div>';});el.innerHTML=h}
-function loadTeam(){siteAdminPost("team").then(function(d){renderTeam(d.team||[]);show("team")}).catch(function(e){alert(e.message||"Impossible de charger l'équipe.")})}
-function renderClientSites(data){var box=document.getElementById("client-summary");if(box)box.innerHTML='<strong>'+(data.client||sess.clientName||'Client')+'</strong>'+(data.principal?' · Contact principal : '+data.principal:'')+(data.principalEmail?' · '+data.principalEmail:'');var el=document.getElementById("client-sites-list");if(!el)return;var items=data.items||[];if(!items.length){el.innerHTML='<div class="card muted">Aucun site rattaché à ce client.</div>';return}var h='';items.forEach(function(s){var badge={free:'Accès Base',pro:'Pro Site',multisite:'Multi-sites',enterprise:'Entreprise'}[s.plan]||s.plan;h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div style="font-weight:800;font-size:16px">'+s.site+'</div><div class="muted" style="font-size:13px">Responsable : '+(s.responsable||'—')+'</div><div class="muted" style="font-size:13px">Code : '+s.code+'</div></div><div><span class="plan-badge '+({free:'plan-free',pro:'plan-pro',multisite:'plan-ent',enterprise:'plan-ent'}[s.plan]||'plan-free')+'">'+badge+'</span></div></div></div>'});el.innerHTML=h}
-function loadClientSites(){siteAdminPost("client-sites").then(function(d){renderClientSites(d);show("sites")}).catch(function(e){alert(e.message||"Impossible de charger les sites.")})}
-function renderCatalog(items){var el=document.getElementById("cat-list");if(!el)return;if(!(items||[]).length){el.innerHTML='<div class="card muted">Aucune fiche personnalisée.</div>';return}var h="";(items||[]).forEach(function(it){var safeId=JSON.stringify(it.id);h+='<div class="cat-row"><div class="cat-left"><strong>'+it.n+'</strong><span class="muted" style="font-size:12px">'+(it.x||'')+' · '+(FM[it.f]||it.f)+'</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="catalogEdit('+safeId+')">Modifier</button><button class="btn btn-outline" style="color:var(--int);border-color:var(--int-bd)" onclick="catalogDelete('+safeId+')">Supprimer</button></div></div>';});el.innerHTML=h}
-function loadCatalog(){siteAdminPost("catalog-list").then(function(d){customCatalog=d.items||[];mergeCatalog();renderCatalog(customCatalog);show("catalog")}).catch(function(e){alert(e.message||"Impossible de charger la base.")})}
-window.teamSetRole=function(name,role){if(role==="responsable"){var keep=confirm("Définir "+name+" comme responsable unique du site ? L'ancien responsable sera passé en agent.");if(!keep)return;}siteAdminPost("set-user-role",{name:name,role:role}).then(loadTeam).catch(function(e){alert(e.message||"Erreur rôle.")})}
-window.teamRemove=function(name){if(!confirm("Supprimer "+name+" ?"))return;siteAdminPost("remove-user",{name:name}).then(loadTeam).catch(function(e){alert(e.message||"Erreur suppression.")})}
-window.catalogEdit=function(id){var item=(customCatalog||[]).find(function(x){return x.id===id});if(!item)return;document.getElementById("cat-id").value=item.id||"";document.getElementById("cat-name").value=item.n||"";document.getElementById("cat-flux").value=item.f||"H";document.getElementById("cat-cat").value=item.x||"";document.getElementById("cat-consigne").value=item.c||"";document.getElementById("cat-seuil").value=item.s||"";document.getElementById("cat-syn").value=(item.y||[]).join(", ");show("catalog");window.scrollTo({top:0,behavior:"smooth"})}
-window.catalogDelete=function(id){if(!confirm("Supprimer cette fiche ?"))return;siteAdminPost("catalog-delete",{id:id}).then(loadCatalog).catch(function(e){alert(e.message||"Erreur suppression.")})}
-function resetCatalogForm(){["cat-id","cat-name","cat-cat","cat-consigne","cat-seuil","cat-syn"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});document.getElementById("cat-flux").value="H"}
+// ===== VOICE =====
+function startVoice(){
+  if(!("webkitSpeechRecognition" in window)&&!("SpeechRecognition" in window)){alert("Reconnaissance vocale non disponible.");return}
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;var r=new SR();r.lang="fr-FR";r.continuous=false;r.interimResults=false;
+  r.onresult=function(e){var t=e.results[0][0].transcript;document.getElementById("in-search").value=t;doLiveSearch()};
+  r.start();
+}
+
 // ===== EVENTS =====
-document.getElementById("btn-create-access").addEventListener("click",function(){ location.href="./pricing.html"; });
-document.getElementById("btn-free-access").addEventListener("click",function(){ document.getElementById("btn-demo").click(); });
-var heroTrial=document.getElementById("btn-free-access-hero"); if(heroTrial) heroTrial.addEventListener("click",startTrialFlow);
-
-// Login: 2-step flow
-var pendingLogin = null; // holds response from step 1
-
+var pendingLogin=null;
 document.getElementById("btn-check").addEventListener("click",function(){
-  var code=document.getElementById("in-code").value.trim();
-  if(!code){document.getElementById("login-err").textContent="Entrez un code";document.getElementById("login-err").style.display="block";return}
-  document.getElementById("login-err").style.display="none";
-  document.getElementById("btn-check").textContent="Vérification...";
-  
-  fetch(apiUrl("auth"),{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({action:"login",code:code})
-  }).then(function(r){return r.json()}).then(function(d){
-    document.getElementById("btn-check").textContent="Vérifier le code";
+  var code=(document.getElementById("in-code").value||"").trim().toUpperCase();if(!code)return;
+  document.getElementById("btn-check").textContent="Vérification...";document.getElementById("login-err").style.display="none";
+  authPost({action:"login",code:code}).then(function(d){
+    document.getElementById("btn-check").textContent="Se connecter";
     if(d.error)throw new Error(d.error);
-    pendingLogin=d;
-    
-    // Show step 2
-    document.getElementById("login-step1").style.display="none";
-    document.getElementById("login-step2").style.display="block";
+    pendingLogin=d;document.getElementById("login-step1").style.display="none";document.getElementById("login-step2").style.display="block";
     document.getElementById("login-site-name").textContent=d.site;
-    
-    // Populate agent dropdown
-    var sel=document.getElementById("sel-agent");
-    sel.innerHTML="";
+    var sel=document.getElementById("sel-agent");sel.innerHTML='<option value="">Choisissez...</option>';
     var agents=d.agents||[];
-    if(agents.length===0){
-      sel.innerHTML='<option value="">Aucun agent configuré</option>';
-      sel.disabled=true;
-      document.getElementById("login-err").textContent="Demandez à l'admin d'ajouter votre nom";
-      document.getElementById("login-err").style.display="block";
-    } else {
-      sel.disabled=false;
-      agents.forEach(function(name){
-        var opt=document.createElement("option");opt.value=name;opt.textContent=name;sel.appendChild(opt);
-      });
-    }
-  }).catch(function(e){
-    document.getElementById("btn-check").textContent="Vérifier le code";
-    document.getElementById("login-err").textContent=e.message||"Code invalide";
-    document.getElementById("login-err").style.display="block";
-  });
+    if(!agents.length){sel.innerHTML='<option value="">Aucun profil disponible</option>';sel.disabled=true;
+      document.getElementById("login-err").textContent="Aucun profil sur ce site.";document.getElementById("login-err").style.display="block";
+    } else {sel.disabled=false;agents.forEach(function(name){var opt=document.createElement("option");opt.value=name;opt.textContent=name;sel.appendChild(opt)})}
+  }).catch(function(e){document.getElementById("btn-check").textContent="Se connecter";document.getElementById("login-err").textContent=e.message||"Code invalide";document.getElementById("login-err").style.display="block"});
 });
 document.getElementById("in-code").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("btn-check").click()});
-
-document.getElementById("btn-back-code").addEventListener("click",function(){
-  document.getElementById("login-step1").style.display="block";
-  document.getElementById("login-step2").style.display="none";
-  document.getElementById("login-err").style.display="none";
-  pendingLogin=null;
-});
-
+document.getElementById("btn-back-code").addEventListener("click",function(){document.getElementById("login-step1").style.display="block";document.getElementById("login-step2").style.display="none";document.getElementById("login-err").style.display="none";pendingLogin=null});
 document.getElementById("btn-login").addEventListener("click",function(){
-  if(!pendingLogin)return;
-  var agent=document.getElementById("sel-agent").value;
+  if(!pendingLogin)return;var agent=document.getElementById("sel-agent").value;
   if(!agent){document.getElementById("login-err").textContent="Sélectionnez un agent";document.getElementById("login-err").style.display="block";return}
   document.getElementById("login-err").style.display="none";
   startAgentSession(pendingLogin.code,agent,false).then(function(d){
-    if(d&&d.error==="SESSION_ACTIVE"){
-      var info=d.activeSession||{};
-      var msg="Cet agent est déjà connecté sur "+(info.deviceName||"un autre appareil")+".";
-      if(info.lastSeenAt) msg+="\nDernière activité: "+new Date(info.lastSeenAt).toLocaleString("fr-FR");
-      msg+="\n\nPrendre la main sur cette session ?";
-      if(confirm(msg)){
-        startAgentSession(pendingLogin.code,agent,true).then(function(ok){
-          if(ok&&ok.error)throw new Error(ok.message||ok.error);
-          pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);
-        }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block";});
-      }
-      return;
-    }
+    if(d&&d.error==="SESSION_ACTIVE"){var info=d.activeSession||{};var msg="Agent déjà connecté sur "+(info.deviceName||"un autre appareil")+".";msg+="\n\nPrendre la main ?";
+      if(confirm(msg)){startAgentSession(pendingLogin.code,agent,true).then(function(ok){if(ok&&ok.error)throw new Error(ok.message||ok.error);pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true)}).catch(function(e){document.getElementById("login-err").textContent=e.message;document.getElementById("login-err").style.display="block"})}return}
     if(d&&d.error)throw new Error(d.message||d.error);
     pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);
-  }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block";});
+  }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block"});
 });
 document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome()});
+document.getElementById("btn-free-access-hero").addEventListener("click",showTrialModal);
 document.getElementById("btn-manage-team").addEventListener("click",loadTeam);
 document.getElementById("btn-manage-catalog").addEventListener("click",loadCatalog);
-document.getElementById("btn-team-add").addEventListener("click",function(){var name=(document.getElementById("team-new-name").value||"").trim();var role=document.getElementById("team-new-role").value;if(!name){alert("Entrez un nom.");return}if(role==="responsable"){var keep=confirm("Créer ce profil comme responsable unique du site ? L'ancien responsable sera passé en agent.");if(!keep)return;}siteAdminPost("add-user",{name:name,role:role}).then(function(){document.getElementById("team-new-name").value="";loadTeam()}).catch(function(e){alert(e.message||"Erreur ajout.")})});
-document.getElementById("btn-cat-save").addEventListener("click",function(){var item={id:(document.getElementById("cat-id").value||"").trim(),n:(document.getElementById("cat-name").value||"").trim(),f:document.getElementById("cat-flux").value,x:(document.getElementById("cat-cat").value||"").trim(),c:(document.getElementById("cat-consigne").value||"").trim(),s:(document.getElementById("cat-seuil").value||"").trim(),y:(document.getElementById("cat-syn").value||"").trim()};siteAdminPost("catalog-save",{item:item}).then(function(){resetCatalogForm();loadCatalog()}).catch(function(e){alert(e.message||"Erreur enregistrement.")})});
-var btnTrialClose=document.getElementById("btn-trial-close"); if(btnTrialClose) btnTrialClose.addEventListener("click",hideTrialModal);
-var btnTrialSubmit=document.getElementById("btn-trial-submit"); if(btnTrialSubmit) btnTrialSubmit.addEventListener("click",createTrialAccess);
-var trialModal=document.getElementById("trial-modal"); if(trialModal) trialModal.addEventListener("click",function(e){ if(e.target&&e.target.id==="trial-modal") hideTrialModal(); });
+document.getElementById("btn-team-add").addEventListener("click",function(){var name=(document.getElementById("team-new-name").value||"").trim();var role=document.getElementById("team-new-role").value;if(!name){alert("Entrez un nom.");return}if(role==="responsable"){if(!confirm("Définir comme responsable unique ?"))return;}siteAdminPost("add-user",{name:name,role:role}).then(function(){document.getElementById("team-new-name").value="";loadTeam()}).catch(function(e){alert(e.message||"Erreur")})});
+document.getElementById("btn-cat-save").addEventListener("click",function(){var item={id:(document.getElementById("cat-id").value||"").trim(),n:(document.getElementById("cat-name").value||"").trim(),f:document.getElementById("cat-flux").value,x:(document.getElementById("cat-cat").value||"").trim(),c:(document.getElementById("cat-consigne").value||"").trim(),s:(document.getElementById("cat-seuil").value||"").trim(),y:(document.getElementById("cat-syn").value||"").trim()};siteAdminPost("catalog-save",{item:item}).then(function(){resetCatalogForm();loadCatalog()}).catch(function(e){alert(e.message||"Erreur")})});
+var btnTrialClose=document.getElementById("btn-trial-close");if(btnTrialClose)btnTrialClose.addEventListener("click",hideTrialModal);
+var btnTrialSubmit=document.getElementById("btn-trial-submit");if(btnTrialSubmit)btnTrialSubmit.addEventListener("click",createTrialAccess);
+var trialModal=document.getElementById("trial-modal");if(trialModal)trialModal.addEventListener("click",function(e){if(e.target&&e.target.id==="trial-modal")hideTrialModal()});
 document.getElementById("btn-logout").addEventListener("click",logout);
-
 document.getElementById("btn-voice").addEventListener("click",startVoice);
-document.getElementById("btn-srch").addEventListener("click",doSearch);
+
+// Live search
+document.getElementById("in-search").addEventListener("input",function(){
+  clearTimeout(searchTimer);var v=this.value;
+  searchTimer=setTimeout(function(){doLiveSearch()},150);
+});
 document.getElementById("in-search").addEventListener("keydown",function(e){if(e.key==="Enter")doSearch()});
-document.getElementById("in-search").addEventListener("input",function(){document.getElementById("btn-srch").style.display=this.value?"block":"none"});
 document.getElementById("btn-photo").addEventListener("click",openCam);
 document.getElementById("btn-nf-photo").addEventListener("click",openCam);
 document.getElementById("btn-nf-nonid").addEventListener("click",function(){st.result={n:st.query||"Non identifié",f:"H",x:"Produits non ID ou Laboratoire",c:"Porter les EPI.",conf:0,nv:false};addHist(st.result);addJournal({name:st.result.n,flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"manual"});showRes()});
@@ -1164,20 +968,19 @@ document.querySelectorAll(".jf").forEach(function(b){b.addEventListener("click",
 document.querySelectorAll("#main-tabs button").forEach(function(b){
   b.addEventListener("click",function(){
     document.querySelectorAll("#main-tabs button").forEach(function(x){x.classList.remove("act")});
-    b.classList.add("act");
-    var t=b.dataset.t;
+    b.classList.add("act");var t=b.dataset.t;
     if(t==="home")goHome();
     else if(t==="journal")showJournal();
-    else if(t==="memory"){syncMemory();showMemory()}
-    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;var pclient=document.getElementById("prof-client");if(pclient)pclient.textContent=sess.clientName||"—";document.getElementById("prof-agent").textContent=sess.agent+(sess.agentRole?" • "+sess.agentRole:"");document.getElementById("prof-plan").textContent={free:"Accès Base + 5 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse";document.getElementById("prof-manage").style.display=(sess.canManageUsers||sess.canManageCatalog)?"grid":"none"}
+    else if(t==="guide"){show("guide");syncMemory()}
+    else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;var pc=document.getElementById("prof-client");if(pc)pc.textContent=sess.clientName||"—";document.getElementById("prof-agent").textContent=sess.agent+(sess.agentRole?" · "+sess.agentRole:"");document.getElementById("prof-plan").textContent={free:"Accès Base + 2 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse";document.getElementById("prof-manage").style.display=(sess.canManageUsers||sess.canManageCatalog)?"grid":"none"}
   });
 });
 
 // ===== INIT =====
 loadSess();loadJournal();
 if(isLoggedIn()){
-  if(sess.code==="DEMO"){show("home");updHome();}
-  else {show("home");updHome();syncMemory();resumeCurrentSession();loadCustomCatalog();}
+  if(sess.code==="DEMO"){show("home");updHome()}
+  else{show("home");updHome();syncMemory();resumeCurrentSession();loadCustomCatalog()}
 }else{show("login")}
 ["click","keydown","touchstart","input"].forEach(function(ev){document.addEventListener(ev,registerActivity,{passive:true})});
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")heartbeat(true)});
@@ -1185,8 +988,5 @@ window.addEventListener("focus",function(){heartbeat(true)});
 
 })();
 </script>
-
-
-
 </body>
 </html>
