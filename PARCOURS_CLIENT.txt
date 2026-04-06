@@ -1,0 +1,20 @@
+Parcours recommandé
+
+1. Super-admin interne
+- admin.html
+- Réservé à l’équipe interne
+- Supervision globale, ventes, sessions, base métier globale
+
+2. Responsable de site (client)
+- Accède via index.html
+- Reçoit le lien de l’application utilisateur + son code d’accès
+- Gère son équipe et ses accès depuis Profil > Mon équipe / Mes sites / Base produits
+
+3. Agent
+- Accède via index.html
+- Utilise la recherche, la photo IA, l’historique et son profil
+- Ne gère pas les accès
+
+Règle mail importante
+- Le mail client ne doit jamais contenir le lien admin.html
+- Le mail client doit contenir uniquement le lien vers l’application utilisateur, le code d’accès et l’explication de gestion depuis Profil

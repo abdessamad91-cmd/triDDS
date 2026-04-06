@@ -593,11 +593,11 @@ body{background:linear-gradient(180deg,#eef4ff,#f7fbff 38%,#f2f5fb)}
 <div id="trial-modal" class="trial-modal">
   <div class="trial-box">
     <h2>Tester l’IA gratuitement</h2>
-    <p>Créez un accès d’essai avec <strong>5 scans IA</strong>. L’essai est accordé une seule fois par email administrateur.</p>
+    <p>Créez un accès d’essai avec <strong>5 scans IA</strong>. L’essai est accordé une seule fois par email du responsable de site.</p>
     <div class="trial-grid">
       <div><div class="lbl">Nom du site</div><input id="trial-site" placeholder="Ex. Déchèterie de test"></div>
-      <div><div class="lbl">Nom administrateur</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
-      <div class="full"><div class="lbl">Email administrateur</div><input id="trial-email" type="email" placeholder="Ex. admin@site.fr"></div>
+      <div><div class="lbl">Nom du responsable de site</div><input id="trial-admin" placeholder="Ex. Abdessamad"></div>
+      <div class="full"><div class="lbl">Email du responsable de site</div><input id="trial-email" type="email" placeholder="Ex. admin@site.fr"></div>
       <div class="full"><div class="lbl">Contact (optionnel)</div><input id="trial-contact" placeholder="Téléphone ou email"></div>
     </div>
     <div class="trial-actions">
@@ -1026,7 +1026,7 @@ function createTrialAccess(){
   var adminName=(document.getElementById("trial-admin").value||"").trim();
   var adminEmail=(document.getElementById("trial-email").value||"").trim();
   var contact=(document.getElementById("trial-contact").value||"").trim();
-  if(!siteName||!adminName||!adminEmail){showTrialMsg("Renseignez au minimum le site, le nom administrateur et l'email.","err");return;}
+  if(!siteName||!adminName||!adminEmail){showTrialMsg("Renseignez au minimum le site, le nom du responsable de site et son email.","err");return;}
   var btn=document.getElementById("btn-trial-submit");btn.disabled=true;btn.textContent="Création de l'essai...";
   fetch(apiUrl("create-trial"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteName:siteName,adminName:adminName,adminEmail:adminEmail,contact:contact})})
     .then(function(r){return r.json().then(function(d){d.__status=r.status;return d;})})
@@ -1085,7 +1085,7 @@ document.getElementById("btn-check").addEventListener("click",function(){
     if(agents.length===0){
       sel.innerHTML='<option value="">Aucun agent configuré</option>';
       sel.disabled=true;
-      document.getElementById("login-err").textContent="Demandez à l'admin d'ajouter votre nom";
+      document.getElementById("login-err").textContent="Demandez au responsable du site d'ajouter votre nom";
       document.getElementById("login-err").style.display="block";
     } else {
       sel.disabled=false;
