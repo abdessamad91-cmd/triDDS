@@ -586,12 +586,24 @@ function loadCustomCatalog(){
   siteAdminPost("catalog-list").then(function(d){if(d&&d.items){customCatalog=d.items;mergeCatalog()}}).catch(function(){});
 }
 var _imgLoaded=false;
+function _fixImgUrl(img){
+  // Always reconstruct URL from API_BASE if r2Key exists
+  if(img.r2Key&&API_BASE){
+    img.url=API_BASE.replace(/\/$/,"")+"/img/"+img.r2Key;
+  }
+  // Fix URLs pointing to tridds.com/api/img (GitHub Pages can't serve R2)
+  if(img.url&&img.url.indexOf("tridds.com/api/img")>=0&&API_BASE){
+    var r2Part=img.url.split("/api/img/")[1];
+    if(r2Part)img.url=API_BASE.replace(/\/$/,"")+"/img/"+r2Part;
+  }
+  return img;
+}
 function _mergeImages(items){
   items.forEach(function(img){
+    _fixImgUrl(img);
     var key=(img.productName||"").toLowerCase().trim();
     if(!key)return;
     if(!productImages[key])productImages[key]=[];
-    // Avoid duplicates by URL
     var exists=productImages[key].some(function(e){return e.url===img.url});
     if(!exists)productImages[key].push(img);
   });
