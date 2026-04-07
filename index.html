@@ -585,15 +585,20 @@ function loadCustomCatalog(){
   if(!sess.code||sess.code==="DEMO"||!API_BASE)return;
   siteAdminPost("catalog-list").then(function(d){if(d&&d.items){customCatalog=d.items;mergeCatalog()}}).catch(function(){});
 }
-function loadProductImages(){
+function loadProductImages(retries){
   if(!sess.code||sess.code==="DEMO"||!API_BASE)return Promise.resolve();
+  retries=retries||0;
   return fetch(apiUrl("product-images"),{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({code:sess.code,action:"list-all"})
-  }).then(function(r){return r.json()}).then(function(d){
+  }).then(function(r){
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(d){
     if(d&&d.items){
       productImages={};
       (d.items||[]).forEach(function(img){
-        var key=img.productName.toLowerCase().trim();
+        var key=(img.productName||"").toLowerCase().trim();
+        if(!key)return;
         if(!productImages[key])productImages[key]=[];
         productImages[key].push(img);
       });
@@ -604,10 +609,12 @@ function loadProductImages(){
           return(a.order||0)-(b.order||0);
         });
       });
-      // Re-render history now that images are loaded
-      if(st.screen==="home")renderHistory();
     }
-  }).catch(function(){});
+    if(st.screen==="home")renderHistory();
+  }).catch(function(e){
+    // Retry once after 2s if first attempt fails
+    if(retries<1){setTimeout(function(){loadProductImages(retries+1)},2000)}
+  });
 }
 function getProductImage(name){
   if(!name)return null;
@@ -1293,7 +1300,20 @@ document.getElementById("btn-user-img-save").addEventListener("click",function()
 loadSess();loadJournal();
 if(isLoggedIn()){
   if(sess.code==="DEMO"){show("home");updHome()}
-  else{show("home");syncMemory();resumeCurrentSession();loadCustomCatalog();loadProductImages().then(function(){updHome()}).catch(function(){updHome()})}
+  else{
+    show("home");updHome();
+    // Resume session first, then load everything
+    resumeCurrentSession().then(function(){
+      syncMemory();
+      loadCustomCatalog();
+      return loadProductImages();
+    }).then(function(){
+      renderHistory();
+    }).catch(function(){
+      // Still try to load images even if session resume fails
+      loadProductImages();
+    });
+  }
 }else{show("login")}
 ["click","keydown","touchstart","input"].forEach(function(ev){document.addEventListener(ev,registerActivity,{passive:true})});
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")heartbeat(true)});
