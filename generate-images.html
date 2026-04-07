@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TriDDS — Générateur d'images par catégorie</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#f5f7f2;color:#1a1a1a;padding:20px}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.sub{color:#5c5e57;font-size:14px;margin-bottom:20px}
+.card{background:#fff;border:1px solid #e0e4d9;border-radius:16px;padding:20px;margin-bottom:14px}
+.btn{padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-green{background:#5a8a19;color:#fff}
+.btn-red{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:14px}
+.cat-card{background:#fff;border:1px solid #e0e4d9;border-radius:12px;overflow:hidden;text-align:center;position:relative}
+.cat-card canvas{width:100%;height:120px;display:block}
+.cat-card .info{padding:8px;font-size:11px}
+.cat-card .name{font-weight:700;font-size:12px;margin-bottom:2px}
+.cat-card .count{color:#8a8d84;font-size:10px}
+.cat-card .status{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px}
+.st-ok{background:#ecfdf5;color:#065f46}
+.st-wait{background:#fffbeb;color:#92400e}
+.progress{margin-top:14px;padding:14px;background:#fff;border:1px solid #e0e4d9;border-radius:12px}
+.bar{height:8px;background:#f0f0f0;border-radius:99px;overflow:hidden;margin-top:8px}
+.bar>div{height:100%;background:#5a8a19;border-radius:99px;transition:width .3s}
+.log{margin-top:10px;max-height:200px;overflow-y:auto;font-size:12px;color:#5c5e57;line-height:1.8}
+.log .ok{color:#059669}.log .err{color:#dc2626}
+.tip{background:rgba(90,138,25,.06);border:1px solid rgba(90,138,25,.15);border-radius:10px;padding:12px;font-size:13px;color:#4d7c0f;line-height:1.6;margin-bottom:14px}
+.row{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Générateur d'images par catégorie</h1>
+  <p class="sub">Génère automatiquement 21 pictogrammes pour les catégories de produits DDS et les uploade vers R2.</p>
+
+  <div class="tip">
+    <strong>Comment ça marche :</strong> Chaque catégorie (Pâteux, Solvants, Aérosols...) reçoit un pictogramme coloré.
+    Tous les produits d'une catégorie partagent la même image. L'upload se fait en mode <strong>Global</strong> (visible par tous les utilisateurs).
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="btn btn-green" id="btn-generate">1. Générer les pictogrammes</button>
+      <button class="btn btn-green" id="btn-upload" disabled>2. Uploader vers R2</button>
+      <span id="status" style="font-size:13px;color:#8a8d84"></span>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div id="progress-box" style="display:none" class="progress">
+    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">
+      <span id="prog-label">Upload en cours...</span>
+      <span id="prog-count">0/0</span>
+    </div>
+    <div class="bar"><div id="prog-bar" style="width:0%"></div></div>
+    <div class="log" id="prog-log"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script>
+(function(){
+const API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||"").replace(/\/$/,"");
+
+// Category definitions with emoji, colors, description
+const CATEGORIES = {
+  "Pâteux":          {emoji:"🎨", color:"#7c3aed", bg:"#f5f3ff", desc:"Peintures, colles, enduits, mastics", count:89},
+  "Solvants":        {emoji:"🧴", color:"#6b7280", bg:"#f9fafb", desc:"Nettoyants, liquides non DDS", count:71},
+  "Phytos et biocides":{emoji:"🐛", color:"#16a34a", bg:"#f0fdf4", desc:"Insecticides, herbicides, biocides", count:67},
+  "Autres DDS liquides":{emoji:"🧪", color:"#0891b2", bg:"#ecfeff", desc:"Solvants, diluants, vernis", count:63},
+  "Aérosols":        {emoji:"💨", color:"#f59e0b", bg:"#fffbeb", desc:"Bombes, sprays, mousses", count:62},
+  "Acides":          {emoji:"⚗️", color:"#dc2626", bg:"#fef2f2", desc:"Acides, pH-, détartrants", count:35},
+  "Phytosanitaires": {emoji:"🌿", color:"#65a30d", bg:"#f7fee7", desc:"Engrais, phyto pro, bio", count:26},
+  "Comburants":      {emoji:"🔥", color:"#ea580c", bg:"#fff7ed", desc:"Chlore, oxydants, peroxydes", count:26},
+  "Bases":           {emoji:"🧼", color:"#2563eb", bg:"#eff6ff", desc:"Soude, javel, ammoniaque", count:22},
+  "Huiles usagées":  {emoji:"🛢️", color:"#854d0e", bg:"#fefce8", desc:"Huiles moteur, graisses", count:8},
+  "Refus déchetterie":{emoji:"⛔", color:"#991b1b", bg:"#fef2f2", desc:"Produits interdits/explosifs", count:2},
+  "Emballages souillés standards":{emoji:"📦", color:"#78716c", bg:"#fafaf9", desc:"Chiffons, matériel souillé", count:2},
+  "Isolement / traitement spécifique":{emoji:"☠️", color:"#7f1d1d", bg:"#fef2f2", desc:"Produits extrêmement dangereux", count:1},
+  "Batteries":       {emoji:"🔋", color:"#15803d", bg:"#f0fdf4", desc:"Batteries automobiles", count:1},
+  "Cartouches de gaz":{emoji:"🔵", color:"#1d4ed8", bg:"#eff6ff", desc:"Cartouches de gaz", count:1},
+  "Bidons vides de combustibles de chauffage":{emoji:"🪣", color:"#92400e", bg:"#fffbeb", desc:"Bidons vides combustible", count:1},
+  "Filtres à huile (hors voitures)":{emoji:"⚙️", color:"#57534e", bg:"#fafaf9", desc:"Filtres PL, tondeuses", count:1},
+  "Filtres":         {emoji:"🔧", color:"#475569", bg:"#f8fafc", desc:"Filtres huile voitures", count:1},
+  "Médicaments → Pharmacie":{emoji:"💊", color:"#e11d48", bg:"#fff1f2", desc:"Orienter vers pharmacie", count:1},
+  "Produits non ID ou Laboratoire":{emoji:"❓", color:"#a16207", bg:"#fefce8", desc:"Sans étiquette, inconnu", count:1},
+  "Radiographies":   {emoji:"📷", color:"#64748b", bg:"#f8fafc", desc:"Révélateur photo", count:1}
+};
+
+let generatedImages = {};
+
+function generatePictogram(catName, catInfo) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 400;
+  const ctx = canvas.getContext("2d");
+
+  // Background gradient
+  ctx.fillStyle = catInfo.bg;
+  ctx.fillRect(0, 0, 400, 400);
+
+  // Subtle grid pattern
+  ctx.strokeStyle = catInfo.color + "15";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 400; i += 20) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 400); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(400, i); ctx.stroke();
+  }
+
+  // Color accent bar at top
+  ctx.fillStyle = catInfo.color;
+  ctx.fillRect(0, 0, 400, 6);
+
+  // Emoji
+  ctx.font = "80px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(catInfo.emoji, 200, 140);
+
+  // Category name
+  ctx.font = "bold 28px 'DM Sans', sans-serif";
+  ctx.fillStyle = catInfo.color;
+  ctx.textAlign = "center";
+  ctx.fillText(catName, 200, 240);
+
+  // Description
+  ctx.font = "16px 'DM Sans', sans-serif";
+  ctx.fillStyle = "#6b7280";
+  // Word wrap
+  const words = catInfo.desc.split(" ");
+  let line = "";
+  let y = 280;
+  words.forEach(w => {
+    const test = line + w + " ";
+    if (ctx.measureText(test).width > 340 && line) {
+      ctx.fillText(line.trim(), 200, y);
+      line = w + " ";
+      y += 22;
+    } else {
+      line = test;
+    }
+  });
+  if (line) ctx.fillText(line.trim(), 200, y);
+
+  // Count badge
+  ctx.fillStyle = catInfo.color + "20";
+  const badgeText = catInfo.count + " produits";
+  const bw = ctx.measureText(badgeText).width + 24;
+  ctx.beginPath();
+  ctx.roundRect(200 - bw/2, 340, bw, 30, 15);
+  ctx.fill();
+  ctx.font = "bold 13px 'DM Sans', sans-serif";
+  ctx.fillStyle = catInfo.color;
+  ctx.fillText(badgeText, 200, 356);
+
+  return canvas;
+}
+
+document.getElementById("btn-generate").addEventListener("click", function() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  generatedImages = {};
+
+  Object.entries(CATEGORIES).forEach(([name, info]) => {
+    const canvas = generatePictogram(name, info);
+    generatedImages[name] = canvas;
+
+    const card = document.createElement("div");
+    card.className = "cat-card";
+    const displayCanvas = document.createElement("canvas");
+    displayCanvas.width = 400;
+    displayCanvas.height = 400;
+    displayCanvas.style.width = "100%";
+    displayCanvas.style.height = "120px";
+    displayCanvas.getContext("2d").drawImage(canvas, 0, 0);
+    card.appendChild(displayCanvas);
+
+    const info_div = document.createElement("div");
+    info_div.className = "info";
+    info_div.innerHTML = `<div class="name">${name}</div><div class="count">${info.count} produits</div>`;
+    card.appendChild(info_div);
+
+    const st = document.createElement("div");
+    st.className = "status st-wait";
+    st.textContent = "⏳";
+    st.id = "st-" + name.replace(/[^a-zA-Z]/g, "");
+    card.appendChild(st);
+
+    grid.appendChild(card);
+  });
+
+  document.getElementById("btn-upload").disabled = false;
+  document.getElementById("status").textContent = Object.keys(CATEGORIES).length + " pictogrammes générés";
+});
+
+document.getElementById("btn-upload").addEventListener("click", async function() {
+  if (!API_BASE) { alert("API_BASE non configuré"); return; }
+
+  const btn = this;
+  btn.disabled = true;
+  const progBox = document.getElementById("progress-box");
+  const progLabel = document.getElementById("prog-label");
+  const progCount = document.getElementById("prog-count");
+  const progBar = document.getElementById("prog-bar");
+  const progLog = document.getElementById("prog-log");
+
+  progBox.style.display = "block";
+  progLog.innerHTML = "";
+
+  // Build product-to-category mapping from TRIDDS_DB
+  const db = window.TRIDDS_DB || [];
+  const productsByCategory = {};
+  db.forEach(p => {
+    const name = p[0];
+    const cat = p[3] || "";
+    if (!cat) return;
+    if (!productsByCategory[cat]) productsByCategory[cat] = [];
+    productsByCategory[cat].push(name);
+  });
+
+  const categories = Object.keys(generatedImages);
+  let done = 0, ok = 0, err = 0;
+  const total = categories.length;
+
+  for (const catName of categories) {
+    const canvas = generatedImages[catName];
+    const products = productsByCategory[catName] || [];
+    const stEl = document.getElementById("st-" + catName.replace(/[^a-zA-Z]/g, ""));
+
+    progLabel.textContent = "Upload: " + catName + "...";
+    progCount.textContent = done + "/" + total;
+    progBar.style.width = Math.round(done / total * 100) + "%";
+
+    // Convert canvas to base64 PNG
+    const dataUrl = canvas.toDataURL("image/png");
+    const base64 = dataUrl.split(",")[1];
+
+    // Upload one image per product in this category
+    // But to save storage, upload ONE image per category and map all products
+    // We upload with productName = first product, then add references for others
+
+    // Upload the category image once
+    try {
+      const res = await fetch(API_BASE + "/product-images", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          code: "_GLOBAL",
+          action: "save",
+          agent: "auto-gen",
+          imageData: base64,
+          imageMime: "image/png",
+          item: {
+            productName: "__CAT__" + catName,
+            alt: catName,
+            source: "auto-catégorie",
+            isPrimary: true,
+            order: 0
+          }
+        })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+
+      // Now create references for each product pointing to this image
+      const imageUrl = d.item ? d.item.url : "";
+      let prodOk = 0;
+      for (const prodName of products) {
+        try {
+          await fetch(API_BASE + "/product-images", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+              code: "_GLOBAL",
+              action: "save",
+              agent: "auto-gen",
+              item: {
+                productName: prodName,
+                url: imageUrl,
+                alt: prodName + " (" + catName + ")",
+                source: "auto-catégorie",
+                isPrimary: true,
+                order: 0
+              }
+            })
+          });
+          prodOk++;
+        } catch(e) {}
+      }
+
+      ok++;
+      if (stEl) { stEl.className = "status st-ok"; stEl.textContent = "✓"; }
+      progLog.innerHTML += `<div class="ok">✓ ${catName} — ${prodOk}/${products.length} produits liés</div>`;
+    } catch(e) {
+      err++;
+      if (stEl) { stEl.className = "status st-err"; stEl.textContent = "✗"; }
+      progLog.innerHTML += `<div class="err">✗ ${catName} — ${e.message}</div>`;
+    }
+
+    done++;
+    progCount.textContent = done + "/" + total;
+    progBar.style.width = Math.round(done / total * 100) + "%";
+  }
+
+  progLabel.textContent = `Terminé : ${ok} catégories uploadées, ${err} erreurs`;
+  progBar.style.width = "100%";
+  btn.disabled = false;
+  document.getElementById("status").textContent = "✅ Upload terminé — " + db.length + " produits liés";
+});
+
+})();
+</script>
+</body>
+</html>

@@ -1156,12 +1156,12 @@ document.getElementById("btn-login").addEventListener("click",function(){
   document.getElementById("login-err").style.display="none";
   startAgentSession(pendingLogin.code,agent,false).then(function(d){
     if(d&&d.error==="SESSION_ACTIVE"){var info=d.activeSession||{};var msg="Agent déjà connecté sur "+(info.deviceName||"un autre appareil")+".";msg+="\n\nPrendre la main ?";
-      if(confirm(msg)){startAgentSession(pendingLogin.code,agent,true).then(function(ok){if(ok&&ok.error)throw new Error(ok.message||ok.error);pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true)}).catch(function(e){document.getElementById("login-err").textContent=e.message;document.getElementById("login-err").style.display="block"})}return}
+      if(confirm(msg)){startAgentSession(pendingLogin.code,agent,true).then(function(ok){if(ok&&ok.error)throw new Error(ok.message||ok.error);pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);loadCustomCatalog();loadProductImages()}).catch(function(e){document.getElementById("login-err").textContent=e.message;document.getElementById("login-err").style.display="block"})}return}
     if(d&&d.error)throw new Error(d.message||d.error);
-    pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);
+    pendingLogin=null;show("home");updHome();syncMemory();heartbeat(true);loadCustomCatalog();loadProductImages();
   }).catch(function(e){document.getElementById("login-err").textContent=e.message||"Connexion impossible";document.getElementById("login-err").style.display="block"});
 });
-document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome()});
+document.getElementById("btn-demo").addEventListener("click",function(){demoLogin();show("home");updHome();loadProductImages()});
 document.getElementById("btn-forgot").addEventListener("click",function(){
   document.getElementById("login-step1").style.display="none";
   document.getElementById("login-step-forgot").style.display="block";
