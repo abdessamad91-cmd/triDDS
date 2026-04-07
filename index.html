@@ -166,6 +166,14 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .compare-match.good{color:var(--eco);background:var(--eco-bg)}
 .compare-match.warn{color:var(--hors);background:var(--hors-bg)}
 
+
+/* Search results vs history differentiation */
+#search-results{margin-bottom:4px}
+#search-results .res-card{border:1.5px solid var(--brand-green);box-shadow:0 2px 8px rgba(90,138,25,.08)}
+#search-results:not(:empty)+#hist-list{margin-top:8px;padding-top:8px;border-top:2px solid var(--bd)}
+.hist-card{opacity:.85}
+.hist-card:hover{opacity:1}
+
 /* Product image gallery */
 .prod-gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0;margin-top:8px}
 .prod-gallery img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);flex-shrink:0}
@@ -302,7 +310,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
   <div id="vol-hdr" class="hdr" style="color:#fff"><button class="bk btn-back" style="background:rgba(255,255,255,.15);color:#fff">←</button><h2>Vérification volume</h2></div>
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:14px">
     <div id="vol-prod" class="card" style="text-align:center;padding:20px">
-      <div style="font-size:22px;margin-bottom:4px">📦</div>
+      <img id="vol-img" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid var(--bd);margin-bottom:8px;display:none">
       <div id="vol-name" style="font-size:16px;font-weight:800"></div>
       <div id="vol-flux" style="color:var(--tx2);font-size:12px;margin-top:4px"></div>
     </div>
@@ -791,13 +799,14 @@ function renderHistory(){
     hl.innerHTML='<div class="home-empty"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Recherchez ou photographiez un produit</p></div>';
     return;
   }
-  var h='<div style="font-size:11px;font-weight:600;color:var(--tx3);margin:12px 0 6px">Dernières recherches</div>';
+  var h='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px"><div style="font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px">Historique</div><div style="flex:1;height:1px;background:var(--bd)"></div><div style="font-size:11px;color:var(--tx3)">'+st.history.length+' derniers</div></div>';
   st.history.forEach(function(x){
     var s=fSt(x.f);
     var details=[];if(x.x)details.push(x.x);if(x.s)details.push(x.s);if(x.vol)details.push(x.vol);
     var bacName=x.x?x.x.split("/")[0].trim():"";
-    var imgH='';if(x.img)imgH='<div class="rc-img"><img src="'+x.img+'" loading="lazy"></div>';
-    h+='<div class="res-card" style="margin-bottom:5px">'+imgH+'<div class="rc-info"><h4>'+x.nm+'</h4><p>'+(details.length?details.join(' · '):'')+'</p></div><div class="rc-flux '+s.rc+'"><div class="rf-label">'+s.lb+'</div>'+(bacName?'<div class="rf-bac">'+bacName+'</div>':'')+'</div></div>';
+    var histImg=x.img||getProductImage(x.nm)||null;
+    var imgH='';if(histImg)imgH='<div class="rc-img"><img src="'+histImg+'" loading="lazy"></div>';
+    h+='<div class="res-card hist-card" style="margin-bottom:5px;cursor:pointer" onclick="window._openHist('+i+')">'+imgH+'<div class="rc-info"><h4>'+x.nm+'</h4><p>'+(details.length?details.join(' · '):'')+'</p></div><div class="rc-flux '+s.rc+'"><div class="rf-label">'+s.lb+'</div>'+(bacName?'<div class="rf-bac">'+bacName+'</div>':'')+'</div></div>';
   });
   hl.innerHTML=h;
 }
@@ -827,6 +836,25 @@ window._selectLive=function(i){
   if(!window._liveResults||!window._liveResults[i])return;
   selectProd(window._liveResults[i]);
 };
+window._openHist=function(i){
+  if(!st.history||!st.history[i])return;
+  var x=st.history[i];
+  // Search for full product data in database
+  var res=searchAll(x.nm);
+  if(res.length&&res[0].n===x.nm){
+    // Found exact match - show full result with all data
+    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm)||x.img||null});
+    showRes();
+  } else if(res.length&&res[0].score>=80){
+    // Close match
+    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm)||x.img||null});
+    showRes();
+  } else {
+    // Not found in DB - show with history data
+    st.result={n:x.nm,f:x.f,x:x.x||"",s:x.s||"",c:"",conf:85,nv:false,vol:x.vol||"",imageUrl:getProductImage(x.nm)||x.img||null};
+    showRes();
+  }
+};
 function doSearch(){
   var q=(document.getElementById("in-search").value||"").trim();
   if(!q)return;st.query=q;
@@ -838,7 +866,7 @@ function doSearch(){
 
 // ===== DISAMBIG/VOLUME =====
 function showDis(){show("dis");document.getElementById("dis-cnt").textContent=st.matches.length;document.getElementById("dis-info").innerHTML="<strong>"+st.matches.length+"</strong> produits correspondent";var h="";st.matches.forEach(function(m,i){h+=resCard(m,' data-i="'+i+'" class="res-card fu di" style="cursor:pointer;animation-delay:'+(i*40)+'ms"')});document.getElementById("dis-list").innerHTML=h;document.querySelectorAll(".di").forEach(function(b){b.addEventListener("click",function(){selectProd(st.matches[parseInt(b.dataset.i)])})})}
-function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s}else{st.result=Object.assign({},p,{conf:p.score||85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()}}
+function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s;var volImg=getProductImage(p.n);var volImgEl=document.getElementById("vol-img");if(volImgEl){if(volImg){volImgEl.src=volImg;volImgEl.style.display="block"}else{volImgEl.style.display="none"}}}else{st.result=Object.assign({},p,{conf:p.score||85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()}}
 
 // ===== RESULT =====
 function showRes(){
