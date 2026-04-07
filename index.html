@@ -152,6 +152,26 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .guide-fam strong{display:block;font-size:13px;margin-bottom:3px}
 .guide-fam span{font-size:11px;color:var(--tx2);line-height:1.4}
 
+
+
+/* Visual comparison: AI crop vs reference */
+.compare-card{margin-top:8px;border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;background:var(--white)}
+.compare-header{padding:8px 12px;background:rgba(90,138,25,.06);font-size:11px;font-weight:700;color:var(--brand-green);display:flex;align-items:center;gap:6px}
+.compare-row{display:flex}
+.compare-side{flex:1;padding:8px;text-align:center;min-width:0}
+.compare-side:first-child{border-right:1px solid var(--bd)}
+.compare-side img{width:100%;max-height:140px;object-fit:contain;border-radius:8px;background:#f8f9f5}
+.compare-label{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
+.compare-match{padding:8px 12px;text-align:center;font-size:12px;font-weight:700;border-top:1px solid var(--bd)}
+.compare-match.good{color:var(--eco);background:var(--eco-bg)}
+.compare-match.warn{color:var(--hors);background:var(--hors-bg)}
+
+/* Product image gallery */
+.prod-gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0;margin-top:8px}
+.prod-gallery img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);flex-shrink:0}
+.prod-gallery .pg-main{border:2px solid var(--brand-green);position:relative}
+.btn-add-photo{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;background:rgba(90,138,25,.06);border:1.5px dashed var(--brand-green);color:var(--brand-green);font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;width:100%}
+
 @media(max-width:600px){.trial-grid,.cat-form{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}}
 </style>
 </head>
@@ -441,6 +461,34 @@ button{cursor:pointer;border:none;background:none;color:inherit}
   </div>
 </div>
 
+<!-- ===== IMAGE UPLOAD OVERLAY ===== -->
+<div id="ov-img" class="ov">
+  <div class="ov-body" style="max-height:70vh">
+    <div style="padding:14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)">
+      <button id="btn-img-close" style="font-size:18px;color:var(--tx2)">✕</button>
+      <div style="flex:1"><div style="font-weight:700;font-size:14px">Ajouter une photo produit</div><div id="img-prod-name" style="font-size:12px;color:var(--tx2)"></div></div>
+    </div>
+    <div style="padding:14px;flex:1;overflow-y:auto">
+      <div id="user-img-dropzone" style="border:2px dashed var(--bd);border-radius:16px;padding:24px;text-align:center;cursor:pointer;background:#fafbf8">
+        <input id="user-img-file" type="file" accept="image/jpeg,image/png,image/webp" style="display:none">
+        <div id="user-img-label" style="color:var(--tx2);font-size:14px;line-height:1.6">
+          <div style="font-size:24px;margin-bottom:6px">📷</div>
+          <strong style="color:var(--tx)">Sélectionner une photo</strong><br>
+          <span style="font-size:12px">JPG, PNG ou WebP · 5 Mo max</span>
+        </div>
+        <div id="user-img-preview" style="display:none;margin-top:10px">
+          <img id="user-img-thumb" style="max-width:100%;max-height:200px;border-radius:12px;border:1px solid var(--bd)">
+        </div>
+      </div>
+      <div id="user-img-msg" style="margin-top:10px;font-size:13px;font-weight:600;display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button id="btn-user-img-save" class="btn btn-green btn-f" style="padding:14px;font-size:15px" disabled>Enregistrer la photo</button>
+      </div>
+      <div id="user-img-gallery" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CORRECTION OVERLAY ===== -->
 <div id="ov-cor" class="ov">
   <div class="ov-body">
@@ -546,6 +594,11 @@ function getProductImage(name){
   var imgs=productImages[key];
   if(imgs&&imgs.length)return imgs[0].url;
   return null;
+}
+function getProductImages(name){
+  if(!name)return[];
+  var key=name.toLowerCase().trim();
+  return productImages[key]||[];
 }
 function startAgentSession(code,agent,force){
   return authPost({action:"start-session",code:code,agent:agent,sessionId:sess.sessionId||"",deviceName:deviceName(),force:!!force}).then(function(d){
@@ -806,9 +859,46 @@ function showRes(){
   if(r.c)h+='<div class="card" style="margin-top:6px;border-left:4px solid var(--int);border-radius:0"><div style="font-size:10px;font-weight:700;color:var(--int);text-transform:uppercase;margin-bottom:2px">⚠ Sécurité</div><div style="color:var(--int-tx);font-weight:600;font-size:12px">'+r.c+'</div></div>';
   if(r.s&&!r.overSeuil)h+='<div style="margin-top:6px;font-size:12px;background:rgba(90,138,25,.06);color:var(--brand-green2);padding:8px 12px;border-radius:var(--rs)">📦 Seuil: '+r.s+'</div>';
   if(r.overSeuil)h+='<div class="card" style="margin-top:6px;background:var(--hors-bg);border-color:var(--hors-bd)"><div style="font-weight:700;color:var(--hors)">⚠️ Volume dépasse le seuil → Hors EcoDDS</div></div>';
-  if(r.cropImage)h+='<div style="margin-top:6px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:120px;object-fit:contain;background:#f5f5f0"></div>';
+  // Visual comparison: AI crop vs reference images
+  var prodImgs=getProductImages(r.n);
+  var refImg=prodImgs.length?prodImgs[0]:null;
+
+  if(r.cropImage&&refImg){
+    // Side by side comparison
+    h+='<div class="compare-card">';
+    h+='<div class="compare-header"><span>🔍</span> Comparaison visuelle</div>';
+    h+='<div class="compare-row">';
+    h+='<div class="compare-side"><div class="compare-label">Photo terrain</div><img src="'+r.cropImage+'"></div>';
+    h+='<div class="compare-side"><div class="compare-label">Référence</div><img src="'+refImg.url+'" onclick="window.open(this.src)"></div>';
+    h+='</div>';
+    if(r.conf>=70)h+='<div class="compare-match good">Correspondance probable — vérifiez visuellement</div>';
+    else h+='<div class="compare-match warn">Confiance faible — comparez attentivement</div>';
+    h+='</div>';
+  } else if(r.cropImage){
+    // Only AI crop, no reference
+    h+='<div style="margin-top:6px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:120px;object-fit:contain;background:#f5f5f0"></div>';
+  } else if(refImg){
+    // Only reference, no AI crop (manual search)
+    h+='<div class="compare-card">';
+    h+='<div class="compare-header"><span>📸</span> Photo de référence</div>';
+    h+='<div style="padding:10px;text-align:center"><img src="'+refImg.url+'" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:8px" onclick="window.open(this.src)"></div>';
+    h+='</div>';
+  }
+
+  // All images gallery (if more than 1)
+  if(prodImgs.length>1){
+    h+='<div class="prod-gallery" style="margin-top:6px">';
+    prodImgs.forEach(function(img){h+='<img src="'+img.url+'" alt="'+(img.alt||r.n)+'" class="'+(img.isPrimary?'pg-main':'')+'" onclick="window.open(this.src)">';});
+    h+='</div>';
+  }
+
+  // Validation buttons
   if(r.nv)h+='<div class="card" style="margin-top:6px;background:#fefce8;border-color:#fde047"><div style="font-weight:700;color:var(--hors-tx);margin-bottom:6px">⚠️ Validation requise</div><div style="display:flex;gap:8px"><button onclick="confirmRes()" class="btn btn-eco" style="flex:1;font-size:12px">✅ Confirmer</button><button onclick="correctRes()" class="btn" style="flex:1;font-size:12px;background:#7c3aed;color:#fff">✏️ Corriger</button><button onclick="markNonID()" class="btn btn-outline" style="flex:1;font-size:12px">❓ Non ID</button></div></div>';
   else h+='<div style="margin-top:6px;text-align:center"><button onclick="correctRes()" style="font-size:12px;color:#7c3aed;text-decoration:underline;background:none;border:none;cursor:pointer">Corriger</button></div>';
+
+  // Add photo button
+  h+='<button class="btn-add-photo" onclick="openUserImgUpload()">📷 Ajouter une photo à ce produit</button>';
+
   document.getElementById("res-body").innerHTML=h;
 }
 
@@ -838,6 +928,11 @@ function showMulti(){
     h+='<div class="res-card fu" style="animation-delay:'+(i*50)+'ms">';
     if(r.cropImage)h+='<img src="'+r.cropImage+'" style="width:64px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';
     h+='<div class="rc-info"><h4>'+r.n+'</h4><p>'+(r.x||"")+(r.vol?" · "+r.vol:"")+'</p>'+confBar(r.conf);
+    // Reference image comparison for multi
+    var mRef=getProductImages(r.n);
+    if(mRef.length&&r.cropImage)h+='<div style="margin-top:5px;display:flex;gap:4px;align-items:center"><div style="flex:1;text-align:center"><div style="font-size:8px;color:var(--tx3);font-weight:700">TERRAIN</div><img src="'+r.cropImage+'" style="width:100%;max-height:48px;object-fit:contain;border-radius:4px;margin-top:2px"></div><div style="font-size:10px;color:var(--tx3)">vs</div><div style="flex:1;text-align:center"><div style="font-size:8px;color:var(--tx3);font-weight:700">REF</div><img src="'+mRef[0].url+'" style="width:100%;max-height:48px;object-fit:contain;border-radius:4px;margin-top:2px"></div></div>';
+    else if(mRef.length)h+='<div style="margin-top:4px"><img src="'+mRef[0].url+'" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--bd)"></div>';
+
     if(r.nv)h+='<div style="margin-top:5px;display:flex;gap:5px"><button onclick="confirmM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:5px;border-radius:6px;background:var(--eco);color:#fff;border:none;cursor:pointer">✅</button><button onclick="correctM('+i+')" style="flex:1;font-size:10px;font-weight:700;padding:5px;border-radius:6px;background:#7c3aed;color:#fff;border:none;cursor:pointer">✏️</button></div>';
     else h+='<button onclick="correctM('+i+')" style="font-size:10px;color:#7c3aed;text-decoration:underline;border:none;background:none;cursor:pointer;margin-top:3px">Corriger</button>';
     h+='</div><div class="rc-flux '+s.rc+'" style="width:100px"><div class="rf-label">'+s.lb+'</div></div></div>';
@@ -919,7 +1014,9 @@ function loadCatalog(){
   show("catalog");document.getElementById("cat-list").innerHTML="Chargement...";
   siteAdminPost("catalog-list").then(function(d){
     var h="";(d.items||[]).forEach(function(it){var s=fSt(it.f);
-      h+='<div class="res-card" style="margin-bottom:4px"><div class="rc-info"><h4>'+it.n+'</h4><p>'+(it.x||"")+'</p></div><div class="rc-flux '+s.rc+'" style="width:80px"><div class="rf-label" style="font-size:11px">'+s.lb+'</div></div></div>';
+      var imgUrl=getProductImage(it.n);
+      var imgH=imgUrl?'<div class="rc-img"><img src="'+imgUrl+'" loading="lazy"></div>':'';
+      h+='<div class="res-card" style="margin-bottom:4px">'+imgH+'<div class="rc-info"><h4>'+it.n+'</h4><p>'+(it.x||"")+'</p></div><div class="rc-flux '+s.rc+'" style="width:80px"><div class="rf-label" style="font-size:11px">'+s.lb+'</div></div></div>';
     });document.getElementById("cat-list").innerHTML=h||"Aucune fiche.";
   }).catch(function(e){document.getElementById("cat-list").innerHTML="Erreur: "+e.message});
 }
@@ -1051,6 +1148,100 @@ document.querySelectorAll("#main-tabs button").forEach(function(b){
     else if(t==="journal")showJournal();
     else if(t==="guide"){show("guide");syncMemory()}
     else if(t==="profile"){show("prof");document.getElementById("prof-site").textContent=sess.site;var pc=document.getElementById("prof-client");if(pc)pc.textContent=sess.clientName||"—";document.getElementById("prof-agent").textContent=sess.agent+(sess.agentRole?" · "+sess.agentRole:"");document.getElementById("prof-plan").textContent={free:"Accès Base + 2 scans offerts",pro:"Pro Site",multisite:"Multi-sites",enterprise:"Entreprise"}[sess.plan]||sess.plan;document.getElementById("prof-photos").textContent=usageTotal()?usageRemaining()+" / "+usageTotal()+" restants":"Aucune IA incluse";document.getElementById("prof-manage").style.display=(sess.canManageUsers||sess.canManageCatalog)?"grid":"none"}
+  });
+});
+
+
+// ===== USER IMAGE UPLOAD =====
+var pendingUserImg=null;
+
+function openUserImgUpload(){
+  if(!st.result)return;
+  var name=st.result.n;
+  document.getElementById("img-prod-name").textContent=name;
+  document.getElementById("user-img-label").style.display="block";
+  document.getElementById("user-img-preview").style.display="none";
+  document.getElementById("user-img-msg").style.display="none";
+  document.getElementById("user-img-file").value="";
+  document.getElementById("btn-user-img-save").disabled=true;
+  pendingUserImg=null;
+  // Show existing images
+  var existing=getProductImages(name);
+  var gal=document.getElementById("user-img-gallery");
+  if(existing.length){
+    var gh='<div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px">Photos existantes</div><div class="prod-gallery">';
+    existing.forEach(function(img){gh+='<img src="'+img.url+'" alt="'+(img.alt||"")+'" class="'+(img.isPrimary?"pg-main":"")+'">';});
+    gh+='</div>';gal.innerHTML=gh;
+  }else{gal.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center">Aucune photo pour ce produit</div>';}
+  document.getElementById("ov-img").classList.add("on");
+}
+window.openUserImgUpload=openUserImgUpload;
+
+document.getElementById("btn-img-close").addEventListener("click",function(){document.getElementById("ov-img").classList.remove("on")});
+document.getElementById("ov-img").addEventListener("click",function(e){if(e.target.id==="ov-img")document.getElementById("ov-img").classList.remove("on")});
+
+var userDropzone=document.getElementById("user-img-dropzone");
+var userFileInput=document.getElementById("user-img-file");
+userDropzone.addEventListener("click",function(){userFileInput.click()});
+userDropzone.addEventListener("dragover",function(e){e.preventDefault();userDropzone.style.borderColor="var(--brand-green)";userDropzone.style.background="rgba(90,138,25,.04)"});
+userDropzone.addEventListener("dragleave",function(){userDropzone.style.borderColor="var(--bd)";userDropzone.style.background="#fafbf8"});
+userDropzone.addEventListener("drop",function(e){e.preventDefault();userDropzone.style.borderColor="var(--bd)";userDropzone.style.background="#fafbf8";var f=e.dataTransfer.files[0];if(f)processUserImg(f)});
+userFileInput.addEventListener("change",function(){var f=userFileInput.files[0];if(f)processUserImg(f)});
+
+function processUserImg(file){
+  if(!file.type.match(/^image\/(jpeg|png|webp)$/)){alert("Format non supporté. Utilisez JPG, PNG ou WebP.");return}
+  if(file.size>5*1024*1024){alert("Image trop lourde (max 5 Mo).");return}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    pendingUserImg={base64:e.target.result.split(",")[1],mime:file.type,name:file.name};
+    document.getElementById("user-img-label").style.display="none";
+    document.getElementById("user-img-preview").style.display="block";
+    document.getElementById("user-img-thumb").src=e.target.result;
+    document.getElementById("btn-user-img-save").disabled=false;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById("btn-user-img-save").addEventListener("click",function(){
+  if(!pendingUserImg||!st.result)return;
+  if(!sess.code||sess.code==="DEMO"){alert("Connectez-vous avec un code pour ajouter des photos.");return}
+  var btn=document.getElementById("btn-user-img-save");
+  var msgEl=document.getElementById("user-img-msg");
+  btn.disabled=true;btn.textContent="Envoi en cours...";
+  var productName=st.result.n;
+  var isFirst=!getProductImages(productName).length;
+  fetch(apiUrl("product-images"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      code:sess.code,action:"save",agent:sess.agent,
+      imageData:pendingUserImg.base64,imageMime:pendingUserImg.mime,
+      item:{productName:productName,alt:productName,source:"terrain",isPrimary:isFirst,order:getProductImages(productName).length}
+    })
+  }).then(function(r){return r.json()}).then(function(d){
+    btn.disabled=false;btn.textContent="Enregistrer la photo";
+    if(d.error)throw new Error(d.error);
+    msgEl.style.display="block";msgEl.style.color="var(--eco-tx)";msgEl.style.background="var(--eco-bg)";msgEl.style.padding="8px 12px";msgEl.style.borderRadius="10px";
+    msgEl.textContent="Photo enregistrée avec succès.";
+    pendingUserImg=null;
+    // Refresh images cache
+    loadProductImages();
+    // Refresh gallery
+    setTimeout(function(){
+      var existing=getProductImages(productName);
+      var gal=document.getElementById("user-img-gallery");
+      if(existing.length){
+        var gh='<div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px">Photos existantes</div><div class="prod-gallery">';
+        existing.forEach(function(img){gh+='<img src="'+img.url+'" class="'+(img.isPrimary?"pg-main":"")+'">';});
+        gh+='</div>';gal.innerHTML=gh;
+      }
+      document.getElementById("user-img-label").style.display="block";
+      document.getElementById("user-img-preview").style.display="none";
+      document.getElementById("user-img-file").value="";
+      document.getElementById("btn-user-img-save").disabled=true;
+    },1000);
+  }).catch(function(e){
+    btn.disabled=false;btn.textContent="Enregistrer la photo";
+    msgEl.style.display="block";msgEl.style.color="var(--int-tx)";msgEl.style.background="var(--int-bg)";msgEl.style.padding="8px 12px";msgEl.style.borderRadius="10px";
+    msgEl.textContent=e.message||"Erreur d'envoi";
   });
 });
 
