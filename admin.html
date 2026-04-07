@@ -234,6 +234,13 @@ let imagesState={sites:[],items:[]};
 async function loadImages(){
   const sitesData=state.dashboard?state.dashboard.sites:[];
   const allItems=[];
+  // Load global images
+  try{
+    const gRes=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:'_GLOBAL',action:'list-all'})});
+    const gd=await gRes.json();
+    if(gd.items)(gd.items||[]).forEach(i=>{allItems.push(Object.assign({code:'_GLOBAL',site:'Global',client:'Tous les sites'},i))});
+  }catch(e){}
+  // Load per-site images
   for(const site of sitesData){
     try{
       const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:site.code,action:'list-all'})});
@@ -247,9 +254,10 @@ async function loadImages(){
 }
 
 function fillImgSelects(){
-  const opts=['<option value="">Choisir un site</option>'].concat(imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client)}</option>`));
+  const globalOpt='<option value="_GLOBAL">Global (tous les sites)</option>';
+  const opts=['<option value="">Choisir un site</option>',globalOpt].concat(imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client)}</option>`));
   $('img-code').innerHTML=opts.join('');
-  $('flt-img-site').innerHTML='<option value="">Tous les sites</option>'+imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)}</option>`).join('');
+  $('flt-img-site').innerHTML='<option value="">Tous les sites</option>'+globalOpt+imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)}</option>`).join('');
 }
 
 function filteredImages(){
