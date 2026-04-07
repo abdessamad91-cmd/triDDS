@@ -70,9 +70,11 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .hdr h2{font-size:15px;font-weight:700;flex:1}
 
 /* Tabs */
-.tabs{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--bd);padding:8px 12px max(8px,env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:90;display:flex;max-width:600px;margin:0 auto}
-.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;font-size:11px;font-weight:700;color:var(--tx3);border-radius:12px;transition:all .15s}
-.tabs button.act{color:var(--brand-green);background:rgba(90,138,25,.08)}
+.tabs{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--bd);padding:0;background:#fff;z-index:90;display:flex}
+.tabs-inner{display:flex;width:100%;max-width:600px;margin:0 auto;padding:6px 8px max(10px,env(safe-area-inset-bottom))}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 6px;font-size:11px;font-weight:700;color:var(--tx3);border-radius:0;transition:color .15s;position:relative}
+.tabs button.act{color:var(--brand-green)}
+.tabs button.act::before{content:'';position:absolute;top:0;left:20%;right:20%;height:3px;background:var(--brand-green);border-radius:0 0 3px 3px}
 .tabs button svg{width:22px;height:22px}
 
 /* Confidence bar */
@@ -107,13 +109,15 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .login-links a,.login-links button{flex:1;min-width:120px;font-size:12px;padding:10px;border-radius:10px;text-decoration:none;font-weight:700;text-align:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7)}
 
 /* Home */
-.home-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:10px}
-.home-bar-left{display:flex;align-items:center;gap:10px}
-.home-bar-left img{height:36px;width:36px;border-radius:10px}
-.home-bar-site{font-size:15px;font-weight:800;color:var(--tx);letter-spacing:-.2px}
-.home-bar-agent{font-size:12px;color:var(--tx2);margin-top:1px}
+.home-bar{background:var(--white);border-bottom:1px solid var(--bd);padding:14px 16px 12px}
+.home-bar-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.home-bar-logo{height:32px;width:auto}
 .home-bar-plan{font-size:11px;padding:4px 10px;border-radius:8px;font-weight:800;background:rgba(90,138,25,.1);color:var(--brand-green)}
-#home-content{flex:1;overflow-y:auto;padding:0 16px 110px}
+.home-bar-info{display:flex;align-items:center;gap:8px;margin-top:8px}
+.home-bar-site{font-size:14px;font-weight:700;color:var(--tx)}
+.home-bar-dot{width:4px;height:4px;border-radius:50%;background:var(--tx3)}
+.home-bar-agent{font-size:13px;color:var(--tx2)}
+#home-content{flex:1;overflow-y:auto;padding:0 16px 120px}
 .home-empty{text-align:center;padding:60px 20px;color:var(--tx3)}
 .home-empty svg{margin-bottom:10px}
 .home-empty p{font-size:13px;margin-top:4px}
@@ -232,11 +236,15 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 <!-- ===== HOME ===== -->
 <div id="s-home" class="S">
   <div class="home-bar">
-    <div class="home-bar-left">
-      <img src="./assets/tridds-symbol.png" alt="" style="height:28px;width:28px;border-radius:7px">
-      <div><div id="home-site" class="home-bar-site">TriDDS</div><div id="home-agent" class="home-bar-agent"></div></div>
+    <div class="home-bar-top">
+      <img src="./assets/tridds-wordmark.png" alt="TriDDS" class="home-bar-logo">
+      <span id="home-plan" class="home-bar-plan">Accès Base</span>
     </div>
-    <span id="home-plan" class="home-bar-plan">Accès Base</span>
+    <div class="home-bar-info">
+      <div id="home-site" class="home-bar-site">TriDDS</div>
+      <div class="home-bar-dot"></div>
+      <div id="home-agent" class="home-bar-agent"></div>
+    </div>
   </div>
   <div class="search-wrap">
     <div class="search-bar">
@@ -249,12 +257,12 @@ button{cursor:pointer;border:none;background:none;color:inherit}
     <div id="search-results"></div>
     <div id="hist-list"></div>
   </div>
-  <div class="tabs" id="main-tabs">
+  <div class="tabs" id="main-tabs"><div class="tabs-inner">
     <button class="act" data-t="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Recherche</button>
     <button data-t="journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Journal</button>
     <button data-t="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Guide</button>
     <button data-t="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
-  </div>
+  </div></div>
 </div>
 
 <!-- ===== CAMERA ===== -->
@@ -365,7 +373,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 <!-- ===== GUIDE ===== -->
 <div id="s-guide" class="S">
   <div class="hdr"><button class="bk btn-back">←</button><h2>Guide de tri</h2></div>
-  <div class="guide-section" style="flex:1;overflow-y:auto;padding-bottom:100px">
+  <div class="guide-section" style="flex:1;overflow-y:auto;padding-bottom:120px">
     <div class="guide-card">
       <h3>Les 3 étapes du tri</h3>
       <p><strong>1.</strong> Identifier la famille produit (pâteux, aérosols, liquides, phytos…)<br>
@@ -417,7 +425,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 <!-- ===== PROFILE ===== -->
 <div id="s-prof" class="S">
   <div class="hdr"><button class="bk btn-back">←</button><h2>Profil</h2></div>
-  <div style="padding:14px;flex:1;overflow-y:auto;padding-bottom:100px">
+  <div style="padding:14px;flex:1;overflow-y:auto;padding-bottom:120px">
     <div class="card" style="margin-bottom:10px">
       <div class="lbl">Site</div><div id="prof-site" style="font-weight:700;font-size:15px"></div>
       <div class="lbl" style="margin-top:10px">Client</div><div id="prof-client" style="font-weight:700;font-size:15px"></div>
