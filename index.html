@@ -585,18 +585,17 @@ function loadCustomCatalog(){
   if(!sess.code||sess.code==="DEMO"||!API_BASE)return;
   siteAdminPost("catalog-list").then(function(d){if(d&&d.items){customCatalog=d.items;mergeCatalog()}}).catch(function(){});
 }
-function loadProductImages(retries){
+var _imgLoaded=false;
+function loadProductImages(){
   if(!sess.code||sess.code==="DEMO"||!API_BASE)return Promise.resolve();
-  retries=retries||0;
-  return fetch(apiUrl("product-images"),{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({code:sess.code,action:"list-all"})
-  }).then(function(r){
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    return r.json();
-  }).then(function(d){
-    if(d&&d.items){
+  var url=API_BASE.replace(/\/$/,"")+"/product-images";
+  var payload=JSON.stringify({code:sess.code,action:"list-all"});
+  return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:payload})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d&&d.items&&d.items.length>0){
       productImages={};
-      (d.items||[]).forEach(function(img){
+      d.items.forEach(function(img){
         var key=(img.productName||"").toLowerCase().trim();
         if(!key)return;
         if(!productImages[key])productImages[key]=[];
@@ -609,12 +608,20 @@ function loadProductImages(retries){
           return(a.order||0)-(b.order||0);
         });
       });
+      _imgLoaded=true;
+      renderHistory();
+    } else if(d&&d.items){
+      _imgLoaded=true;
     }
-    if(st.screen==="home")renderHistory();
-  }).catch(function(e){
-    // Retry once after 2s if first attempt fails
-    if(retries<1){setTimeout(function(){loadProductImages(retries+1)},2000)}
-  });
+  }).catch(function(e){_imgLoaded=false});
+}
+// Auto-retry: try loading images every 3s until loaded (max 5 tries)
+var _imgRetries=0;
+function ensureImagesLoaded(){
+  if(_imgLoaded||!isLoggedIn()||sess.code==="DEMO"||_imgRetries>=5)return;
+  _imgRetries++;
+  loadProductImages();
+  setTimeout(ensureImagesLoaded,3000);
 }
 function getProductImage(name){
   if(!name)return null;
@@ -806,7 +813,7 @@ function show(id){document.querySelectorAll(".S").forEach(function(e){e.classLis
   var tabs=document.getElementById("main-tabs");
   if(tabs){var showTabs=isLoggedIn()&&id!=="login"&&id!=="cam"&&id!=="load";tabs.style.display=showTabs?"flex":"none"}
 }
-function goHome(){show("home");st.result=null;st.image=null;st.matches=[];st.multi=null;st.query="";st.corIdx=-1;st.corJrnId=null;st.usedModel=null;document.getElementById("in-search").value="";document.getElementById("search-results").innerHTML="";stopCam();updHome()}
+function goHome(){show("home");st.result=null;st.image=null;st.matches=[];st.multi=null;st.query="";st.corIdx=-1;st.corJrnId=null;st.usedModel=null;document.getElementById("in-search").value="";document.getElementById("search-results").innerHTML="";stopCam();updHome();if(!_imgLoaded){_imgRetries=0;loadProductImages();setTimeout(ensureImagesLoaded,3000)}}
 
 function updHome(){
   document.getElementById("home-site").textContent=sess.site||"TriDDS";
@@ -1301,18 +1308,10 @@ loadSess();loadJournal();
 if(isLoggedIn()){
   if(sess.code==="DEMO"){show("home");updHome()}
   else{
-    show("home");updHome();
-    // Resume session first, then load everything
-    resumeCurrentSession().then(function(){
-      syncMemory();
-      loadCustomCatalog();
-      return loadProductImages();
-    }).then(function(){
-      renderHistory();
-    }).catch(function(){
-      // Still try to load images even if session resume fails
-      loadProductImages();
-    });
+    show("home");updHome();syncMemory();resumeCurrentSession();loadCustomCatalog();
+    // Load images with auto-retry
+    loadProductImages();
+    setTimeout(ensureImagesLoaded,3000);
   }
 }else{show("login")}
 ["click","keydown","touchstart","input"].forEach(function(ev){document.addEventListener(ev,registerActivity,{passive:true})});
