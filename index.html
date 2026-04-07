@@ -830,7 +830,7 @@ function renderHistory(){
     return;
   }
   var h='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px"><div style="font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px">Historique</div><div style="flex:1;height:1px;background:var(--bd)"></div><div style="font-size:11px;color:var(--tx3)">'+st.history.length+' derniers</div></div>';
-  st.history.forEach(function(x){
+  st.history.forEach(function(x,i){
     var s=fSt(x.f);
     var details=[];if(x.x)details.push(x.x);if(x.s)details.push(x.s);if(x.vol)details.push(x.vol);
     var bacName=x.x?x.x.split("/")[0].trim():"";
