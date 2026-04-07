@@ -601,6 +601,8 @@ function loadProductImages(){
           return(a.order||0)-(b.order||0);
         });
       });
+      // Re-render history now that images are loaded
+      if(st.screen==="home")renderHistory();
     }
   }).catch(function(){});
 }
@@ -874,7 +876,7 @@ function doSearch(){
 
 // ===== DISAMBIG/VOLUME =====
 function showDis(){show("dis");document.getElementById("dis-cnt").textContent=st.matches.length;document.getElementById("dis-info").innerHTML="<strong>"+st.matches.length+"</strong> produits correspondent";var h="";st.matches.forEach(function(m,i){h+=resCard(m,' data-i="'+i+'" class="res-card fu di" style="cursor:pointer;animation-delay:'+(i*40)+'ms"')});document.getElementById("dis-list").innerHTML=h;document.querySelectorAll(".di").forEach(function(b){b.addEventListener("click",function(){selectProd(st.matches[parseInt(b.dataset.i)])})})}
-function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s;var volImg=getProductImage(p.n);var volImgEl=document.getElementById("vol-img");if(volImgEl){if(volImg){volImgEl.src=volImg;volImgEl.style.display="block"}else{volImgEl.style.display="none"}}}else{st.result=Object.assign({},p,{conf:p.score||85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()}}
+function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s;var volImg=getProductImage(p.n);var volImgEl=document.getElementById("vol-img");if(volImgEl){if(volImg){volImgEl.src=volImg;volImgEl.style.display="block"}else{volImgEl.style.display="none"}}}else{st.result=Object.assign({},p,{conf:85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:85,validationType:"confirmed"});showRes()}}
 
 // ===== RESULT =====
 function showRes(){
@@ -1167,9 +1169,9 @@ document.getElementById("btn-cap").addEventListener("click",capture);
 document.getElementById("cam-file").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){st.image=ev.target.result;stopCam();document.getElementById("cam-view").style.display="none";document.getElementById("cam-prev").style.display="block";document.getElementById("cam-img").src=st.image;document.getElementById("cam-ctrl").style.display="none";document.getElementById("cam-act").style.display="flex"};r.readAsDataURL(f)});
 document.getElementById("btn-retake").addEventListener("click",function(){st.image=null;openCam()});
 document.getElementById("btn-anl").addEventListener("click",analyze);
-document.getElementById("btn-vol-ok").addEventListener("click",function(){st.result.conf=st.result.score||85;addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()});
-document.getElementById("btn-vol-over").addEventListener("click",function(){st.result.f="H";st.result.overSeuil=true;st.result.conf=st.result.score||85;addHist(st.result);addJournal({name:st.result.n,flux:"H",category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()});
-document.getElementById("btn-vol-unk").addEventListener("click",function(){st.result.conf=st.result.score||85;addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"auto"});showRes()});
+document.getElementById("btn-vol-ok").addEventListener("click",function(){st.result.conf=85;addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:85,validationType:"confirmed"});showRes()});
+document.getElementById("btn-vol-over").addEventListener("click",function(){st.result.f="H";st.result.overSeuil=true;st.result.conf=85;addHist(st.result);addJournal({name:st.result.n,flux:"H",category:st.result.x,confidence:85,validationType:"confirmed"});showRes()});
+document.getElementById("btn-vol-unk").addEventListener("click",function(){st.result.conf=85;addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:85,validationType:"confirmed"});showRes()});
 document.getElementById("btn-cor-close").addEventListener("click",function(){document.getElementById("ov-cor").classList.remove("on")});
 document.getElementById("cor-input").addEventListener("input",corSearch);
 document.querySelectorAll(".btn-back").forEach(function(b){b.addEventListener("click",goHome)});
