@@ -587,11 +587,9 @@ function loadCustomCatalog(){
 }
 var _imgLoaded=false;
 function _fixImgUrl(img){
-  // Always reconstruct URL from API_BASE if r2Key exists
   if(img.r2Key&&API_BASE){
     img.url=API_BASE.replace(/\/$/,"")+"/img/"+img.r2Key;
   }
-  // Fix URLs pointing to tridds.com/api/img (GitHub Pages can't serve R2)
   if(img.url&&img.url.indexOf("tridds.com/api/img")>=0&&API_BASE){
     var r2Part=img.url.split("/api/img/")[1];
     if(r2Part)img.url=API_BASE.replace(/\/$/,"")+"/img/"+r2Part;
@@ -617,29 +615,30 @@ function _mergeImages(items){
 }
 function loadProductImages(){
   if(!API_BASE)return Promise.resolve();
-  var url=API_BASE.replace(/\/$/,"")+"/product-images";
-  productImages={};
-  var promises=[];
-  // Always load global shared images
-  promises.push(
-    fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:"_GLOBAL",action:"list-all"})})
-    .then(function(r){return r.json()})
-    .then(function(d){if(d&&d.items)_mergeImages(d.items)})
-    .catch(function(){})
-  );
-  // Load site-specific images if logged in with a real code
-  if(sess.code&&sess.code!=="DEMO"){
-    promises.push(
-      fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:sess.code,action:"list-all"})})
+  var baseUrl=API_BASE.replace(/\/$/,"");
+  // Use public-images endpoint — returns all images across all sites
+  return fetch(baseUrl+"/public-images",{method:"GET"})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d&&d.items&&d.items.length>0){
+      _mergeImages(d.items);
+      _imgLoaded=true;
+      if(st.screen==="home")renderHistory();
+    }
+  }).catch(function(){
+    // Fallback: try site-specific if public endpoint not available
+    if(sess.code&&sess.code!=="DEMO"){
+      return fetch(baseUrl+"/product-images",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:sess.code,action:"list-all"})})
       .then(function(r){return r.json()})
-      .then(function(d){if(d&&d.items)_mergeImages(d.items)})
-      .catch(function(){})
-    );
-  }
-  return Promise.all(promises).then(function(){
-    _imgLoaded=Object.keys(productImages).length>0||true;
-    if(st.screen==="home")renderHistory();
-  }).catch(function(){});
+      .then(function(d){
+        if(d&&d.items&&d.items.length>0){
+          _mergeImages(d.items);
+          _imgLoaded=true;
+          if(st.screen==="home")renderHistory();
+        }
+      }).catch(function(){});
+    }
+  });
 }
 var _imgRetries=0;
 function ensureImagesLoaded(){
