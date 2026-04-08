@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TriDDS Admin</title>
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f7f2;--panel:#fff;--line:#e7eef8;--text:#0f172a;--muted:#64748b;--blue:#c22829;--blue2:#a31f20;--green:#059669;--red:#dc2626;--purple:#7c3aed;--orange:#ea580c;--shadow:0 16px 40px rgba(15,23,42,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f5f7f2;color:var(--text)}.hidden{display:none!important}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top left,#1e3a8a,#0f172a 55%)}.card{width:min(460px,100%);background:#fff;border-radius:28px;padding:28px;box-shadow:var(--shadow)}.logo{width:64px;height:64px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 24px rgba(15,23,42,.12);margin-bottom:16px;border:1px solid #e2e8f0}.logo img{width:100%;height:100%;object-fit:contain;display:block}.title{font-size:32px;font-weight:900;letter-spacing:-1px;margin:0}.sub{margin:10px 0 20px;color:var(--muted);line-height:1.55}.label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}.field{margin-bottom:14px}.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:16px;border:1.5px solid #dbe3f0;font:inherit;background:#fff;outline:none}.field textarea{min-height:96px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}.btn{border:none;border-radius:16px;padding:13px 18px;font:inherit;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 12px 24px rgba(37,99,235,.22)}.btn-soft{background:#fff;border:1px solid var(--line);color:var(--text)}.btn-red{background:#fef2f2;border:1px solid #fecaca;color:var(--red)}.btn-green{background:#ecfdf5;border:1px solid #a7f3d0;color:var(--green)}.btn-sm{padding:10px 12px;border-radius:12px;font-size:12px}.err{display:none;color:var(--red);font-size:13px;font-weight:700;margin-top:8px}
+.main{padding:24px}.shell{max-width:1460px;margin:0 auto}.topbar{background:linear-gradient(135deg,#1c1917,#2d4a0f);color:#fff;border-radius:28px;padding:28px;display:flex;justify-content:space-between;gap:18px;align-items:flex-start;box-shadow:var(--shadow);margin-bottom:18px}.topbar h1{margin:0;font-size:34px;font-weight:900;letter-spacing:-1px}.topbar p{margin:10px 0 0;color:#dbeafe;max-width:760px;line-height:1.6}.actions{display:flex;gap:10px;flex-wrap:wrap}.actions .btn-soft{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16);color:#fff}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.tab{padding:11px 16px;border-radius:999px;border:1px solid #dbe3f0;background:#fff;color:#334155;font-weight:800;cursor:pointer}.tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:18px}.kpi{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}.kpi .tag{font-size:12px;font-weight:800;text-transform:uppercase;color:var(--muted);letter-spacing:.08em}.kpi .num{font-size:34px;font-weight:900;margin-top:10px}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)}.panel-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panel-title h2{margin:0;font-size:20px;font-weight:900}.panel-sub{font-size:13px;color:var(--muted);margin-top:4px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}.site-card{border:1px solid var(--line);border-radius:22px;padding:18px;background:linear-gradient(180deg,#fff,#fbfdff)}.site-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.site-title{font-size:20px;font-weight:900;letter-spacing:-.4px}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--muted);margin-top:4px}.mini{font-size:12px;color:var(--muted)}.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800}.b-free{background:#eef2ff;color:#4338ca}.b-pro{background:#dbeafe;color:#1d4ed8}.b-multi{background:#f3e8ff;color:#7e22ce}.b-ent{background:#ede9fe;color:#5b21b6}.b-on{background:#ecfdf5;color:#047857}.b-off{background:#fef2f2;color:#b91c1c}.role{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800}.role-resp{background:#ede9fe;color:#6d28d9}.role-agent{background:#ecfeff;color:#0f766e}.agent-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.agent-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px}.agent-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.agent-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.site-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}.toolbar{display:grid;grid-template-columns:220px 1fr auto;gap:10px;margin-bottom:14px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:13px;vertical-align:top}.table th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.empty{padding:18px 0;color:var(--muted)}.pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}.pill-gray{background:#f1f5f9;color:#475569}.pill-orange{background:#ffedd5;color:#c2410c}.pill-blue{background:#dbeafe;color:#1d4ed8}.session{display:flex;justify-content:space-between;gap:14px;padding:14px;border:1px solid #e7eef8;border-radius:18px;background:#fff}.session+.session{margin-top:10px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:800;display:none;z-index:999}@media(max-width:980px){.grid,.toolbar,.form-grid{grid-template-columns:1fr}.topbar{flex-direction:column}.main{padding:16px}}
+.table-modern tbody tr:nth-child(even){background:#fbfdff}.table-modern tbody tr:hover{background:#eef4ff}.table-sticky thead th{position:sticky;top:0;background:#fff;z-index:1}.mainbase-stats{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px}.mini-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#f8fafc;border:1px solid #e2e8f0;color:#334155}.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}.pager-actions{display:flex;gap:8px;align-items:center}.pager select{padding:10px 12px;border-radius:12px;border:1px solid #dbe3f0;font:inherit;background:#fff}.badge-sheet{background:#dbeafe;color:#1d4ed8}.badge-count{background:#ecfdf5;color:#047857}.badge-cols{background:#ede9fe;color:#6d28d9}
+.helper-box{background:#f8fbff;border:1px solid #dbeafe;border-radius:18px;padding:12px 14px;margin-bottom:14px}.helper-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#1d4ed8;margin-bottom:6px}.helper-text{font-size:13px;color:#475569;line-height:1.5}.link-btn{background:none;border:none;color:#2563eb;font:inherit;font-weight:800;cursor:pointer;padding:0}.optional-note{font-size:12px;color:#64748b;margin-top:-4px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<section id="login" class="login">
+  <div class="card">
+    <div class="logo"><img src="./assets/tridds-symbol.png" alt="TriDDS"></div>
+    <h1 class="title">TriDDS Admin</h1>
+    <p class="sub">Pilotez les sites, les ventes, les sessions, la base produits et la base de connaissance depuis une seule page.</p>
+    <div class="field"><div class="label">Clé administrateur</div><input id="in-key" type="password" placeholder="Entrez votre clé admin"></div>
+    <button id="btn-login" class="btn btn-primary" style="width:100%">Ouvrir l’administration</button>
+    <div id="login-err" class="err"></div>
+  </div>
+</section>
+<main id="app" class="main hidden">
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <div class="pill pill-blue">🛡️ Administration centrale</div>
+        <h1>Tableau de pilotage</h1>
+        <p>Gérez vos sites, produits, photos et équipes depuis une seule interface.</p>
+      </div>
+      <div class="actions">
+        <button id="btn-refresh" class="btn btn-soft">Actualiser</button>
+        <button id="btn-logout" class="btn btn-soft">Déconnexion</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Tableau de bord</button>
+      <button class="tab" data-tab="sites">Sites & accès</button>
+      <button class="tab" data-tab="activity">Activité</button>
+      <button class="tab" data-tab="catalog">Produits</button>
+      <button class="tab" data-tab="images">Photos</button>
+    </div>
+
+    <section data-section="overview">
+      <div class="kpis">
+        <div class="kpi"><div class="tag">Sites actifs</div><div class="num" id="kpi-sites">0</div></div>
+        <div class="kpi"><div class="tag">Sessions actives</div><div class="num" id="kpi-sessions">0</div></div>
+        <div class="kpi"><div class="tag">Ventes</div><div class="num" id="kpi-sales">0</div></div>
+        <div class="kpi"><div class="tag">MRR estimé</div><div class="num" id="kpi-mrr">0 €</div></div>
+        <div class="kpi"><div class="tag">Mémoire</div><div class="num" id="kpi-brands">0</div></div>
+      </div>
+      <div class="grid">
+        <div class="panel"><div class="panel-title"><div><h2>Dernières ventes</h2><div class="panel-sub">Aperçu des achats les plus récents</div></div></div><div id="sales-preview"></div></div>
+        <div class="panel"><div class="panel-title"><div><h2>Sessions en cours</h2><div class="panel-sub">Qui est connecté, sur quel appareil</div></div></div><div id="sessions-preview"></div></div>
+      </div>
+    </section>
+
+    <section data-section="sites" class="hidden">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title"><div><h2>Créer un accès</h2><div class="panel-sub">Client, contact principal, site et plan.</div></div></div>
+          <div class="form-grid">
+            <div class="field"><div class="label">Code</div><input id="new-code" placeholder="EX. TRI-FAU-PRO"></div>
+            <div class="field"><div class="label">Plan</div><select id="new-plan"><option value="free">Accès Base</option><option value="pro">Pro Site</option><option value="multisite">Multi-sites</option><option value="enterprise">Entreprise</option></select></div>
+            <div class="field"><div class="label">Client</div><input id="new-client" placeholder="Nicollin"></div>
+            <div class="field"><div class="label">Contact principal</div><input id="new-principal" placeholder="Nom du contact principal"></div>
+            <div class="field"><div class="label">Email principal</div><input id="new-principal-email" placeholder="contact@client.fr"></div>
+            <div class="field"><div class="label">Nom du site</div><input id="new-site" placeholder="Déchèterie de Faulquemont"></div>
+            <div class="field full"><div class="label">Contact</div><input id="new-contact" placeholder="Email ou téléphone"></div>
+            <div class="field full"><div class="label">Notes</div><input id="new-notes" placeholder="Infos complémentaires"></div>
+            <div class="full"><button id="btn-create" class="btn btn-primary">Créer l’accès</button></div>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-title"><div><h2>Règles de gestion</h2><div class="panel-sub">Un seul responsable par site. Les autres profils sont des agents. Un changement de plan ou d’état révoque les anciennes sessions.</div></div></div><div class="mini">Le responsable peut gérer son équipe côté site. Le super-admin garde la vue globale sur les sites, les ventes, la mémoire et le catalogue.</div></div>
+      </div>
+      <div class="panel" style="margin-top:18px"><div class="panel-title"><div><h2>Tous les sites</h2><div class="panel-sub">Gestion complète des accès, plans et agents.</div></div></div><div id="sites-list"></div></div>
+    </section>
+
+    <section data-section="activity" class="hidden">
+      <div class="grid">
+        <div class="panel"><div class="panel-title"><div><h2>Ventes</h2><div class="panel-sub">Historique des achats Stripe</div></div></div><div id="sales-full"></div></div>
+        <div class="panel"><div class="panel-title"><div><h2>Sessions actives</h2><div class="panel-sub">Qui est connecté</div></div></div><div id="sessions-full"></div></div>
+      </div>
+    </section>
+
+    <section data-section="catalog" class="hidden">
+      <div class="grid">
+        <div class="panel"><div class="panel-title"><div><h2>Produits</h2><div class="panel-sub">Fiches personnalisées, mémoire apprise et base de référence</div></div></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn btn-sm js-sub-tab active" data-sub="cat-view" style="font-size:12px" onclick="document.querySelectorAll('.cat-sub').forEach(s=>s.classList.add('hidden'));document.getElementById('cat-view').classList.remove('hidden');document.querySelectorAll('.js-sub-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Fiches produits</button>
+            <button class="btn btn-sm js-sub-tab" data-sub="kn-view" style="font-size:12px" onclick="document.querySelectorAll('.cat-sub').forEach(s=>s.classList.add('hidden'));document.getElementById('kn-view').classList.remove('hidden');document.querySelectorAll('.js-sub-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Mémoire IA</button>
+            <button class="btn btn-sm js-sub-tab" data-sub="mb-view" style="font-size:12px" onclick="document.querySelectorAll('.cat-sub').forEach(s=>s.classList.add('hidden'));document.getElementById('mb-view').classList.remove('hidden');document.querySelectorAll('.js-sub-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Base référence (482)</button>
+            <a href="./bulk-upload.html" target="_blank" class="btn btn-green btn-sm" style="font-size:12px;text-decoration:none">📷 Upload en masse</a>
+          </div>
+          <div id="cat-view" class="cat-sub"><div class="toolbar"><select id="flt-cat-site"><option value="">Tous les sites</option></select><input id="flt-cat-search" placeholder="Rechercher un produit, une catégorie, un client..."><button id="btn-cat-new" class="btn btn-primary btn-sm">+ Nouvelle fiche</button></div><div id="catalog-table"></div></div>
+        <aside class="panel"><div class="panel-title"><div><h2 id="cat-form-title">Nouvelle fiche</h2><div class="panel-sub">Créez une fiche rapidement sans vous perdre dans les champs.</div></div></div><div class="helper-box"><div class="helper-title">3 champs suffisent</div><div class="helper-text">Remplissez <strong>Site</strong>, <strong>Nom</strong> et <strong>Catégorie</strong>. Le flux se choisit dans la liste. Tout le reste est optionnel.</div></div><div class="form-grid"><div class="field full"><div class="label">Site</div><select id="cat-code"></select></div><div class="field full"><div class="label">Nom du produit</div><input id="cat-name" placeholder="Ex. Décapant gel façade"></div><div class="field"><div class="label">Flux</div><select id="cat-flux" style="font-weight:700"><option value="E" style="color:#059669">✓ EcoDDS</option><option value="H" style="color:#d97706">✗ Hors EcoDDS</option><option value="C" style="color:#dc2626">⛔ Interdit / Cas spécial</option></select></div><div class="field"><div class="label">Catégorie</div><select id="cat-category"><option value="">Choisir...</option><option value="Acides">Acides</option><option value="Aérosols">Aérosols</option><option value="Autres DDS liquides">Autres DDS liquides</option><option value="Bases">Bases</option><option value="Batteries">Batteries</option><option value="Bidons vides de combustibles de chauffage">Bidons vides</option><option value="Cartouches de gaz">Cartouches de gaz</option><option value="Comburants">Comburants</option><option value="Emballages souillés standards">Emballages souillés</option><option value="Filtres">Filtres</option><option value="Huiles usagées">Huiles usagées</option><option value="Pâteux">Pâteux</option><option value="Phytos et biocides">Phytos et biocides</option><option value="Phytosanitaires">Phytosanitaires</option><option value="Solvants">Solvants</option><option value="Produits non ID ou Laboratoire">Produits non ID</option></select></div><div class="full optional-note"><button type="button" id="btn-cat-advanced" class="link-btn">Afficher les champs optionnels</button></div><div id="cat-advanced" class="hidden full"><div class="field full"><div class="label">Orientation / consigne (optionnel)</div><textarea id="cat-orientation" placeholder="Consigne de tri / orientation recommandée"></textarea></div><div class="field full"><div class="label">Sous-catégorie / précision (optionnel)</div><input id="cat-sub" placeholder="Ex. Décapants / dissolvants"></div><div class="field full"><div class="label">Synonymes (optionnel)</div><input id="cat-syn" placeholder="séparés par des virgules"></div></div><div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button id="btn-cat-save" class="btn btn-primary">Enregistrer</button><button id="btn-cat-delete" class="btn btn-red hidden">Supprimer</button><button id="btn-cat-cancel" class="btn btn-soft hidden">Annuler</button></div><div id="cat-meta" class="mini full"></div></div></aside>
+      </div>
+          </div>
+          <div id="kn-view" class="cat-sub hidden">
+            <div class="toolbar"><select id="flt-kn-site"><option value="">Tous les sites</option></select><input id="flt-kn-search" placeholder="Rechercher une marque..."><button id="btn-kn-new" class="btn btn-primary btn-sm">+ Entrée</button></div>
+            <div id="knowledge-table"></div>
+          </div>
+          <div id="mb-view" class="cat-sub hidden">
+            <div class="toolbar">
+              <select id="flt-main-sheet"><option value="Produits_Normalises">Produits_Normalises</option><option value="Flux_Reference">Flux_Reference</option><option value="Regles_Keywords">Regles_Keywords</option><option value="Synonymes">Synonymes</option></select>
+              <input id="flt-main-search" placeholder="Rechercher...">
+              <select id="flt-main-page-size"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>
+            </div>
+            <div class="mainbase-stats"><span class="mini-pill badge-sheet" id="mainbase-sheet-pill">Feuille</span><span class="mini-pill badge-count" id="mainbase-count-pill">0</span><span class="mini-pill badge-cols" id="mainbase-cols-pill">0</span></div>
+            <div id="mainbase-table"></div>
+            <div class="pager"><div class="mini" id="mainbase-meta"></div><div class="pager-actions"><button id="btn-main-prev" class="btn btn-soft btn-sm">←</button><span class="mini" id="mainbase-page-info">1/1</span><button id="btn-main-next" class="btn btn-soft btn-sm">→</button></div></div>
+          </div>
+        </div>
+      <div class="grid">
+        <div class="panel" style="display:none"><div id="kn-old-placeholder"></div></div>
+        <aside class="panel"><div class="panel-title"><div><h2 id="kn-form-title">Nouvelle entrée</h2><div class="panel-sub">Un formulaire guidé pour corriger la mémoire sans ambiguïté.</div></div></div><div class="helper-box"><div class="helper-title">Méthode simple</div><div class="helper-text">Le minimum pour enregistrer est : <strong>Site</strong> + <strong>Marque / libellé appris</strong>. Si tu connais déjà le bon produit, le flux et la catégorie, ajoute-les tout de suite. Sinon tu pourras compléter plus tard.</div></div><div class="form-grid"><div class="field full"><div class="label">Site</div><select id="kn-code"></select></div><div class="field full"><div class="label">Marque / libellé appris</div><input id="kn-brand" placeholder="Ex. Décapex"></div><div class="field full"><div class="label">Produit associé</div><input id="kn-product" placeholder="Ex. Décapant gel façade"></div><div class="field"><div class="label">Flux</div><select id="kn-flux" style="font-weight:700"><option value="E" style="color:#059669">✓ EcoDDS</option><option value="H" style="color:#d97706">✗ Hors EcoDDS</option><option value="C" style="color:#dc2626">⛔ Interdit / Cas spécial</option></select></div><div class="field"><div class="label">Catégorie</div><select id="kn-category"><option value="">Choisir...</option><option value="Acides">Acides</option><option value="Aérosols">Aérosols</option><option value="Autres DDS liquides">Autres DDS liquides</option><option value="Bases">Bases</option><option value="Comburants">Comburants</option><option value="Huiles usagées">Huiles usagées</option><option value="Pâteux">Pâteux</option><option value="Phytos et biocides">Phytos et biocides</option><option value="Phytosanitaires">Phytosanitaires</option><option value="Solvants">Solvants</option></select></div><div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button id="btn-kn-save" class="btn btn-primary">Enregistrer</button><button id="btn-kn-promote" class="btn btn-green hidden">Envoyer vers la base produits</button><button id="btn-kn-delete" class="btn btn-red hidden">Supprimer</button><button id="btn-kn-cancel" class="btn btn-soft hidden">Annuler</button></div><div id="kn-meta" class="mini full"></div></div></aside>
+      </div>
+    </section>
+
+    
+    <section data-section="images" class="hidden">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title"><div><h2>Images produits</h2><div class="panel-sub">Gestion multi-images par produit. Ajoutez, ordonnez et définissez l'image principale.</div></div></div>
+          <div class="toolbar">
+            <select id="flt-img-site"><option value="">Tous les sites</option></select>
+            <input id="flt-img-search" placeholder="Rechercher un produit...">
+            <button id="btn-img-new" class="btn btn-primary btn-sm">+ Nouvelle image</button>
+          </div>
+          <div id="images-table"></div>
+        </div>
+        <aside class="panel">
+          <div class="panel-title"><div><h2 id="img-form-title">Nouvelle image</h2><div class="panel-sub">Associez une image URL à un produit du catalogue.</div></div></div>
+          <div class="helper-box"><div class="helper-title">Upload direct</div><div class="helper-text">Glissez-déposez une photo ou cliquez pour la sélectionner. Elle sera stockée dans votre espace Cloudflare R2. Choisissez le flux pour afficher la bonne photo selon le classement.</div></div>
+          <div class="form-grid">
+            <div class="field full"><div class="label">Site</div><select id="img-code"></select></div>
+            <div class="field full"><div class="label">Nom du produit</div><input id="img-product" placeholder="Ex. White spirit"></div>
+            <div class="field full">
+              <div class="label">Image</div>
+              <div id="img-dropzone" style="border:2px dashed #d7e0ec;border-radius:16px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;background:#fbfdff">
+                <input id="img-file" type="file" accept="image/jpeg,image/png,image/webp" style="display:none">
+                <div id="img-drop-label" style="color:#64748b;font-size:13px;line-height:1.6"><strong style="color:#334155">Cliquer pour choisir</strong> ou glisser-déposer<br><span style="font-size:11px">JPG, PNG ou WebP · 5 Mo max</span></div>
+                <div id="img-drop-preview" style="display:none;margin-top:10px"><img id="img-drop-thumb" style="max-width:200px;max-height:160px;border-radius:12px;border:1px solid #e2e8f0"></div>
+              </div>
+              <input id="img-url" type="hidden">
+            </div>
+            <div class="field full"><div class="label">Texte alternatif</div><input id="img-alt" placeholder="Description de l'image"></div>
+            <div class="field"><div class="label">Source</div><input id="img-source" placeholder="Ex. EcoDDS, Photo terrain"></div>
+            <div class="field"><div class="label">Ordre</div><input id="img-order" type="number" value="0" min="0"></div>
+            <div class="field"><div class="label">Flux de l'image</div><select id="img-flux"><option value="">Tous les flux (EcoDDS + Hors)</option><option value="E">EcoDDS uniquement</option><option value="H">Hors EcoDDS uniquement</option></select></div>
+            <div class="field full" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="img-primary" style="width:18px;height:18px"> <label for="img-primary" style="font-size:13px;font-weight:700">Image principale</label></div>
+            <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button id="btn-img-save" class="btn btn-primary">Enregistrer</button>
+              <button id="btn-img-delete" class="btn btn-red hidden">Supprimer</button>
+              <button id="btn-img-cancel" class="btn btn-soft hidden">Annuler</button>
+            </div>
+            <div id="img-preview" class="full" style="margin-top:8px"></div>
+            <div id="img-meta" class="mini full"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section data-section="mainbase" style="display:none" class="hidden">
+      <div class="panel">
+        <div class="panel-title"><div><h2>Base principale officielle</h2><div class="panel-sub">Référence centrale importée depuis le fichier maître.</div></div></div>
+        <div class="toolbar">
+          <select id="flt-main-sheet"><option value="Produits_Normalises">Produits_Normalises</option><option value="Flux_Reference">Flux_Reference</option><option value="Regles_Keywords">Regles_Keywords</option><option value="Synonymes">Synonymes</option><option value="Nouveautes_A_Valider">Nouveautes_A_Valider</option><option value="Historique_Validation">Historique_Validation</option><option value="HorsEcoDDS_A_Completer">HorsEcoDDS_A_Completer</option><option value="Cas_Speciaux">Cas_Speciaux</option></select>
+          <input id="flt-main-search" placeholder="Rechercher dans la base principale...">
+          <select id="flt-main-page-size"><option value="25">25 lignes</option><option value="50">50 lignes</option><option value="100">100 lignes</option></select>
+        </div>
+        <div class="mainbase-stats">
+          <span class="mini-pill badge-sheet" id="mainbase-sheet-pill">Feuille</span>
+          <span class="mini-pill badge-count" id="mainbase-count-pill">0 lignes</span>
+          <span class="mini-pill badge-cols" id="mainbase-cols-pill">0 colonnes</span>
+        </div>
+        <div id="mainbase-table"></div>
+        <div class="pager">
+          <div class="mini" id="mainbase-meta"></div>
+          <div class="pager-actions">
+            <button id="btn-main-prev" class="btn btn-soft btn-sm">Précédent</button>
+            <span class="mini" id="mainbase-page-info">Page 1 / 1</span>
+            <button id="btn-main-next" class="btn btn-soft btn-sm">Suivant</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+<div id="toast" class="toast"></div>
+<script src="config.js"></script>
+<script>
+(function(){
+let KEY='';
+let state={dashboard:null,catalog:{sites:[],items:[]},knowledge:{sites:[],items:[]},mainbase:null};
+let editCat=null, editKn=null;
+let mainbasePage=1;
+const API_BASE=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||'').replace(/\/$/,'');
+const API=API_BASE?API_BASE+'/admin':'';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2600)}
+function dt(v){if(!v)return'—';try{return new Date(v).toLocaleString('fr-FR')}catch(e){return v}}
+function euro(v){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(v||0))}
+function api(action,data){if(!API)return Promise.reject(new Error('Backend non configuré dans config.js'));return fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify(Object.assign({action},data||{}))}).then(async r=>{const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch(e){d={error:t||('HTTP '+r.status)}}if(!r.ok||d.error)throw new Error(d.error||('HTTP '+r.status));return d;})}
+function planBadge(p){return {free:'<span class="badge b-free">Accès Base</span>',pro:'<span class="badge b-pro">Pro Site</span>',multisite:'<span class="badge b-multi">Multi-sites</span>',enterprise:'<span class="badge b-ent">Entreprise</span>'}[p]||''}
+function statusBadge(active){return active?'<span class="badge b-on">Actif</span>':'<span class="badge b-off">Désactivé</span>'}
+function roleBadge(role){return role==='responsable'?'<span class="role role-resp">Responsable</span>':'<span class="role role-agent">Agent</span>'}
+function setTab(name){
+  // Map old tab names to new
+  var map={sales:'activity',sessions:'activity',knowledge:'catalog',mainbase:'catalog'};
+  name=map[name]||name;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('[data-section]').forEach(s=>{
+    var show=s.dataset.section===name;
+    if(s.style.display==='none')show=false;
+    s.classList.toggle('hidden',!show);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function loadAll(){const [dash,cat,kn,mb]=await Promise.all([api('dashboard'),api('catalog-admin-list'),api('knowledge-admin-list'),fetch('./base-principale.json').then(r=>r.json())]);state.dashboard=dash;state.catalog=cat;state.knowledge=kn;state.mainbase=mb;renderAll();loadImages().catch(()=>{})}
+function renderOverview(){const s=state.dashboard.stats||{};$('kpi-sites').textContent=s.activeSites||0;$('kpi-sessions').textContent=s.activeSessions||0;$('kpi-sales').textContent=s.totalSales||0;$('kpi-mrr').textContent=euro(s.mrr||0);$('kpi-brands').textContent=s.totalBrands||0;renderSalesTable((state.dashboard.sales||[]).slice(0,5),'sales-preview');renderSalesTable(state.dashboard.sales||[],'sales-full');renderSessions((state.dashboard.sessions||[]).slice(0,4),'sessions-preview');renderSessions(state.dashboard.sessions||[],'sessions-full')}
+function renderSalesTable(items,target){const el=$(target);if(!items.length){el.innerHTML='<div class="empty">Aucune vente enregistrée.</div>';return;}let h='<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Site</th><th>Plan</th><th>Montant</th><th>Email</th><th>Code</th></tr></thead><tbody>';items.forEach(s=>h+=`<tr><td>${esc(dt(s.date))}</td><td><strong>${esc(s.site)}</strong></td><td>${planBadge(s.plan)}</td><td>${esc(euro(s.amount))}</td><td class="mini">${esc(s.adminEmail||'—')}</td><td class="code">${esc(s.code||'—')}</td></tr>`);h+='</tbody></table></div>';el.innerHTML=h}
+function renderSessions(items,target){const el=$(target);if(!items.length){el.innerHTML='<div class="empty">Aucune session active.</div>';return;}let h='';items.forEach(s=>h+=`<div class="session"><div><div style="font-weight:900">${esc(s.agent)}</div><div class="mini">${esc(s.site)} · ${esc(s.code)}</div><div class="mini">${esc(s.deviceName||'Appareil inconnu')}</div><div class="mini">Dernière activité : ${esc(dt(s.lastSeenAt))}</div></div><div><button class="btn btn-red btn-sm js-site-action" data-action="kick-session" data-code="${esc(s.code)}" data-agent="${esc(s.agent)}">Forcer la déconnexion</button></div></div>`);el.innerHTML=h}
+function renderSites(){const el=$('sites-list');const items=state.dashboard.sites||[];if(!items.length){el.innerHTML='<div class="empty">Aucun site enregistré.</div>';return;}let h='<div class="cards">';items.forEach(s=>{h+=`<div class="site-card"><div class="site-head"><div><div class="site-title">${esc(s.site)}</div><div class="code">${esc(s.code)}</div></div><div class="badges">${planBadge(s.plan)}${statusBadge(s.active)}</div></div>`; if(s.client)h+=`<div class="mini">Client : ${esc(s.client)}</div>`; if(s.principal)h+=`<div class="mini">Contact principal : ${esc(s.principal)}${s.principalEmail?' · '+esc(s.principalEmail):''}</div>`; if(s.responsable)h+=`<div class="mini">Responsable du site : ${esc(s.responsable)}</div>`; if(s.contact)h+=`<div class="mini">Contact : ${esc(s.contact)}</div>`; if(s.notes)h+=`<div class="mini">Notes : ${esc(s.notes)}</div>`; h+=`<div class="mini" style="margin-top:8px">Créé : ${esc(dt(s.created))}</div><div class="agent-list">`; (s.agentsList||[]).forEach(a=>{h+=`<div class="agent-row"><div class="agent-left"><span>👤 <strong>${esc(a.name)}</strong></span>${roleBadge(a.role||'agent')}</div><div class="agent-right"><select class="js-role-select" data-code="${esc(s.code)}" data-agent="${esc(a.name)}"><option value="responsable"${(a.role==='responsable'?' selected':'')}>Responsable</option><option value="agent"${((a.role||'agent')==='agent'?' selected':'')}>Agent</option></select><button class="btn btn-soft btn-sm js-site-action" data-action="remove-agent" data-code="${esc(s.code)}" data-agent="${esc(a.name)}">Supprimer</button></div></div>`;}); h+=`</div><div style="margin-top:14px;display:grid;grid-template-columns:1fr 160px;gap:8px"><input id="add-agent-${esc(s.code)}" placeholder="Nom du nouveau profil"><select id="add-role-${esc(s.code)}"><option value="agent">Agent</option><option value="responsable">Responsable</option></select></div><div class="site-actions"><button class="btn btn-green btn-sm js-site-action" data-action="add-agent" data-code="${esc(s.code)}">+ Profil</button>${s.active?`<button class="btn btn-red btn-sm js-site-action" data-action="deactivate" data-code="${esc(s.code)}">Désactiver</button>`:`<button class="btn btn-green btn-sm js-site-action" data-action="activate" data-code="${esc(s.code)}">Réactiver</button>`}<select class="js-plan-select" data-code="${esc(s.code)}"><option value="free"${s.plan==='free'?' selected':''}>Accès Base</option><option value="pro"${s.plan==='pro'?' selected':''}>Pro Site</option><option value="multisite"${s.plan==='multisite'?' selected':''}>Multi-sites</option><option value="enterprise"${s.plan==='enterprise'?' selected':''}>Entreprise</option></select><button class="btn btn-soft btn-sm js-site-action" data-action="delete-site" data-code="${esc(s.code)}">Supprimer le site</button></div></div>`}); h+='</div>'; el.innerHTML=h}
+function fillSelects(){const opts=['<option value="">Choisir un site</option>'].concat((state.catalog.sites||[]).map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`));$('cat-code').innerHTML=opts.join('');$('flt-cat-site').innerHTML='<option value="">Tous les sites</option>'+(state.catalog.sites||[]).map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`).join('');$('kn-code').innerHTML=opts.join('');$('flt-kn-site').innerHTML='<option value="">Tous les sites</option>'+(state.knowledge.sites||[]).map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client||'—')}</option>`).join('')}
+function filteredCatalog(){const site=$('flt-cat-site').value;const q=$('flt-cat-search').value.trim().toLowerCase();return (state.catalog.items||[]).filter(i=>{if(site&&i.code!==site)return false;if(!q)return true;return [i.n,i.x,i.c,i.s,(i.y||[]).join(','),i.site,i.client].join(' ').toLowerCase().includes(q)})}
+function renderCatalog(){const items=filteredCatalog();const el=$('catalog-table');if(!items.length){el.innerHTML='<div class="empty">Aucune fiche personnalisée.</div>';return;}let h='<div class="table-wrap"><table class="table"><thead><tr><th>Produit</th><th>Site</th><th>Flux</th><th>Catégorie</th><th>Mise à jour</th><th></th></tr></thead><tbody>';items.forEach(i=>h+=`<tr><td><strong>${esc(i.n)}</strong><div class="mini">${esc(i.x||'')}</div></td><td>${esc(i.site||'—')}<div class="mini">${esc(i.client||'—')}</div></td><td><span class="pill pill-gray">${esc(i.f||'—')}</span></td><td>${esc(i.c||'—')}<div class="mini">${esc(i.s||'')}</div></td><td>${esc(dt(i.updatedAt))}</td><td><button class="btn btn-soft btn-sm js-cat-edit" data-code="${esc(i.code)}" data-id="${esc(i.id)}">Modifier</button></td></tr>`);h+='</tbody></table></div>';el.innerHTML=h}
+function resetCat(){editCat=null;$('cat-form-title').textContent='Nouvelle fiche';$('cat-code').value=$('flt-cat-site').value||state.catalog.sites[0]?.code||'';$('cat-name').value='';$('cat-flux').value='H';$('cat-category').value='';$('cat-orientation').value='';$('cat-sub').value='';$('cat-syn').value='';$('btn-cat-delete').classList.add('hidden');$('btn-cat-cancel').classList.add('hidden');$('cat-meta').textContent=''}
+function startCat(code,id){const item=(state.catalog.items||[]).find(x=>x.code===code&&x.id===id);if(!item)return;editCat={code,id};$('cat-form-title').textContent='Modifier la fiche';$('cat-code').value=item.code;$('cat-name').value=item.n||'';$('cat-flux').value=item.f||'H';$('cat-category').value=item.x||'';$('cat-orientation').value=item.c||'';$('cat-sub').value=item.s||'';$('cat-syn').value=(item.y||[]).join(', ');$('btn-cat-delete').classList.remove('hidden');$('btn-cat-cancel').classList.remove('hidden');$('cat-meta').textContent='Dernière mise à jour : '+dt(item.updatedAt)}
+function saveCat(){const code=$('cat-code').value;const item={id:editCat?editCat.id:'',n:$('cat-name').value.trim(),f:$('cat-flux').value,x:$('cat-category').value.trim(),c:$('cat-orientation').value.trim(),s:$('cat-sub').value.trim(),y:$('cat-syn').value.split(',').map(v=>v.trim()).filter(Boolean)};if(!code||!item.n||!item.x){toast('Site, nom et catégorie requis');alert('Site, nom et catégorie requis');return;}api('catalog-admin-save',{code,item}).then(()=>{toast(editCat?'Fiche mise à jour':'Fiche créée');editCat=null;loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function deleteCat(){if(!editCat)return;if(!confirm('Supprimer cette fiche ?'))return;api('catalog-admin-delete',{code:editCat.code,id:editCat.id}).then(()=>{toast('Fiche supprimée');editCat=null;loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function filteredKnowledge(){const site=$('flt-kn-site').value;const q=$('flt-kn-search').value.trim().toLowerCase();return (state.knowledge.items||[]).filter(i=>{if(site&&i.code!==site)return false;if(!q)return true;return [i.brand,i.p,i.c,i.site,i.client,(i.by||[]).join(',')].join(' ').toLowerCase().includes(q)})}
+function renderKnowledge(){const items=filteredKnowledge();const el=$('knowledge-table');if(!items.length){el.innerHTML='<div class="empty">Aucune entrée apprise.</div>';return;}let h='<div class="table-wrap"><table class="table"><thead><tr><th>Marque</th><th>Produit</th><th>Site</th><th>Flux</th><th>Catégorie</th><th>Occur.</th><th>Mise à jour</th><th></th></tr></thead><tbody>';items.forEach(i=>h+=`<tr><td><strong>${esc(i.brand)}</strong><div class="mini">${esc((i.by||[]).join(', '))}</div></td><td>${esc(i.p||'—')}</td><td>${esc(i.site||'—')}<div class="mini">${esc(i.client||'—')}</div></td><td><span class="pill pill-orange">${esc(i.f||'—')}</span></td><td>${esc(i.c||'—')}</td><td>${esc(i.n||0)}</td><td>${esc(i.d||dt(i.lastUpdate))}</td><td><button class="btn btn-soft btn-sm js-kn-edit" data-code="${esc(i.code)}" data-brand="${esc(i.brand)}">Modifier</button></td></tr>`);h+='</tbody></table></div>';el.innerHTML=h}
+function resetKn(){editKn=null;$('kn-form-title').textContent='Nouvelle entrée';$('kn-code').value=$('flt-kn-site').value||state.knowledge.sites[0]?.code||'';$('kn-brand').value='';$('kn-product').value='';$('kn-flux').value='H';$('kn-category').value='';$('btn-kn-promote').classList.add('hidden');$('btn-kn-delete').classList.add('hidden');$('btn-kn-cancel').classList.add('hidden');$('kn-meta').textContent=''}
+function startKn(code,brand){const item=(state.knowledge.items||[]).find(x=>x.code===code&&x.brand===brand);if(!item)return;editKn={code,brand};$('kn-form-title').textContent='Modifier l’entrée';$('kn-code').value=item.code;$('kn-brand').value=item.brand||'';$('kn-product').value=item.p||'';$('kn-flux').value=item.f||'H';$('kn-category').value=item.c||'';$('btn-kn-promote').classList.remove('hidden');$('btn-kn-delete').classList.remove('hidden');$('btn-kn-cancel').classList.remove('hidden');$('kn-meta').textContent='Occurrences : '+(item.n||0)+' · Dernière mise à jour : '+(item.d||dt(item.lastUpdate))}
+function saveKn(){const code=$('kn-code').value;const item={brand:$('kn-brand').value.trim(),product:$('kn-product').value.trim(),flux:$('kn-flux').value,category:$('kn-category').value.trim()};if(!code||!item.brand){toast('Site et marque requis');alert('Site et marque requis');return;}api('knowledge-admin-save',{code,originalBrand:editKn?editKn.brand:'',item}).then(()=>{toast(editKn?'Entrée mise à jour':'Entrée créée');editKn=null;loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function deleteKn(){if(!editKn)return;if(!confirm('Supprimer cette entrée ?'))return;api('knowledge-admin-delete',{code:editKn.code,brand:editKn.brand}).then(()=>{toast('Entrée supprimée');editKn=null;loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function promoteKn(){if(!editKn)return;api('knowledge-admin-promote',{code:editKn.code,brand:editKn.brand}).then(()=>{toast('Entrée envoyée vers la base produits');loadAll();setTab('catalog')}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}
+function renderAll(){renderOverview();renderSites();fillSelects();renderCatalog();renderKnowledge();renderMainBase();if(!editCat)resetCat();if(!editKn)resetKn()}
+
+function renderMainBase(){const data=state.mainbase&&state.mainbase.sheets?state.mainbase.sheets:{};const sheetName=$('flt-main-sheet').value||'Produits_Normalises';const sheet=data[sheetName];const el=$('mainbase-table');if(!sheet){el.innerHTML='<div class="empty">Aucune base principale chargée.</div>';return;}const q=$('flt-main-search').value.trim().toLowerCase();let rows=sheet.rows||[];if(q){rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(q));}const headers=(sheet.headers||[]).filter(Boolean);const cols=headers.slice(0,10);const pageSize=Math.max(1,parseInt($('flt-main-page-size').value||'25',10));const totalRows=rows.length;const totalPages=Math.max(1,Math.ceil(totalRows/pageSize));if(mainbasePage>totalPages)mainbasePage=totalPages;if(mainbasePage<1)mainbasePage=1;const start=(mainbasePage-1)*pageSize;const pageRows=rows.slice(start,start+pageSize);$('mainbase-sheet-pill').textContent=sheetName;$('mainbase-count-pill').textContent=totalRows+' lignes';$('mainbase-cols-pill').textContent=cols.length+' colonnes';$('mainbase-meta').textContent='Affichage '+(totalRows?start+1:0)+'-'+Math.min(start+pageRows.length,totalRows)+' sur '+totalRows;$('mainbase-page-info').textContent='Page '+mainbasePage+' / '+totalPages;$('btn-main-prev').disabled=mainbasePage<=1;$('btn-main-next').disabled=mainbasePage>=totalPages;if(!pageRows.length){el.innerHTML='<div class="empty">Aucun résultat.</div>';return;}let h='<div class="table-wrap"><table class="table table-modern table-sticky"><thead><tr>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>';pageRows.forEach(r=>{h+='<tr>'+cols.map(c=>'<td>'+esc(r[c]||'—')+'</td>').join('')+'</tr>';});h+='</tbody></table></div>';el.innerHTML=h}
+
+$('btn-login').addEventListener('click',()=>{KEY=$('in-key').value.trim();if(!KEY){$('login-err').textContent='Entrez la clé admin';$('login-err').style.display='block';return;}loadAll().then(()=>{$('login').classList.add('hidden');$('app').classList.remove('hidden');$('login-err').style.display='none'}).catch(e=>{$('login-err').textContent=e.message||'Clé invalide';$('login-err').style.display='block'})});$('in-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('btn-login').click()});$('btn-refresh').addEventListener('click',()=>loadAll().catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)}));$('btn-logout').addEventListener('click',()=>{KEY='';$('app').classList.add('hidden');$('login').classList.remove('hidden');$('in-key').value='';setTab('overview')});document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+$('btn-create').addEventListener('click',()=>{const code=$('new-code').value.trim();const client=$('new-client').value.trim();const principal=$('new-principal').value.trim();const principalEmail=$('new-principal-email').value.trim();const site=$('new-site').value.trim();const plan=$('new-plan').value;const contact=$('new-contact').value.trim();const notes=$('new-notes').value.trim();if(!code||!site||!client){toast('Client, code et nom du site requis');alert('Client, code et nom du site requis');return;}api('create',{code,client,principal,principalEmail,site,plan,contact,notes}).then(()=>{toast('Accès créé');$('new-code').value='';$('new-client').value='';$('new-principal').value='';$('new-principal-email').value='';$('new-site').value='';$('new-contact').value='';$('new-notes').value='';loadAll();setTab('sites')}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})});
+$('btn-cat-save').addEventListener('click',saveCat);$('btn-cat-delete').addEventListener('click',deleteCat);$('btn-cat-advanced').addEventListener('click',()=>{const box=$('cat-advanced');box.classList.toggle('hidden');$('btn-cat-advanced').textContent=box.classList.contains('hidden')?'Afficher les champs optionnels':'Masquer les champs optionnels';});$('btn-cat-cancel').addEventListener('click',()=>{editCat=null;resetCat()});$('btn-cat-new').addEventListener('click',()=>{editCat=null;resetCat()});$('flt-cat-site').addEventListener('change',renderCatalog);$('flt-cat-search').addEventListener('input',renderCatalog);
+$('btn-kn-save').addEventListener('click',saveKn);$('flt-main-sheet').addEventListener('change',()=>{mainbasePage=1;renderMainBase()});$('flt-main-search').addEventListener('input',()=>{mainbasePage=1;renderMainBase()});$('flt-main-page-size').addEventListener('change',()=>{mainbasePage=1;renderMainBase()});$('btn-main-prev').addEventListener('click',()=>{if(mainbasePage>1){mainbasePage--;renderMainBase()}});$('btn-main-next').addEventListener('click',()=>{mainbasePage++;renderMainBase()});$('btn-kn-delete').addEventListener('click',deleteKn);$('btn-kn-promote').addEventListener('click',promoteKn);$('btn-kn-cancel').addEventListener('click',()=>{editKn=null;resetKn()});$('btn-kn-new').addEventListener('click',()=>{editKn=null;resetKn()});$('flt-kn-site').addEventListener('change',renderKnowledge);$('flt-kn-search').addEventListener('input',renderKnowledge);
+document.addEventListener('click',e=>{const siteBtn=e.target.closest('.js-site-action');if(siteBtn){const a=siteBtn.dataset.action,code=siteBtn.dataset.code,agent=siteBtn.dataset.agent||'';if(a==='add-agent'){const name=$('add-agent-'+code)?.value.trim()||'';const role=$('add-role-'+code)?.value||'agent';if(!name){toast('Entrez un nom de profil');alert('Entrez un nom de profil');return}if(role==='responsable'&&!confirm("Définir ce profil comme responsable unique du site ? L'ancien responsable sera passé en agent."))return;api('add-agent',{code,agent:name,role}).then(()=>{toast('Profil ajouté');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='remove-agent'){if(!confirm('Retirer '+agent+' ?'))return;api('remove-agent',{code,agent}).then(()=>{toast('Profil retiré');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='deactivate'){api('update',{code,active:false}).then(()=>{toast('Site désactivé');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='activate'){api('update',{code,active:true}).then(()=>{toast('Site réactivé');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='delete-site'){if(!confirm('Supprimer définitivement '+code+' ?'))return;api('delete',{code}).then(()=>{toast('Site supprimé');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} else if(a==='kick-session'){if(!confirm('Forcer la déconnexion de '+agent+' ?'))return;api('kick-session',{code,agent}).then(()=>{toast('Session fermée');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}return;} const catEdit=e.target.closest('.js-cat-edit'); if(catEdit){startCat(catEdit.dataset.code,catEdit.dataset.id);return;} const knEdit=e.target.closest('.js-kn-edit'); if(knEdit){startKn(knEdit.dataset.code,knEdit.dataset.brand);return;}});
+document.addEventListener('change',e=>{if(e.target.matches('.js-role-select')){const code=e.target.dataset.code||'';const agent=e.target.dataset.agent||'';const role=e.target.value;if(role==='responsable'&&!confirm("Définir "+agent+" comme responsable unique du site ? L'ancien responsable sera passé en agent.")){loadAll();return;}api('set-agent-role',{code,agent,role}).then(()=>{toast('Rôle mis à jour');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})} if(e.target.matches('.js-plan-select')){const code=e.target.dataset.code||'';api('update',{code,plan:e.target.value}).then(()=>{toast('Plan mis à jour');loadAll()}).catch(e=>{toast('Erreur: '+e.message);alert('Erreur: '+e.message)})}});
+
+// ===== IMAGES =====
+let editImg=null;
+let imagesState={sites:[],items:[]};
+
+async function loadImages(){
+  const sitesData=state.dashboard?state.dashboard.sites:[];
+  const allItems=[];
+  // Load global images
+  try{
+    const gRes=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:'_GLOBAL',action:'list-all'})});
+    const gd=await gRes.json();
+    if(gd.items)(gd.items||[]).forEach(i=>{allItems.push(Object.assign({code:'_GLOBAL',site:'Global',client:'Tous les sites'},i))});
+  }catch(e){}
+  // Load per-site images
+  for(const site of sitesData){
+    try{
+      const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:site.code,action:'list-all'})});
+      const d=await res.json();
+      if(d.items)(d.items||[]).forEach(i=>{allItems.push(Object.assign({code:site.code,site:site.site,client:site.client||''},i))});
+    }catch(e){}
+  }
+  imagesState={sites:sitesData.map(s=>({code:s.code,site:s.site,client:s.client||''})),items:allItems};
+  fillImgSelects();
+  renderImages();
+}
+
+function fillImgSelects(){
+  const globalOpt='<option value="_GLOBAL">Global (tous les sites)</option>';
+  const opts=['<option value="">Choisir un site</option>',globalOpt].concat(imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)} · ${esc(s.client)}</option>`));
+  $('img-code').innerHTML=opts.join('');
+  $('flt-img-site').innerHTML='<option value="">Tous les sites</option>'+globalOpt+imagesState.sites.map(s=>`<option value="${esc(s.code)}">${esc(s.site)}</option>`).join('');
+}
+
+function filteredImages(){
+  const site=$('flt-img-site').value;
+  const q=$('flt-img-search').value.trim().toLowerCase();
+  return imagesState.items.filter(i=>{
+    if(site&&i.code!==site)return false;
+    if(!q)return true;
+    return [i.productName,i.alt,i.source,i.site,i.client].join(' ').toLowerCase().includes(q);
+  });
+}
+
+function renderImages(){
+  const items=filteredImages();
+  const el=$('images-table');
+  if(!items.length){el.innerHTML='<div class="empty">Aucune image enregistrée.</div>';return;}
+  let h='<div class="table-wrap"><table class="table"><thead><tr><th style="width:60px">Aperçu</th><th>Produit</th><th>Site</th><th>Source</th><th>Ordre</th><th>Principale</th><th></th></tr></thead><tbody>';
+  items.forEach(i=>{
+    h+=`<tr>
+      <td><img src="${esc(i.url)}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect fill=%22%23f1f5f9%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2228%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2212%22>?</text></svg>'"></td>
+      <td><strong>${esc(i.productName)}</strong><div class="mini">${esc(i.alt||'')}</div></td>
+      <td>${esc(i.site||'—')}<div class="mini">${esc(i.client||'')}</div></td>
+      <td><span class="pill pill-gray">${esc(i.source||'—')}</span></td>
+      <td>${esc(i.order||0)}</td>
+      <td>${i.isPrimary?'<span class="badge b-on" style="font-size:10px">★ Principale</span>':'<span class="mini">—</span>'}</td>
+      <td><button class="btn btn-soft btn-sm js-img-edit" data-code="${esc(i.code)}" data-id="${esc(i.id)}">Modifier</button></td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  el.innerHTML=h;
+}
+
+function resetImg(){
+  editImg=null;pendingImageData=null;
+  $('img-form-title').textContent='Nouvelle image';
+  $('img-code').value=$('flt-img-site').value||imagesState.sites[0]?.code||'';
+  $('img-product').value='';$('img-url').value='';$('img-alt').value='';
+  $('img-source').value='';$('img-order').value='0';$('img-primary').checked=false;$('img-flux').value='';
+  $('btn-img-delete').classList.add('hidden');$('btn-img-cancel').classList.add('hidden');
+  $('img-preview').innerHTML='';$('img-meta').textContent='';
+  $('img-drop-label').style.display='block';$('img-drop-preview').style.display='none';
+  $('img-file').value='';
+}
+
+function startImgEdit(code,id){
+  const item=imagesState.items.find(x=>x.code===code&&x.id===id);
+  if(!item)return;
+  editImg={code,id};
+  $('img-form-title').textContent='Modifier l\'image';
+  $('img-code').value=item.code;$('img-product').value=item.productName||'';
+  $('img-url').value=item.url||'';$('img-alt').value=item.alt||'';
+  $('img-source').value=item.source||'';$('img-flux').value=item.imageFlux||'';$('img-order').value=item.order||0;
+  $('img-primary').checked=!!item.isPrimary;
+  $('btn-img-delete').classList.remove('hidden');$('btn-img-cancel').classList.remove('hidden');
+  pendingImageData=null;
+  if(item.url){
+    $('img-drop-label').style.display='none';$('img-drop-preview').style.display='block';
+    $('img-drop-thumb').src=item.url;
+    $('img-preview').innerHTML=`<div style="font-size:12px;color:#475569;margin-top:4px">Image actuelle chargée. Déposez un fichier pour la remplacer.</div>`;
+  }else{
+    $('img-drop-label').style.display='block';$('img-drop-preview').style.display='none';
+    $('img-preview').innerHTML='';
+  }
+  $('img-meta').textContent='Dernière mise à jour : '+dt(item.updatedAt);
+}
+
+async function saveImg(){
+  const code=$('img-code').value;
+  const productName=$('img-product').value.trim();
+  const alt=$('img-alt').value.trim();
+  const source=$('img-source').value.trim();
+  const order=parseInt($('img-order').value)||0;
+  const isPrimary=$('img-primary').checked;
+  const existingUrl=$('img-url').value.trim();
+
+  if(!code||!productName){toast('Site et nom du produit requis');return;}
+
+  const payload={
+    code, action:'save', agent:'superadmin',
+    item:{ id:editImg?editImg.id:'', productName, url:existingUrl, alt, source, order, isPrimary, imageFlux:$('img-flux').value }
+  };
+
+  // If a new file was selected, include base64 data
+  if(pendingImageData){
+    payload.imageData=pendingImageData.base64;
+    payload.imageMime=pendingImageData.mime;
+  } else if(!existingUrl && !editImg){
+    toast('Sélectionnez une image');return;
+  }
+
+  try{
+    const btn=$('btn-img-save');btn.disabled=true;btn.textContent='Envoi en cours...';
+    const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await res.json();
+    btn.disabled=false;btn.textContent='Enregistrer';
+    if(d.error)throw new Error(d.error);
+    toast(editImg?'Image mise à jour':'Image uploadée');
+    editImg=null;pendingImageData=null;resetImg();loadImages();
+  }catch(e){
+    $('btn-img-save').disabled=false;$('btn-img-save').textContent='Enregistrer';
+    toast('Erreur: '+e.message);
+  }
+}
+
+async function deleteImg(){
+  if(!editImg||!confirm('Supprimer cette image ?'))return;
+  try{
+    const res=await fetch(API_BASE+'/product-images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:editImg.code,action:'delete',id:editImg.id})});
+    const d=await res.json();
+    if(d.error)throw new Error(d.error);
+    toast('Image supprimée');editImg=null;resetImg();loadImages();
+  }catch(e){toast('Erreur: '+e.message)}
+}
+
+let pendingImageData=null;
+
+// Dropzone handlers
+const dropzone=$('img-dropzone');
+const fileInput=$('img-file');
+
+dropzone.addEventListener('click',()=>fileInput.click());
+dropzone.addEventListener('dragover',(e)=>{e.preventDefault();dropzone.style.borderColor='#2563eb';dropzone.style.background='#eff6ff'});
+dropzone.addEventListener('dragleave',()=>{dropzone.style.borderColor='#d7e0ec';dropzone.style.background='#fbfdff'});
+dropzone.addEventListener('drop',(e)=>{
+  e.preventDefault();dropzone.style.borderColor='#d7e0ec';dropzone.style.background='#fbfdff';
+  const file=e.dataTransfer.files[0];if(file)processImageFile(file);
+});
+fileInput.addEventListener('change',()=>{const file=fileInput.files[0];if(file)processImageFile(file)});
+
+function processImageFile(file){
+  if(!file.type.match(/^image\/(jpeg|png|webp)$/)){toast('Format non supporté. Utilisez JPG, PNG ou WebP.');return;}
+  if(file.size>5*1024*1024){toast('Image trop lourde (max 5 Mo).');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const base64=e.target.result.split(',')[1];
+    pendingImageData={base64,mime:file.type,name:file.name};
+    $('img-drop-label').style.display='none';
+    $('img-drop-preview').style.display='block';
+    $('img-drop-thumb').src=e.target.result;
+    $('img-preview').innerHTML=`<div style="margin-top:8px;font-size:12px;color:#047857;font-weight:700">✓ ${esc(file.name)} (${(file.size/1024).toFixed(0)} Ko)</div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+$('btn-img-save').addEventListener('click',saveImg);
+$('btn-img-delete').addEventListener('click',deleteImg);
+$('btn-img-cancel').addEventListener('click',()=>{editImg=null;resetImg()});
+$('btn-img-new').addEventListener('click',()=>{editImg=null;resetImg()});
+$('flt-img-site').addEventListener('change',renderImages);
+$('flt-img-search').addEventListener('input',renderImages);
+document.addEventListener('click',e=>{
+  const imgEdit=e.target.closest('.js-img-edit');
+  if(imgEdit){startImgEdit(imgEdit.dataset.code,imgEdit.dataset.id);return;}
+});
+
+})();
+</script>
+</body>
+</html>
