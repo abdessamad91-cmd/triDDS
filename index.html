@@ -1015,7 +1015,14 @@ function showRes(){
   }
 
   if(r.cropImage){
-    h+='<div style="margin:0 14px 8px;border-radius:10px;overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:120px;object-fit:contain;background:#f5f5f0"></div>';
+    h+='<div style="margin:0 14px 10px;border-radius:12px;border:1px solid var(--bd);overflow:hidden">';
+    var _hasRef=getProductImages(r.n,r.overSeuil?"H":r.f).length>0;
+    h+='<div style="padding:6px 12px;background:var(--card);font-size:11px;font-weight:700;color:var(--tx2);display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--bd)">Photo analysee par l\u2019IA';
+    if(!_hasRef)h+='<span style="margin-left:auto;font-weight:400;color:var(--eco)">Sera ajoutee aux references</span>';
+    h+='</div>';
+    h+='<div style="padding:8px;text-align:center;background:#fafbf8"><img src="'+r.cropImage+'" style="max-width:100%;max-height:140px;object-fit:contain;border-radius:8px"></div>';
+    h+='</div>';
+    
   }
 
   var currentFlux=r.f||"E";
@@ -1044,7 +1051,15 @@ function showRes(){
 }
 
 // Validation globals
-window.confirmRes=function(){if(!st.result)return;st.result.nv=false;st.result.conf=Math.max(st.result.conf,75);var ai=st.result.aiData;if(ai)pushLearn(ai.marque||ai.nom||st.result.n,st.result.n,st.result.f,st.result.x);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"confirmed"});showRes()};
+window.confirmRes=function(){if(!st.result)return;st.result.nv=false;st.result.conf=Math.max(st.result.conf,75);var ai=st.result.aiData;if(ai)pushLearn(ai.marque||ai.nom||st.result.n,st.result.n,st.result.f,st.result.x);
+  // Save AI crop ONLY if product has no reference photo yet for this flux
+  var flux=st.result.overSeuil?"H":st.result.f;
+  var existing=getProductImages(st.result.n,flux);
+  if(st.result.cropImage&&!st.result._cropSaved&&existing.length===0){
+    st.result._cropSaved=true;
+    autoSaveCropImage(st.result.n,st.result.cropImage,flux);
+  }
+  addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:st.result.conf,validationType:"confirmed"});showRes()};
 window.correctRes=function(){st.corJrnId=null;st.corIdx=-1;document.getElementById("cor-orig").textContent=st.result?st.result.n:"";document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
 window.markNonID=function(){if(!st.result)return;st.result.f="H";st.result.x="Produits non ID ou Laboratoire";st.result.nv=false;st.result.conf=0;addJournal({name:st.result.n,flux:"H",category:"Produits non ID ou Laboratoire",confidence:0,validationType:"manual"});addHist(st.result);showRes()};
 
@@ -1067,7 +1082,7 @@ function showMulti(){
   prods.forEach(function(r,i){
     var s=fSt(r.f);
     h+='<div class="res-card fu" style="animation-delay:'+(i*50)+'ms">';
-    if(r.cropImage)h+='<img src="'+r.cropImage+'" style="width:64px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';
+    if(r.cropImage){h+='<img src="'+r.cropImage+'" style="width:64px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';}
     h+='<div class="rc-info"><h4>'+r.n+'</h4><p>'+(r.x||"")+(r.vol?" · "+r.vol:"")+'</p>'+confBar(r.conf);
     // Reference image comparison for multi
     var mRef=getProductImages(r.n,r.f);
@@ -1080,7 +1095,14 @@ function showMulti(){
   });
   document.getElementById("mul-list").innerHTML=h;
 }
-window.confirmM=function(i){if(!st.multi||!st.multi[i])return;var r=st.multi[i];r.nv=false;r.conf=Math.max(r.conf,75);if(r.aiData)pushLearn(r.aiData.marque||r.aiData.nom||r.n,r.n,r.f,r.x);addJournal({name:r.n,flux:r.f,category:r.x,confidence:r.conf,validationType:"confirmed"});showMulti()};
+window.confirmM=function(i){if(!st.multi||!st.multi[i])return;var r=st.multi[i];r.nv=false;r.conf=Math.max(r.conf,75);if(r.aiData)pushLearn(r.aiData.marque||r.aiData.nom||r.n,r.n,r.f,r.x);
+  var flux=r.overSeuil?"H":r.f;
+  var existing=getProductImages(r.n,flux);
+  if(r.cropImage&&!r._cropSaved&&existing.length===0){
+    r._cropSaved=true;
+    autoSaveCropImage(r.n,r.cropImage,flux);
+  }
+  addJournal({name:r.n,flux:r.f,category:r.x,confidence:r.conf,validationType:"confirmed"});showMulti()};
 window.correctM=function(i){st.corIdx=i;st.corJrnId=null;document.getElementById("cor-orig").textContent=st.multi[i].n;document.getElementById("cor-input").value="";document.getElementById("cor-results").innerHTML="";document.getElementById("ov-cor").classList.add("on");setTimeout(function(){document.getElementById("cor-input").focus()},200)};
 
 // ===== CAMERA & ANALYZE =====
@@ -1132,13 +1154,30 @@ window.jrnFix=function(id){st.corJrnId=id;st.corIdx=-1;var e=journal.find(functi
 function showMemory(){
   show("mem");var keys=memKeys();
   document.getElementById("mem-stats").textContent=keys.length+" marques apprises";
-  if(!keys.length){document.getElementById("mem-list").innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)">Aucune marque apprise</div>';return}
+  if(!keys.length){document.getElementById("mem-list").innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)"><div style="font-size:24px;margin-bottom:8px">🧠</div>Aucune marque apprise<div style="font-size:12px;margin-top:6px;color:var(--tx3)">L\'IA apprend automatiquement quand les agents identifient des produits</div></div>';return}
   var entries=keys.map(function(k){return{brand:k,data:mem.brands[k]}}).sort(function(a,b){return(b.data.n||0)-(a.data.n||0)});
-  var h="";entries.forEach(function(e){var s=fSt(e.data.f);
-    h+='<div class="res-card" style="margin-bottom:4px"><div class="rc-info"><h4>'+e.brand+'</h4><p>'+(e.data.p||"")+(e.data.n?" · vu "+e.data.n+"x":"")+'</p></div><div class="rc-flux '+s.rc+'" style="width:90px"><div class="rf-label" style="font-size:12px">'+s.lb+'</div></div></div>';
+  var h="";entries.forEach(function(e,idx){var s=fSt(e.data.f);
+    var prodImg=getProductImage(e.data.p||e.brand,e.data.f)||"";
+    var imgH=prodImg?'<img src="'+prodImg+'" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);flex-shrink:0">':'';
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--bd)">';
+    h+=imgH;
+    h+='<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.brand+'</div>';
+    h+='<div style="font-size:12px;color:var(--tx2)">'+(e.data.p||"Produit inconnu")+' · vu '+e.data.n+'x</div></div>';
+    h+='<div class="rc-flux '+s.rc+'" style="width:70px;flex-shrink:0"><div class="rf-label" style="font-size:11px">'+s.lb+'</div></div>';
+    h+='<button onclick="deleteMemBrand(\''+e.brand.replace(/'/g,"\\'")+'\')" style="padding:6px 10px;border-radius:8px;background:var(--int-bg);color:var(--int-tx);border:1px solid var(--int-bd);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Suppr.</button>';
+    h+='</div>';
   });
   document.getElementById("mem-list").innerHTML=h;
 }
+window.deleteMemBrand=function(brand){
+  if(!confirm("Supprimer la marque \""+brand+"\" de la mémoire ?"))return;
+  if(mem.brands&&mem.brands[brand]){
+    delete mem.brands[brand];
+    saveMem();
+    if(sess.memoryEnabled)syncMemory();
+    showMemory();
+  }
+};
 
 // ===== TEAM & CATALOG (kept from original) =====
 function loadTeam(){
@@ -1404,6 +1443,34 @@ function lightboxNav(dir){
   document.getElementById("lightbox-img").src=_lbImages[_lbIdx];
 }
 window.lightboxNav=lightboxNav;
+
+
+// Auto-save AI crop image to R2 as a reference
+function autoSaveCropImage(productName, cropDataUrl, flux){
+  if(!cropDataUrl||!productName||!sess.code||sess.code==="DEMO"||!API_BASE)return;
+  // Skip if product already has 5+ images for this flux (avoid flooding)
+  var existing=getProductImages(productName,flux);
+  if(existing.length>=5)return;
+  // Convert data URL to base64
+  var base64=cropDataUrl.split(",")[1];
+  if(!base64)return;
+  var mime=cropDataUrl.match(/^data:(image\/\w+)/);
+  mime=mime?mime[1]:"image/jpeg";
+  fetch(apiUrl("product-images"),{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      code:sess.code,action:"save",agent:sess.agent||"ia",
+      imageData:base64,imageMime:mime,
+      item:{productName:productName,alt:"Photo IA - "+productName,source:"ia-scan",isPrimary:false,order:99,imageFlux:flux||""}
+    })
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d&&d.item){
+      // Update the history entry with the permanent URL
+      var key=productName.toLowerCase().trim();
+      if(!productImages[key])productImages[key]=[];
+      productImages[key].push(d.item);
+    }
+  }).catch(function(){});
+}
 
 // ===== INIT =====
 loadSess();loadJournal();
