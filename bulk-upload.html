@@ -12,34 +12,30 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#f5f7f2;color:#1a1a1a
 .top h1{font-size:20px;font-weight:800}
 .top .sub{color:rgba(255,255,255,.5);font-size:12px;margin-top:4px}
 .toolbar{background:#fff;border-bottom:1px solid #e0e4d9;padding:10px 20px;position:sticky;top:68px;z-index:40;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.toolbar input{flex:1;min-width:200px;padding:10px 14px;border:1.5px solid #e0e4d9;border-radius:10px;font:inherit;outline:none}
+.toolbar input{flex:1;min-width:150px;padding:10px 14px;border:1.5px solid #e0e4d9;border-radius:10px;font:inherit;outline:none}
 .toolbar select{padding:10px;border:1.5px solid #e0e4d9;border-radius:10px;font:inherit;outline:none;background:#fff}
 .stats{font-size:13px;color:#5c5e57;padding:8px 20px;display:flex;gap:16px;align-items:center;background:#fff;border-bottom:1px solid #e0e4d9}
-.stats .done{color:#059669;font-weight:700}
-.stats .remaining{color:#dc2626;font-weight:700}
-.bar-wrap{height:6px;flex:1;background:#e5e7eb;border-radius:99px;overflow:hidden;min-width:100px}
+.done{color:#059669;font-weight:700}.remaining{color:#dc2626;font-weight:700}
+.bar-wrap{height:6px;flex:1;background:#e5e7eb;border-radius:99px;overflow:hidden;min-width:80px}
 .bar-fill{height:100%;background:#059669;border-radius:99px;transition:width .3s}
 .grid{padding:10px 20px 100px;display:flex;flex-direction:column;gap:6px}
 .row{background:#fff;border:1px solid #e0e4d9;border-radius:12px;display:flex;align-items:stretch;overflow:hidden;transition:all .2s}
 .row.has-img{border-color:#bbf7d0;background:#f0fdf4}
-.row:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.row-img{width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:#fafbf8;border-right:1px solid #e0e4d9;flex-shrink:0;cursor:pointer;overflow:hidden}
+.row-img img{width:100%;height:100%;object-fit:cover}
 .row-info{flex:1;padding:10px 14px;min-width:0}
 .row-info h3{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row-info .meta{font-size:11px;color:#8a8d84;margin-top:2px}
 .row-flux{width:80px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;text-align:center;padding:4px}
 .flux-E{background:#059669}.flux-H{background:#d97706}.flux-C{background:#dc2626}
-.row-img{width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:#fafbf8;border-right:1px solid #e0e4d9;flex-shrink:0;cursor:pointer;overflow:hidden}
-.row-img img{width:100%;height:100%;object-fit:cover}
-.row-img .ph{font-size:20px;opacity:.25}
 .row-actions{display:flex;align-items:center;gap:6px;padding:0 10px;flex-shrink:0}
 .btn-s{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
-.btn-search{background:#eff6ff;color:#2563eb}.btn-search:hover{background:#dbeafe}
-.btn-up{background:#ecfdf5;color:#059669}.btn-up:hover{background:#d1fae5}
+.btn-search{background:#eff6ff;color:#2563eb}.btn-up{background:#ecfdf5;color:#059669}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center}
 .modal.on{display:flex}
 .modal-body{background:#fff;border-radius:20px;padding:24px;width:90%;max-width:440px;max-height:80vh;overflow-y:auto}
 .modal-body h3{font-size:16px;font-weight:800;margin-bottom:4px}
-.modal-body .hint{font-size:12px;color:#8a8d84;margin-bottom:14px}
+.hint{font-size:12px;color:#8a8d84;margin-bottom:14px}
 .dz{border:2px dashed #e0e4d9;border-radius:14px;padding:24px;text-align:center;cursor:pointer;margin-bottom:12px;transition:all .2s}
 .dz.over{border-color:#5a8a19;background:rgba(90,138,25,.04)}
 .dz input{display:none}
@@ -50,80 +46,70 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#f5f7f2;color:#1a1a1a
 .btn-cancel{width:100%;padding:10px;background:none;border:none;color:#8a8d84;font-size:13px;cursor:pointer;margin-top:6px}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1917;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;display:none}
 .tip{background:rgba(90,138,25,.06);border:1px solid rgba(90,138,25,.15);border-radius:10px;padding:12px 20px;font-size:12px;color:#4d7c0f;line-height:1.6;margin:10px 20px}
+.m-flux{display:flex;gap:8px;margin-bottom:14px}
+.m-flux label{flex:1;padding:10px;border:1.5px solid #e0e4d9;border-radius:10px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.m-flux input{display:none}
+.m-flux input:checked+span{background:var(--bg);color:var(--fg)}
+.m-flux label:has(input:checked){border-color:currentColor}
 </style>
 </head>
 <body>
 <div class="top">
   <h1>📷 Alimenter les images produits</h1>
-  <div class="sub">482 produits · Cliquez 🔍 pour chercher l'image sur Google, puis glissez-la dans 📷</div>
+  <div class="sub">482 produits · 🔍 Google Images → 📷 Upload</div>
 </div>
-<div class="tip">
-  <strong>Workflow rapide :</strong> Cliquez 🔍 → Google Images s'ouvre → clic droit sur la bonne image → "Enregistrer l'image sous" → revenez ici → cliquez 📷 → glissez ou sélectionnez l'image → Upload. ~30 sec par produit.
-</div>
+<div class="tip"><strong>Workflow :</strong> 🔍 ouvre Google Images → enregistrez la photo → 📷 uploadez-la. Choisissez le flux pour chaque image (EcoDDS, Hors, ou les deux).</div>
 <div class="toolbar">
-  <input id="search" type="text" placeholder="Filtrer les produits..." oninput="render()">
+  <input id="search" type="text" placeholder="Filtrer..." oninput="render()">
   <select id="filter-cat" onchange="render()"><option value="">Toutes catégories</option></select>
-  <select id="filter-status" onchange="render()">
-    <option value="">Tous</option>
-    <option value="missing" selected>Sans image</option>
-    <option value="done">Avec image</option>
-  </select>
-  <select id="site-code">
-    <option value="_GLOBAL">Global (tous les sites)</option>
-  </select>
+  <select id="filter-status" onchange="render()"><option value="">Tous</option><option value="missing" selected>Sans image</option><option value="done">Avec image</option></select>
+  <select id="site-code"><option value="_GLOBAL">Global</option></select>
 </div>
 <div class="stats">
   <span>Total: <strong id="st-t">0</strong></span>
   <span>✓ <strong id="st-d" class="done">0</strong></span>
   <span>✗ <strong id="st-r" class="remaining">0</strong></span>
-  <div class="bar-wrap"><div class="bar-fill" id="st-bar" style="width:0%"></div></div>
+  <div class="bar-wrap"><div class="bar-fill" id="st-bar"></div></div>
   <span id="st-pct" style="font-weight:700;font-size:12px">0%</span>
 </div>
 <div class="grid" id="grid"></div>
-
 <div class="modal" id="modal">
   <div class="modal-body">
     <h3 id="m-title">Produit</h3>
-    <div class="hint" id="m-hint">Catégorie</div>
+    <div class="hint" id="m-hint"></div>
+    <div class="m-flux">
+      <label style="--bg:#ecfdf5;--fg:#059669"><input type="radio" name="m-flux" value="" checked><span style="display:block;padding:4px;border-radius:6px">Tous les flux</span></label>
+      <label style="--bg:#ecfdf5;--fg:#059669;color:#059669"><input type="radio" name="m-flux" value="E"><span style="display:block;padding:4px;border-radius:6px">EcoDDS</span></label>
+      <label style="--bg:#fef3c7;--fg:#92400e;color:#d97706"><input type="radio" name="m-flux" value="H"><span style="display:block;padding:4px;border-radius:6px">Hors EcoDDS</span></label>
+    </div>
     <div class="dz" id="m-dz">
       <input type="file" id="m-file" accept="image/jpeg,image/png,image/webp">
-      <div>📷 <strong>Cliquer ou glisser l'image ici</strong><br><span style="font-size:12px;color:#8a8d84">JPG, PNG, WebP · 5 Mo max</span></div>
+      <div>📷 <strong>Cliquer ou glisser</strong><br><span style="font-size:12px;color:#8a8d84">JPG, PNG, WebP · 5 Mo max</span></div>
     </div>
     <div class="preview" id="m-prev"></div>
-    <a id="m-google" href="#" target="_blank" style="display:block;text-align:center;font-size:13px;color:#2563eb;font-weight:600;margin-bottom:14px">🔍 Ouvrir Google Images pour ce produit →</a>
-    <button class="btn-primary" id="m-upload" disabled>Uploader l'image</button>
+    <a id="m-google" href="#" target="_blank" style="display:block;text-align:center;font-size:13px;color:#2563eb;font-weight:600;margin-bottom:14px">🔍 Google Images →</a>
+    <button class="btn-primary" id="m-upload" disabled>Uploader</button>
     <button class="btn-cancel" id="m-cancel">Annuler</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
-
 <script src="config.js"></script>
 <script src="data.js"></script>
 <script>
 (function(){
 const API=((window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||"").replace(/\/$/,"");
 const DB=window.TRIDDS_DB||[];
-let prods=[];
-let imgIdx={};
-let curProd=null;
-let pendFile=null;
-
+let prods=[];let imgIdx={};let curProd=null;let pendFile=null;
 DB.forEach(p=>prods.push({name:p[0],flux:p[2],cat:p[3]||"",seuil:p[5]||""}));
-
 const cats=[...new Set(prods.map(p=>p.cat))].filter(Boolean).sort();
 const cs=document.getElementById("filter-cat");
 cats.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c+" ("+prods.filter(p=>p.cat===c).length+")";cs.appendChild(o)});
-
 async function loadExisting(){
   if(!API)return;
-  try{
-    const r=await fetch(API+"/public-images");
-    const d=await r.json();
-    if(d&&d.items)d.items.forEach(i=>{const k=(i.productName||"").toLowerCase().trim();if(k){let u=i.url||"";if(i.r2Key)u=API+"/img/"+i.r2Key;if(u.indexOf("tridds.com/api/img")>=0){const p=u.split("/api/img/")[1];if(p)u=API+"/img/"+p}imgIdx[k]=u||true}});
-  }catch(e){}
+  try{const r=await fetch(API+"/public-images");const d=await r.json();
+  if(d&&d.items)d.items.forEach(i=>{const k=(i.productName||"").toLowerCase().trim();if(k){let u=i.url||"";if(i.r2Key)u=API+"/img/"+i.r2Key;if(u.indexOf("tridds.com/api/img")>=0){const p=u.split("/api/img/")[1];if(p)u=API+"/img/"+p}imgIdx[k]=u||true}});}catch(e){}
   render();
 }
-
 function render(){
   const q=(document.getElementById("search").value||"").toLowerCase();
   const cat=document.getElementById("filter-cat").value;
@@ -132,9 +118,7 @@ function render(){
     if(q&&p.name.toLowerCase().indexOf(q)<0)return false;
     if(cat&&p.cat!==cat)return false;
     const has=!!imgIdx[p.name.toLowerCase().trim()];
-    if(st==="missing"&&has)return false;
-    if(st==="done"&&!has)return false;
-    return true;
+    if(st==="missing"&&has)return false;if(st==="done"&&!has)return false;return true;
   });
   const done=prods.filter(p=>!!imgIdx[p.name.toLowerCase().trim()]).length;
   const pct=Math.round(done/prods.length*100);
@@ -143,7 +127,6 @@ function render(){
   document.getElementById("st-r").textContent=prods.length-done;
   document.getElementById("st-bar").style.width=pct+"%";
   document.getElementById("st-pct").textContent=pct+"%";
-  
   const g=document.getElementById("grid");
   if(!f.length){g.innerHTML='<div style="text-align:center;padding:40px;color:#8a8d84">Aucun produit</div>';return}
   let h="";
@@ -153,76 +136,59 @@ function render(){
     const u=typeof has==="string"?has:null;
     const gq=encodeURIComponent(p.name+" produit chimique bricolage");
     const n=p.name.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-    h+=`<div class="row ${has?'has-img':''}">
-      <div class="row-img" onclick="openUp('${n}','${(p.cat||'').replace(/'/g,"\\'")}')">
-        ${u?`<img src="${u}" loading="lazy">`:'<div class="ph">📷</div>'}
-      </div>
-      <div class="row-info"><h3>${p.name}</h3><div class="meta">${p.cat}${p.seuil?' · '+p.seuil:''}</div></div>
-      <div class="row-flux flux-${p.flux}">${fl}</div>
-      <div class="row-actions">
-        <a class="btn-s btn-search" href="https://www.google.com/search?tbm=isch&q=${gq}" target="_blank">🔍</a>
-        <button class="btn-s btn-up" onclick="openUp('${n}','${(p.cat||'').replace(/'/g,"\\'")}')">📷</button>
-      </div>
-    </div>`;
+    const ct=(p.cat||"").replace(/'/g,"\\'");
+    h+='<div class="row '+(has?'has-img':'')+'"><div class="row-img" onclick="openUp(\''+n+'\',\''+ct+'\')">'+
+      (u?'<img src="'+u+'" loading="lazy">':'<div style="font-size:20px;opacity:.25">📷</div>')+
+      '</div><div class="row-info"><h3>'+p.name+'</h3><div class="meta">'+p.cat+(p.seuil?' · '+p.seuil:'')+'</div></div>'+
+      '<div class="row-flux flux-'+p.flux+'">'+fl+'</div><div class="row-actions">'+
+      '<a class="btn-s btn-search" href="https://www.google.com/search?tbm=isch&q='+gq+'" target="_blank">🔍</a>'+
+      '<button class="btn-s btn-up" onclick="openUp(\''+n+'\',\''+ct+'\')">📷</button></div></div>';
   });
   g.innerHTML=h;
 }
-
-const modal=document.getElementById("modal");
-const dz=document.getElementById("m-dz");
-const fi=document.getElementById("m-file");
-const prev=document.getElementById("m-prev");
+const modal=document.getElementById("modal");const dz=document.getElementById("m-dz");
+const fi=document.getElementById("m-file");const prev=document.getElementById("m-prev");
 const btnUp=document.getElementById("m-upload");
-
 window.openUp=function(name,cat){
   curProd=name;pendFile=null;
   document.getElementById("m-title").textContent=name;
   document.getElementById("m-hint").textContent=cat;
   document.getElementById("m-google").href="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(name+" produit chimique bricolage");
   prev.innerHTML="";btnUp.disabled=true;fi.value="";
+  document.querySelector('input[name="m-flux"][value=""]').checked=true;
   modal.classList.add("on");
 };
-
 document.getElementById("m-cancel").addEventListener("click",()=>modal.classList.remove("on"));
 modal.addEventListener("click",e=>{if(e.target===modal)modal.classList.remove("on")});
-
 dz.addEventListener("click",()=>fi.click());
 dz.addEventListener("dragover",e=>{e.preventDefault();dz.classList.add("over")});
 dz.addEventListener("dragleave",()=>dz.classList.remove("over"));
 dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("over");proc(e.dataTransfer.files[0])});
 fi.addEventListener("change",()=>proc(fi.files[0]));
-
 function proc(file){
-  if(!file||!file.type.match(/^image\/(jpeg|png|webp)$/)){toast("Format: JPG, PNG ou WebP");return}
+  if(!file||!file.type.match(/^image\/(jpeg|png|webp)$/))return;
   if(file.size>5*1024*1024){toast("Max 5 Mo");return}
   pendFile=file;
   const r=new FileReader();
-  r.onload=e=>{
-    prev.innerHTML=`<img src="${e.target.result}"><div style="font-size:12px;color:#059669;margin-top:6px;font-weight:700">✓ ${file.name} · ${(file.size/1024).toFixed(0)} Ko</div>`;
-    btnUp.disabled=false;
-  };
+  r.onload=e=>{prev.innerHTML='<img src="'+e.target.result+'"><div style="font-size:12px;color:#059669;margin-top:6px;font-weight:700">✓ '+(file.size/1024).toFixed(0)+' Ko</div>';btnUp.disabled=false;};
   r.readAsDataURL(file);
 }
-
 btnUp.addEventListener("click",async()=>{
   if(!pendFile||!curProd||!API)return;
   btnUp.disabled=true;btnUp.textContent="Envoi...";
   try{
     const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=()=>rej(new Error("Err"));r.readAsDataURL(pendFile)});
     const code=document.getElementById("site-code").value;
-    const r=await fetch(API+"/product-images",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,action:"save",agent:"admin-bulk",imageData:b64,imageMime:pendFile.type,item:{productName:curProd,alt:curProd,source:"google-images",isPrimary:true,order:0}})});
+    const flux=document.querySelector('input[name="m-flux"]:checked').value;
+    const r=await fetch(API+"/product-images",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,action:"save",agent:"admin-bulk",imageData:b64,imageMime:pendFile.type,item:{productName:curProd,alt:curProd,source:"google-images",isPrimary:true,order:0,imageFlux:flux}})});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     imgIdx[curProd.toLowerCase().trim()]=d.item?d.item.url:true;
-    toast("✓ "+curProd);
-    modal.classList.remove("on");
-    render();
+    toast("✓ "+curProd);modal.classList.remove("on");render();
   }catch(e){toast("Erreur: "+e.message)}
-  btnUp.disabled=false;btnUp.textContent="Uploader l'image";
+  btnUp.disabled=false;btnUp.textContent="Uploader";
 });
-
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",3000)}
-
 loadExisting();
 })();
 </script>

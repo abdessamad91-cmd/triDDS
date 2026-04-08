@@ -37,7 +37,7 @@
       <div>
         <div class="pill pill-blue">🛡️ Administration centrale</div>
         <h1>Tableau de pilotage</h1>
-        <p>Une administration unifiée pour les accès, les ventes, les sessions, la base produits et la base de connaissance.</p>
+        <p>Gérez vos sites, produits, photos et équipes depuis une seule interface.</p>
       </div>
       <div class="actions">
         <button id="btn-refresh" class="btn btn-soft">Actualiser</button>
@@ -45,14 +45,11 @@
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" data-tab="overview">Vue d’ensemble</button>
-      <button class="tab" data-tab="sites">Sites</button>
-      <button class="tab" data-tab="sales">Ventes</button>
-      <button class="tab" data-tab="sessions">Sessions</button>
-      <button class="tab" data-tab="catalog">Base produits</button>
-      <button class="tab" data-tab="knowledge">Base de connaissance</button>
-      <button class="tab" data-tab="images">Images</button>
-      <button class="tab" data-tab="mainbase">Base principale</button>
+      <button class="tab active" data-tab="overview">Tableau de bord</button>
+      <button class="tab" data-tab="sites">Sites & accès</button>
+      <button class="tab" data-tab="activity">Activité</button>
+      <button class="tab" data-tab="catalog">Produits</button>
+      <button class="tab" data-tab="images">Photos</button>
     </div>
 
     <section data-section="overview">
@@ -90,20 +87,44 @@
       <div class="panel" style="margin-top:18px"><div class="panel-title"><div><h2>Tous les sites</h2><div class="panel-sub">Gestion complète des accès, plans et agents.</div></div></div><div id="sites-list"></div></div>
     </section>
 
-    <section data-section="sales" class="hidden"><div class="panel"><div class="panel-title"><div><h2>Historique des ventes</h2><div class="panel-sub">Achats Stripe enregistrés</div></div></div><div id="sales-full"></div></div></section>
-    <section data-section="sessions" class="hidden"><div class="panel"><div class="panel-title"><div><h2>Sessions actives</h2><div class="panel-sub">Déconnexion forcée possible</div></div></div><div id="sessions-full"></div></div></section>
-
-    <section data-section="catalog" class="hidden">
+    <section data-section="activity" class="hidden">
       <div class="grid">
-        <div class="panel"><div class="panel-title"><div><h2>Catalogue global</h2><div class="panel-sub">Fiches personnalisées par client et par site.</div></div></div><div class="toolbar"><select id="flt-cat-site"><option value="">Tous les sites</option></select><input id="flt-cat-search" placeholder="Rechercher un produit, une catégorie, un client..."><button id="btn-cat-new" class="btn btn-primary btn-sm">+ Nouvelle fiche</button></div><div id="catalog-table"></div></div>
-        <aside class="panel"><div class="panel-title"><div><h2 id="cat-form-title">Nouvelle fiche</h2><div class="panel-sub">Créez une fiche rapidement sans vous perdre dans les champs.</div></div></div><div class="helper-box"><div class="helper-title">Méthode simple</div><div class="helper-text">Pour enregistrer une fiche, il suffit de remplir <strong>Site</strong>, <strong>Nom du produit</strong>, <strong>Flux</strong> et <strong>Catégorie</strong>. Les autres champs sont optionnels.</div></div><div class="form-grid"><div class="field full"><div class="label">Site</div><select id="cat-code"></select></div><div class="field full"><div class="label">Nom du produit</div><input id="cat-name" placeholder="Ex. Décapant gel façade"></div><div class="field"><div class="label">Flux</div><select id="cat-flux"><option value="H">Hors EcoDDS</option><option value="E">EcoDDS</option><option value="D">Déchets dangereux</option><option value="R">Réemploi</option></select></div><div class="field"><div class="label">Catégorie</div><input id="cat-category" placeholder="Ex. Solvants"></div><div class="full optional-note"><button type="button" id="btn-cat-advanced" class="link-btn">Afficher les champs optionnels</button></div><div id="cat-advanced" class="hidden full"><div class="field full"><div class="label">Orientation / consigne (optionnel)</div><textarea id="cat-orientation" placeholder="Consigne de tri / orientation recommandée"></textarea></div><div class="field full"><div class="label">Sous-catégorie / précision (optionnel)</div><input id="cat-sub" placeholder="Ex. Décapants / dissolvants"></div><div class="field full"><div class="label">Synonymes (optionnel)</div><input id="cat-syn" placeholder="séparés par des virgules"></div></div><div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button id="btn-cat-save" class="btn btn-primary">Enregistrer</button><button id="btn-cat-delete" class="btn btn-red hidden">Supprimer</button><button id="btn-cat-cancel" class="btn btn-soft hidden">Annuler</button></div><div id="cat-meta" class="mini full"></div></div></aside>
+        <div class="panel"><div class="panel-title"><div><h2>Ventes</h2><div class="panel-sub">Historique des achats Stripe</div></div></div><div id="sales-full"></div></div>
+        <div class="panel"><div class="panel-title"><div><h2>Sessions actives</h2><div class="panel-sub">Qui est connecté</div></div></div><div id="sessions-full"></div></div>
       </div>
     </section>
 
-    <section data-section="knowledge" class="hidden">
+    <section data-section="catalog" class="hidden">
       <div class="grid">
-        <div class="panel"><div class="panel-title"><div><h2>Entrées apprises</h2><div class="panel-sub">Vue consolidée de la mémoire partagée.</div></div></div><div class="toolbar"><select id="flt-kn-site"><option value="">Tous les sites</option></select><input id="flt-kn-search" placeholder="Rechercher une marque, un produit, une catégorie, un client..."><button id="btn-kn-new" class="btn btn-primary btn-sm">+ Nouvelle entrée</button></div><div id="knowledge-table"></div></div>
-        <aside class="panel"><div class="panel-title"><div><h2 id="kn-form-title">Nouvelle entrée</h2><div class="panel-sub">Un formulaire guidé pour corriger la mémoire sans ambiguïté.</div></div></div><div class="helper-box"><div class="helper-title">Méthode simple</div><div class="helper-text">Le minimum pour enregistrer est : <strong>Site</strong> + <strong>Marque / libellé appris</strong>. Si tu connais déjà le bon produit, le flux et la catégorie, ajoute-les tout de suite. Sinon tu pourras compléter plus tard.</div></div><div class="form-grid"><div class="field full"><div class="label">Site</div><select id="kn-code"></select></div><div class="field full"><div class="label">Marque / libellé appris</div><input id="kn-brand" placeholder="Ex. Décapex"></div><div class="field full"><div class="label">Produit associé</div><input id="kn-product" placeholder="Ex. Décapant gel façade"></div><div class="field"><div class="label">Flux</div><select id="kn-flux"><option value="H">Hors EcoDDS</option><option value="E">EcoDDS</option><option value="D">Déchets dangereux</option><option value="R">Réemploi</option></select></div><div class="field"><div class="label">Catégorie</div><input id="kn-category" placeholder="Ex. Solvants"></div><div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button id="btn-kn-save" class="btn btn-primary">Enregistrer</button><button id="btn-kn-promote" class="btn btn-green hidden">Envoyer vers la base produits</button><button id="btn-kn-delete" class="btn btn-red hidden">Supprimer</button><button id="btn-kn-cancel" class="btn btn-soft hidden">Annuler</button></div><div id="kn-meta" class="mini full"></div></div></aside>
+        <div class="panel"><div class="panel-title"><div><h2>Produits</h2><div class="panel-sub">Fiches personnalisées, mémoire apprise et base de référence</div></div></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn btn-sm js-sub-tab active" data-sub="cat-view" style="font-size:12px" onclick="document.querySelectorAll('.cat-sub').forEach(s=>s.classList.add('hidden'));document.getElementById('cat-view').classList.remove('hidden');document.querySelectorAll('.js-sub-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Fiches produits</button>
+            <button class="btn btn-sm js-sub-tab" data-sub="kn-view" style="font-size:12px" onclick="document.querySelectorAll('.cat-sub').forEach(s=>s.classList.add('hidden'));document.getElementById('kn-view').classList.remove('hidden');document.querySelectorAll('.js-sub-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Mémoire IA</button>
+            <button class="btn btn-sm js-sub-tab" data-sub="mb-view" style="font-size:12px" onclick="document.querySelectorAll('.cat-sub').forEach(s=>s.classList.add('hidden'));document.getElementById('mb-view').classList.remove('hidden');document.querySelectorAll('.js-sub-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Base référence (482)</button>
+            <a href="./bulk-upload.html" target="_blank" class="btn btn-green btn-sm" style="font-size:12px;text-decoration:none">📷 Upload en masse</a>
+          </div>
+          <div id="cat-view" class="cat-sub"><div class="toolbar"><select id="flt-cat-site"><option value="">Tous les sites</option></select><input id="flt-cat-search" placeholder="Rechercher un produit, une catégorie, un client..."><button id="btn-cat-new" class="btn btn-primary btn-sm">+ Nouvelle fiche</button></div><div id="catalog-table"></div></div>
+        <aside class="panel"><div class="panel-title"><div><h2 id="cat-form-title">Nouvelle fiche</h2><div class="panel-sub">Créez une fiche rapidement sans vous perdre dans les champs.</div></div></div><div class="helper-box"><div class="helper-title">3 champs suffisent</div><div class="helper-text">Remplissez <strong>Site</strong>, <strong>Nom</strong> et <strong>Catégorie</strong>. Le flux se choisit dans la liste. Tout le reste est optionnel.</div></div><div class="form-grid"><div class="field full"><div class="label">Site</div><select id="cat-code"></select></div><div class="field full"><div class="label">Nom du produit</div><input id="cat-name" placeholder="Ex. Décapant gel façade"></div><div class="field"><div class="label">Flux</div><select id="cat-flux" style="font-weight:700"><option value="E" style="color:#059669">✓ EcoDDS</option><option value="H" style="color:#d97706">✗ Hors EcoDDS</option><option value="C" style="color:#dc2626">⛔ Interdit / Cas spécial</option></select></div><div class="field"><div class="label">Catégorie</div><select id="cat-category"><option value="">Choisir...</option><option value="Acides">Acides</option><option value="Aérosols">Aérosols</option><option value="Autres DDS liquides">Autres DDS liquides</option><option value="Bases">Bases</option><option value="Batteries">Batteries</option><option value="Bidons vides de combustibles de chauffage">Bidons vides</option><option value="Cartouches de gaz">Cartouches de gaz</option><option value="Comburants">Comburants</option><option value="Emballages souillés standards">Emballages souillés</option><option value="Filtres">Filtres</option><option value="Huiles usagées">Huiles usagées</option><option value="Pâteux">Pâteux</option><option value="Phytos et biocides">Phytos et biocides</option><option value="Phytosanitaires">Phytosanitaires</option><option value="Solvants">Solvants</option><option value="Produits non ID ou Laboratoire">Produits non ID</option></select></div><div class="full optional-note"><button type="button" id="btn-cat-advanced" class="link-btn">Afficher les champs optionnels</button></div><div id="cat-advanced" class="hidden full"><div class="field full"><div class="label">Orientation / consigne (optionnel)</div><textarea id="cat-orientation" placeholder="Consigne de tri / orientation recommandée"></textarea></div><div class="field full"><div class="label">Sous-catégorie / précision (optionnel)</div><input id="cat-sub" placeholder="Ex. Décapants / dissolvants"></div><div class="field full"><div class="label">Synonymes (optionnel)</div><input id="cat-syn" placeholder="séparés par des virgules"></div></div><div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button id="btn-cat-save" class="btn btn-primary">Enregistrer</button><button id="btn-cat-delete" class="btn btn-red hidden">Supprimer</button><button id="btn-cat-cancel" class="btn btn-soft hidden">Annuler</button></div><div id="cat-meta" class="mini full"></div></div></aside>
+      </div>
+          </div>
+          <div id="kn-view" class="cat-sub hidden">
+            <div class="toolbar"><select id="flt-kn-site"><option value="">Tous les sites</option></select><input id="flt-kn-search" placeholder="Rechercher une marque..."><button id="btn-kn-new" class="btn btn-primary btn-sm">+ Entrée</button></div>
+            <div id="knowledge-table"></div>
+          </div>
+          <div id="mb-view" class="cat-sub hidden">
+            <div class="toolbar">
+              <select id="flt-main-sheet"><option value="Produits_Normalises">Produits_Normalises</option><option value="Flux_Reference">Flux_Reference</option><option value="Regles_Keywords">Regles_Keywords</option><option value="Synonymes">Synonymes</option></select>
+              <input id="flt-main-search" placeholder="Rechercher...">
+              <select id="flt-main-page-size"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>
+            </div>
+            <div class="mainbase-stats"><span class="mini-pill badge-sheet" id="mainbase-sheet-pill">Feuille</span><span class="mini-pill badge-count" id="mainbase-count-pill">0</span><span class="mini-pill badge-cols" id="mainbase-cols-pill">0</span></div>
+            <div id="mainbase-table"></div>
+            <div class="pager"><div class="mini" id="mainbase-meta"></div><div class="pager-actions"><button id="btn-main-prev" class="btn btn-soft btn-sm">←</button><span class="mini" id="mainbase-page-info">1/1</span><button id="btn-main-next" class="btn btn-soft btn-sm">→</button></div></div>
+          </div>
+        </div>
+      <div class="grid">
+        <div class="panel" style="display:none"><div id="kn-old-placeholder"></div></div>
+        <aside class="panel"><div class="panel-title"><div><h2 id="kn-form-title">Nouvelle entrée</h2><div class="panel-sub">Un formulaire guidé pour corriger la mémoire sans ambiguïté.</div></div></div><div class="helper-box"><div class="helper-title">Méthode simple</div><div class="helper-text">Le minimum pour enregistrer est : <strong>Site</strong> + <strong>Marque / libellé appris</strong>. Si tu connais déjà le bon produit, le flux et la catégorie, ajoute-les tout de suite. Sinon tu pourras compléter plus tard.</div></div><div class="form-grid"><div class="field full"><div class="label">Site</div><select id="kn-code"></select></div><div class="field full"><div class="label">Marque / libellé appris</div><input id="kn-brand" placeholder="Ex. Décapex"></div><div class="field full"><div class="label">Produit associé</div><input id="kn-product" placeholder="Ex. Décapant gel façade"></div><div class="field"><div class="label">Flux</div><select id="kn-flux" style="font-weight:700"><option value="E" style="color:#059669">✓ EcoDDS</option><option value="H" style="color:#d97706">✗ Hors EcoDDS</option><option value="C" style="color:#dc2626">⛔ Interdit / Cas spécial</option></select></div><div class="field"><div class="label">Catégorie</div><select id="kn-category"><option value="">Choisir...</option><option value="Acides">Acides</option><option value="Aérosols">Aérosols</option><option value="Autres DDS liquides">Autres DDS liquides</option><option value="Bases">Bases</option><option value="Comburants">Comburants</option><option value="Huiles usagées">Huiles usagées</option><option value="Pâteux">Pâteux</option><option value="Phytos et biocides">Phytos et biocides</option><option value="Phytosanitaires">Phytosanitaires</option><option value="Solvants">Solvants</option></select></div><div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button id="btn-kn-save" class="btn btn-primary">Enregistrer</button><button id="btn-kn-promote" class="btn btn-green hidden">Envoyer vers la base produits</button><button id="btn-kn-delete" class="btn btn-red hidden">Supprimer</button><button id="btn-kn-cancel" class="btn btn-soft hidden">Annuler</button></div><div id="kn-meta" class="mini full"></div></div></aside>
       </div>
     </section>
 
@@ -121,7 +142,7 @@
         </div>
         <aside class="panel">
           <div class="panel-title"><div><h2 id="img-form-title">Nouvelle image</h2><div class="panel-sub">Associez une image URL à un produit du catalogue.</div></div></div>
-          <div class="helper-box"><div class="helper-title">Format attendu</div><div class="helper-text">Collez l'URL d'une image hébergée (Cloudflare R2, Imgur, etc.). Formats supportés : JPG, PNG, WebP. Taille recommandée : 400x400 minimum.</div></div>
+          <div class="helper-box"><div class="helper-title">Upload direct</div><div class="helper-text">Glissez-déposez une photo ou cliquez pour la sélectionner. Elle sera stockée dans votre espace Cloudflare R2. Choisissez le flux pour afficher la bonne photo selon le classement.</div></div>
           <div class="form-grid">
             <div class="field full"><div class="label">Site</div><select id="img-code"></select></div>
             <div class="field full"><div class="label">Nom du produit</div><input id="img-product" placeholder="Ex. White spirit"></div>
@@ -137,6 +158,7 @@
             <div class="field full"><div class="label">Texte alternatif</div><input id="img-alt" placeholder="Description de l'image"></div>
             <div class="field"><div class="label">Source</div><input id="img-source" placeholder="Ex. EcoDDS, Photo terrain"></div>
             <div class="field"><div class="label">Ordre</div><input id="img-order" type="number" value="0" min="0"></div>
+            <div class="field"><div class="label">Flux de l'image</div><select id="img-flux"><option value="">Tous les flux (EcoDDS + Hors)</option><option value="E">EcoDDS uniquement</option><option value="H">Hors EcoDDS uniquement</option></select></div>
             <div class="field full" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="img-primary" style="width:18px;height:18px"> <label for="img-primary" style="font-size:13px;font-weight:700">Image principale</label></div>
             <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
               <button id="btn-img-save" class="btn btn-primary">Enregistrer</button>
@@ -150,7 +172,7 @@
       </div>
     </section>
 
-    <section data-section="mainbase" class="hidden">
+    <section data-section="mainbase" style="display:none" class="hidden">
       <div class="panel">
         <div class="panel-title"><div><h2>Base principale officielle</h2><div class="panel-sub">Référence centrale importée depuis le fichier maître.</div></div></div>
         <div class="toolbar">
@@ -196,7 +218,18 @@ function api(action,data){if(!API)return Promise.reject(new Error('Backend non c
 function planBadge(p){return {free:'<span class="badge b-free">Accès Base</span>',pro:'<span class="badge b-pro">Pro Site</span>',multisite:'<span class="badge b-multi">Multi-sites</span>',enterprise:'<span class="badge b-ent">Entreprise</span>'}[p]||''}
 function statusBadge(active){return active?'<span class="badge b-on">Actif</span>':'<span class="badge b-off">Désactivé</span>'}
 function roleBadge(role){return role==='responsable'?'<span class="role role-resp">Responsable</span>':'<span class="role role-agent">Agent</span>'}
-function setTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('[data-section]').forEach(s=>s.classList.toggle('hidden',s.dataset.section!==name));window.scrollTo({top:0,behavior:'smooth'})}
+function setTab(name){
+  // Map old tab names to new
+  var map={sales:'activity',sessions:'activity',knowledge:'catalog',mainbase:'catalog'};
+  name=map[name]||name;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('[data-section]').forEach(s=>{
+    var show=s.dataset.section===name;
+    if(s.style.display==='none')show=false;
+    s.classList.toggle('hidden',!show);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 async function loadAll(){const [dash,cat,kn,mb]=await Promise.all([api('dashboard'),api('catalog-admin-list'),api('knowledge-admin-list'),fetch('./base-principale.json').then(r=>r.json())]);state.dashboard=dash;state.catalog=cat;state.knowledge=kn;state.mainbase=mb;renderAll();loadImages().catch(()=>{})}
 function renderOverview(){const s=state.dashboard.stats||{};$('kpi-sites').textContent=s.activeSites||0;$('kpi-sessions').textContent=s.activeSessions||0;$('kpi-sales').textContent=s.totalSales||0;$('kpi-mrr').textContent=euro(s.mrr||0);$('kpi-brands').textContent=s.totalBrands||0;renderSalesTable((state.dashboard.sales||[]).slice(0,5),'sales-preview');renderSalesTable(state.dashboard.sales||[],'sales-full');renderSessions((state.dashboard.sessions||[]).slice(0,4),'sessions-preview');renderSessions(state.dashboard.sessions||[],'sessions-full')}
 function renderSalesTable(items,target){const el=$(target);if(!items.length){el.innerHTML='<div class="empty">Aucune vente enregistrée.</div>';return;}let h='<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Site</th><th>Plan</th><th>Montant</th><th>Email</th><th>Code</th></tr></thead><tbody>';items.forEach(s=>h+=`<tr><td>${esc(dt(s.date))}</td><td><strong>${esc(s.site)}</strong></td><td>${planBadge(s.plan)}</td><td>${esc(euro(s.amount))}</td><td class="mini">${esc(s.adminEmail||'—')}</td><td class="code">${esc(s.code||'—')}</td></tr>`);h+='</tbody></table></div>';el.innerHTML=h}
@@ -295,7 +328,7 @@ function resetImg(){
   $('img-form-title').textContent='Nouvelle image';
   $('img-code').value=$('flt-img-site').value||imagesState.sites[0]?.code||'';
   $('img-product').value='';$('img-url').value='';$('img-alt').value='';
-  $('img-source').value='';$('img-order').value='0';$('img-primary').checked=false;
+  $('img-source').value='';$('img-order').value='0';$('img-primary').checked=false;$('img-flux').value='';
   $('btn-img-delete').classList.add('hidden');$('btn-img-cancel').classList.add('hidden');
   $('img-preview').innerHTML='';$('img-meta').textContent='';
   $('img-drop-label').style.display='block';$('img-drop-preview').style.display='none';
@@ -309,7 +342,7 @@ function startImgEdit(code,id){
   $('img-form-title').textContent='Modifier l\'image';
   $('img-code').value=item.code;$('img-product').value=item.productName||'';
   $('img-url').value=item.url||'';$('img-alt').value=item.alt||'';
-  $('img-source').value=item.source||'';$('img-order').value=item.order||0;
+  $('img-source').value=item.source||'';$('img-flux').value=item.imageFlux||'';$('img-order').value=item.order||0;
   $('img-primary').checked=!!item.isPrimary;
   $('btn-img-delete').classList.remove('hidden');$('btn-img-cancel').classList.remove('hidden');
   pendingImageData=null;
@@ -337,7 +370,7 @@ async function saveImg(){
 
   const payload={
     code, action:'save', agent:'superadmin',
-    item:{ id:editImg?editImg.id:'', productName, url:existingUrl, alt, source, order, isPrimary }
+    item:{ id:editImg?editImg.id:'', productName, url:existingUrl, alt, source, order, isPrimary, imageFlux:$('img-flux').value }
   };
 
   // If a new file was selected, include base64 data

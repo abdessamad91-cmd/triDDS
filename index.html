@@ -178,6 +178,15 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .hist-card{opacity:.85}
 .hist-card:hover{opacity:1}
 
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px}
+.lightbox.on{display:flex}
+.lightbox img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:12px}
+.lightbox-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lightbox-nav{display:flex;gap:8px;margin-top:12px}
+.lightbox-nav button{padding:8px 16px;border-radius:8px;background:rgba(255,255,255,.15);color:#fff;border:none;font-size:14px;cursor:pointer}
+
 /* Product image gallery */
 .prod-gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0;margin-top:8px}
 .prod-gallery img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);flex-shrink:0}
@@ -514,6 +523,17 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 </div>
 
 
+
+<!-- ===== LIGHTBOX ===== -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('on')">✕</button>
+  <img id="lightbox-img" src="">
+  <div class="lightbox-nav">
+    <button onclick="lightboxNav(-1)">← Précédent</button>
+    <button onclick="lightboxNav(1)">Suivant →</button>
+  </div>
+</div>
+
 <!-- ===== GLOBAL TAB BAR (always visible when logged in) ===== -->
 <div class="tabs" id="main-tabs" style="display:none"><div class="tabs-inner">
   <button class="act" data-t="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Recherche</button>
@@ -563,7 +583,7 @@ var P=DB.map(function(p){return{n:p[0],q:p[1],f:p[2],x:p[3]||"",c:p[4]||"",s:p[5
 // ===== AUTH & SESSION =====
 var sess={code:"",site:"",clientName:"",agent:"",agentRole:"agent",canManageUsers:false,canManageCatalog:false,plan:"free",memoryEnabled:false,aiEnabled:false,trialTotal:2,trialUsed:0,trialRemaining:2,monthlyLimit:0,monthlyUsed:0,monthlyRemaining:0,sessionId:"",deviceName:""};
 var customCatalog=[];
-var productImages={};
+var productImages={};var catImages={};
 function loadSess(){try{var d=JSON.parse(localStorage.getItem("tridds_sess"));if(d&&d.code)sess=d}catch(e){}}
 function saveSess(){localStorage.setItem("tridds_sess",JSON.stringify(sess))}
 function isLoggedIn(){return!!sess.code}
@@ -616,28 +636,24 @@ function _mergeImages(items){
 function loadProductImages(){
   if(!API_BASE)return Promise.resolve();
   var baseUrl=API_BASE.replace(/\/$/,"");
-  // Use public-images endpoint — returns all images across all sites
-  return fetch(baseUrl+"/public-images",{method:"GET"})
-  .then(function(r){return r.json()})
-  .then(function(d){
-    if(d&&d.items&&d.items.length>0){
-      _mergeImages(d.items);
-      _imgLoaded=true;
-      if(st.screen==="home")renderHistory();
-    }
-  }).catch(function(){
-    // Fallback: try site-specific if public endpoint not available
-    if(sess.code&&sess.code!=="DEMO"){
-      return fetch(baseUrl+"/product-images",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:sess.code,action:"list-all"})})
-      .then(function(r){return r.json()})
-      .then(function(d){
-        if(d&&d.items&&d.items.length>0){
-          _mergeImages(d.items);
-          _imgLoaded=true;
-          if(st.screen==="home")renderHistory();
-        }
-      }).catch(function(){});
-    }
+  var p1=fetch(baseUrl+"/public-images",{method:"GET"})
+    .then(function(r){return r.json()})
+    .then(function(d){if(d&&d.items)_mergeImages(d.items)})
+    .catch(function(){
+      if(sess.code&&sess.code!=="DEMO"){
+        return fetch(baseUrl+"/product-images",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:sess.code,action:"list-all"})})
+          .then(function(r){return r.json()})
+          .then(function(d){if(d&&d.items)_mergeImages(d.items)})
+          .catch(function(){});
+      }
+    });
+  var p2=fetch(baseUrl+"/cat-images",{method:"GET"})
+    .then(function(r){return r.json()})
+    .then(function(d){if(d&&d.categories){catImages={};Object.keys(d.categories).forEach(function(k){var img=d.categories[k];_fixImgUrl(img);catImages[k.toLowerCase().trim()]=img.url})}})
+    .catch(function(){});
+  return Promise.all([p1,p2]).then(function(){
+    _imgLoaded=true;
+    if(st.screen==="home")renderHistory();
   });
 }
 var _imgRetries=0;
@@ -647,17 +663,33 @@ function ensureImagesLoaded(){
   loadProductImages();
   setTimeout(ensureImagesLoaded,3000);
 }
-function getProductImage(name){
+function getProductImage(name,flux){
   if(!name)return null;
   var key=name.toLowerCase().trim();
   var imgs=productImages[key];
-  if(imgs&&imgs.length)return imgs[0].url;
-  return null;
+  if(!imgs||!imgs.length){
+    // Fallback: category image
+    var category;var found=window.TRIDDS_DB&&window.TRIDDS_DB.find(function(p){return p[0]===name});if(found)category=found[3]||"";
+    if(category){var ck=category.toLowerCase().trim();if(catImages[ck])return catImages[ck]}
+    return null;
+  }
+  if(flux){
+    var tagged=imgs.filter(function(i){return i.imageFlux===flux});
+    if(tagged.length)return tagged[0].url;
+    var generic=imgs.filter(function(i){return!i.imageFlux||i.imageFlux==="all"||i.imageFlux===""});
+    if(generic.length)return generic[0].url;
+  }
+  return imgs[0].url;
 }
-function getProductImages(name){
+function getProductImages(name,flux){
   if(!name)return[];
   var key=name.toLowerCase().trim();
-  return productImages[key]||[];
+  var all=productImages[key]||[];
+  if(!flux||!all.length)return all;
+  var tagged=all.filter(function(i){return i.imageFlux===flux});
+  if(tagged.length)return tagged;
+  var generic=all.filter(function(i){return!i.imageFlux||i.imageFlux==="all"||i.imageFlux===""});
+  return generic.length?generic:all;
 }
 function startAgentSession(code,agent,force){
   return authPost({action:"start-session",code:code,agent:agent,sessionId:sess.sessionId||"",deviceName:deviceName(),force:!!force}).then(function(d){
@@ -825,7 +857,7 @@ function resCard(r,extra){
   if(r.s)details.push(r.s);
   if(r.vol)details.push(r.vol);
   var bacName=r.x?r.x.split("/")[0].trim():"";
-  var imgUrl=r.imageUrl||getProductImage(r.n)||null;
+  var imgUrl=r.imageUrl||getProductImage(r.n,r.f)||null;
   var imgHtml='';
   if(imgUrl)imgHtml='<div class="rc-img"><img src="'+imgUrl+'" alt="'+r.n+'" loading="lazy"></div>';
   else if(r.cropImage)imgHtml='<div class="rc-img"><img src="'+r.cropImage+'" alt="'+r.n+'"></div>';
@@ -833,6 +865,26 @@ function resCard(r,extra){
 }
 
 // ===== SCREENS =====
+
+// Mapping EcoDDS category -> Hors EcoDDS bac name
+var HORS_BAC_MAP={
+  "autres dds liquides":"Solvants",
+  "acides":"Acides",
+  "bases":"Bases",
+  "pâteux":"Pâteux",
+  "pateux":"Pâteux",
+  "aérosols":"Aérosols",
+  "aerosols":"Aérosols",
+  "comburants":"Comburants",
+  "phytos et biocides":"Phytosanitaires",
+  "filtres":"Filtres"
+};
+function getHorsBac(ecoCategory){
+  if(!ecoCategory)return"Solvants";
+  var k=ecoCategory.toLowerCase().trim();
+  return HORS_BAC_MAP[k]||ecoCategory;
+}
+
 function show(id){document.querySelectorAll(".S").forEach(function(e){e.classList.remove("on")});var e=document.getElementById("s-"+id);if(e)e.classList.add("on");st.screen=id;
   var tabs=document.getElementById("main-tabs");
   if(tabs){var showTabs=isLoggedIn()&&id!=="login"&&id!=="cam"&&id!=="load";tabs.style.display=showTabs?"flex":"none"}
@@ -858,7 +910,7 @@ function renderHistory(){
     var s=fSt(x.f);
     var details=[];if(x.x)details.push(x.x);if(x.s)details.push(x.s);if(x.vol)details.push(x.vol);
     var bacName=x.x?x.x.split("/")[0].trim():"";
-    var histImg=x.img||getProductImage(x.nm)||null;
+    var histImg=x.img||getProductImage(x.nm,x.f)||null;
     var imgH='';if(histImg)imgH='<div class="rc-img"><img src="'+histImg+'" loading="lazy"></div>';
     h+='<div class="res-card hist-card" style="margin-bottom:5px;cursor:pointer" onclick="window._openHist('+i+')">'+imgH+'<div class="rc-info"><h4>'+x.nm+'</h4><p>'+(details.length?details.join(' · '):'')+'</p></div><div class="rc-flux '+s.rc+'"><div class="rf-label">'+s.lb+'</div>'+(bacName?'<div class="rf-bac">'+bacName+'</div>':'')+'</div></div>';
   });
@@ -897,15 +949,15 @@ window._openHist=function(i){
   var res=searchAll(x.nm);
   if(res.length&&res[0].n===x.nm){
     // Found exact match - show full result with all data
-    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm)||x.img||null});
+    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm,x.f)||x.img||null});
     showRes();
   } else if(res.length&&res[0].score>=80){
     // Close match
-    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm)||x.img||null});
+    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm,x.f)||x.img||null});
     showRes();
   } else {
     // Not found in DB - show with history data
-    st.result={n:x.nm,f:x.f,x:x.x||"",s:x.s||"",c:"",conf:85,nv:false,vol:x.vol||"",imageUrl:getProductImage(x.nm)||x.img||null};
+    st.result={n:x.nm,f:x.f,x:x.x||"",s:x.s||"",c:"",conf:85,nv:false,vol:x.vol||"",imageUrl:getProductImage(x.nm,x.f)||x.img||null};
     showRes();
   }
 };
@@ -920,66 +972,77 @@ function doSearch(){
 
 // ===== DISAMBIG/VOLUME =====
 function showDis(){show("dis");document.getElementById("dis-cnt").textContent=st.matches.length;document.getElementById("dis-info").innerHTML="<strong>"+st.matches.length+"</strong> produits correspondent";var h="";st.matches.forEach(function(m,i){h+=resCard(m,' data-i="'+i+'" class="res-card fu di" style="cursor:pointer;animation-delay:'+(i*40)+'ms"')});document.getElementById("dis-list").innerHTML=h;document.querySelectorAll(".di").forEach(function(b){b.addEventListener("click",function(){selectProd(st.matches[parseInt(b.dataset.i)])})})}
-function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s;var volImg=getProductImage(p.n);var volImgEl=document.getElementById("vol-img");if(volImgEl){if(volImg){volImgEl.src=volImg;volImgEl.style.display="block"}else{volImgEl.style.display="none"}}}else{st.result=Object.assign({},p,{conf:85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:85,validationType:"confirmed"});showRes()}}
+function selectProd(p){if(p.s&&p.f==="E"){st.result=Object.assign({},p);show("vol");var s=fSt(p.f);document.getElementById("vol-hdr").style.background=s.bn;document.getElementById("vol-name").textContent=p.n;document.getElementById("vol-prod").style.borderColor=s.bd;document.getElementById("vol-prod").style.background=s.bg;document.getElementById("vol-flux").textContent=FM[p.f]+" · "+p.x;document.getElementById("vol-seuil").textContent=p.s;var volImg=getProductImage(p.n,p.f);var volImgEl=document.getElementById("vol-img");if(volImgEl){if(volImg){volImgEl.src=volImg;volImgEl.style.display="block"}else{volImgEl.style.display="none"}}}else{st.result=Object.assign({},p,{conf:85});addHist(st.result);addJournal({name:st.result.n,flux:st.result.f,category:st.result.x,confidence:85,validationType:"confirmed"});showRes()}}
 
 // ===== RESULT =====
 function showRes(){
   show("res");var r=st.result,s=fSt(r.f);
   document.getElementById("res-title").textContent=r.n;
-  var fb=document.getElementById("res-flux-banner");fb.className="flux-banner "+s.cls;
-  fb.innerHTML='<div>'+FM[r.f]+'</div><div class="flux-cat">→ '+(r.x||"Produits non ID")+'</div>';
-  var ai=r.aiData||{};var lp=[];if(ai.marque)lp.push(ai.marque);if(ai.nom&&ai.nom!==ai.marque)lp.push(ai.nom);
-  var lt=lp.join(" — ");var vol=ai.volume_estime||ai.volume||r.vol||"";
-  var h='<div class="card" style="border-left:4px solid '+s.bn+';border-radius:0">';
-  if(lt)h+='<div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:4px">🏷️ '+lt+'</div>';
-  h+='<div style="font-size:15px;font-weight:800;color:'+s.tx+'">→ '+r.n+'</div>';
-  if(vol)h+='<div style="font-size:12px;color:var(--tx2);margin-top:3px">📏 '+vol+'</div>';
-  h+=confBar(r.conf);
-  if(r.fromMemory)h+='<div style="margin-top:5px;font-size:10px;color:var(--brand-green)">🧠 Identifié par mémoire partagée</div>';
-  if(r.fluxCorrected)h+='<div style="margin-top:3px;font-size:10px;color:var(--eco)">🔄 Corrigé par le référentiel</div>';
+
+  var bacName=r.x||"Produits non ID";
+  if(r.overSeuil||r.f==="H"){bacName=getHorsBac(r.x)}
+
+  var fb=document.getElementById("res-flux-banner");
+  if(r.f==="C"){
+    fb.className="flux-banner";fb.style.cssText="background:#dc2626;padding:16px;text-align:center;color:#fff";
+    fb.innerHTML='<div style="display:flex;align-items:center;gap:12px;justify-content:center"><img src="./assets/hors-eco-dds.png" style="width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.3)" onerror="this.style.display=\'none\'"><div style="font-size:20px;font-weight:800">INTERDIT</div></div>';
+  } else if(r.f==="H"||r.overSeuil){
+    fb.className="flux-banner";fb.style.cssText="background:var(--hors);padding:16px;text-align:center;color:#fff";
+    fb.innerHTML='<div style="display:flex;align-items:center;gap:12px;justify-content:center"><img src="./assets/hors-eco-dds.png" style="width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.3)" onerror="this.style.display=\'none\'"><div style="font-size:20px;font-weight:800">Hors EcoDDS</div></div>';
+  } else {
+    fb.className="flux-banner";fb.style.cssText="background:var(--eco);padding:16px;text-align:center;color:#fff";
+    fb.innerHTML='<div style="display:flex;align-items:center;gap:12px;justify-content:center"><img src="./assets/eco-dds.png" style="width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.3)" onerror="this.style.display=\'none\'"><div style="font-size:20px;font-weight:800">EcoDDS</div></div>';
+  }
+
+  var h="";
+  var bacBg=r.f==="C"?"var(--int-bg)":((r.f==="H"||r.overSeuil)?"var(--hors-bg)":"var(--eco-bg)");
+  var bacBd=r.f==="C"?"var(--int-bd)":((r.f==="H"||r.overSeuil)?"var(--hors-bd)":"var(--eco-bd)");
+  var bacTx=r.f==="C"?"var(--int-tx)":((r.f==="H"||r.overSeuil)?"var(--hors-tx)":"var(--eco-tx)");
+  var bacIcon=r.f==="C"?"\u{1F6AB}":"\u{1FAA3}";
+  var bacLabel=r.f==="C"?"Ne pas accepter":"Mettre dans le bac";
+  h+='<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:'+bacBg+';border-bottom:1px solid '+bacBd+'">';
+  h+='<div style="width:40px;height:40px;border-radius:10px;background:'+bacBd+';display:flex;align-items:center;justify-content:center;font-size:20px">'+bacIcon+'</div>';
+  h+='<div><div style="font-size:11px;color:var(--tx2)">'+bacLabel+'</div><div style="font-size:17px;font-weight:800;color:'+bacTx+';margin-top:2px">'+bacName+'</div></div>';
   h+='</div>';
-  if(r.c)h+='<div class="card" style="margin-top:6px;border-left:4px solid var(--int);border-radius:0"><div style="font-size:10px;font-weight:700;color:var(--int);text-transform:uppercase;margin-bottom:2px">⚠ Sécurité</div><div style="color:var(--int-tx);font-weight:600;font-size:12px">'+r.c+'</div></div>';
-  if(r.s&&!r.overSeuil)h+='<div style="margin-top:6px;font-size:12px;background:rgba(90,138,25,.06);color:var(--brand-green2);padding:8px 12px;border-radius:var(--rs)">📦 Seuil: '+r.s+'</div>';
-  if(r.overSeuil)h+='<div class="card" style="margin-top:6px;background:var(--hors-bg);border-color:var(--hors-bd)"><div style="font-weight:700;color:var(--hors)">⚠️ Volume dépasse le seuil → Hors EcoDDS</div></div>';
-  // Visual comparison: AI crop vs reference images
-  var prodImgs=getProductImages(r.n);
-  var refImg=prodImgs.length?prodImgs[0]:null;
 
-  if(r.cropImage&&refImg){
-    // Side by side comparison
-    h+='<div class="compare-card">';
-    h+='<div class="compare-header"><span>🔍</span> Comparaison visuelle</div>';
-    h+='<div class="compare-row">';
-    h+='<div class="compare-side"><div class="compare-label">Photo terrain</div><img src="'+r.cropImage+'"></div>';
-    h+='<div class="compare-side"><div class="compare-label">Référence</div><img src="'+refImg.url+'" onclick="window.open(this.src)"></div>';
-    h+='</div>';
-    if(r.conf>=70)h+='<div class="compare-match good">Correspondance probable — vérifiez visuellement</div>';
-    else h+='<div class="compare-match warn">Confiance faible — comparez attentivement</div>';
-    h+='</div>';
-  } else if(r.cropImage){
-    // Only AI crop, no reference
-    h+='<div style="margin-top:6px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:120px;object-fit:contain;background:#f5f5f0"></div>';
-  } else if(refImg){
-    // Only reference, no AI crop (manual search)
-    h+='<div class="compare-card">';
-    h+='<div class="compare-header"><span>📸</span> Photo de référence</div>';
-    h+='<div style="padding:10px;text-align:center"><img src="'+refImg.url+'" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:8px" onclick="window.open(this.src)"></div>';
-    h+='</div>';
+  if(r.s&&!r.overSeuil){
+    var sv=r.s.replace(/[\u2264\u2265<>]/g,"").trim();
+    h+='<div style="border-radius:10px;padding:10px 14px;margin:12px 14px;font-size:14px;text-align:center;background:var(--eco-bg);color:var(--eco-tx);border:1px solid var(--eco-bd)">\u2713 Accept\u00e9 jusqu\u2019\u00e0 '+sv+'</div>';
+  }
+  if(r.overSeuil){
+    var sv=r.s?r.s.replace(/[\u2264\u2265<>]/g,"").trim():"";
+    h+='<div style="border-radius:10px;padding:10px 14px;margin:12px 14px;font-size:14px;text-align:center;background:var(--hors-bg);color:var(--hors-tx);border:1px solid var(--hors-bd)">\u26A0 D\u00e9passe '+sv+' \u2014 pas dans le bac EcoDDS</div>';
   }
 
-  // All images gallery (if more than 1)
-  if(prodImgs.length>1){
-    h+='<div class="prod-gallery" style="margin-top:6px">';
-    prodImgs.forEach(function(img){h+='<img src="'+img.url+'" alt="'+(img.alt||r.n)+'" class="'+(img.isPrimary?'pg-main':'')+'" onclick="window.open(this.src)">';});
-    h+='</div>';
+  if(r.c){
+    h+='<div style="border-radius:10px;padding:10px 14px;margin:0 14px 12px;font-size:13px;background:var(--int-bg);color:var(--int-tx);border:1px solid var(--int-bd);display:flex;align-items:flex-start;gap:8px;line-height:1.4"><span>\u26D4</span><span>'+r.c+'</span></div>';
   }
 
-  // Validation buttons
-  if(r.nv)h+='<div class="card" style="margin-top:6px;background:#fefce8;border-color:#fde047"><div style="font-weight:700;color:var(--hors-tx);margin-bottom:6px">⚠️ Validation requise</div><div style="display:flex;gap:8px"><button onclick="confirmRes()" class="btn btn-eco" style="flex:1;font-size:12px">✅ Confirmer</button><button onclick="correctRes()" class="btn" style="flex:1;font-size:12px;background:#7c3aed;color:#fff">✏️ Corriger</button><button onclick="markNonID()" class="btn btn-outline" style="flex:1;font-size:12px">❓ Non ID</button></div></div>';
-  else h+='<div style="margin-top:6px;text-align:center"><button onclick="correctRes()" style="font-size:12px;color:#7c3aed;text-decoration:underline;background:none;border:none;cursor:pointer">Corriger</button></div>';
+  if(r.cropImage){
+    h+='<div style="margin:0 14px 8px;border-radius:10px;overflow:hidden;border:1px solid var(--bd)"><img src="'+r.cropImage+'" style="width:100%;max-height:120px;object-fit:contain;background:#f5f5f0"></div>';
+  }
 
-  // Add photo button
-  h+='<button class="btn-add-photo" onclick="openUserImgUpload()">📷 Ajouter une photo à ce produit</button>';
+  var currentFlux=r.f||"E";
+  if(r.overSeuil)currentFlux="H";
+  var prodImgs=getProductImages(r.n,currentFlux);
+
+  if(prodImgs.length){
+    var urls=prodImgs.map(function(img){return img.url});
+    h+='<div style="padding:0 14px 8px"><div style="font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:6px">Photos de r\u00e9f\u00e9rence</div>';
+    h+='<div style="display:flex;gap:8px;overflow-x:auto;padding:2px">';
+    prodImgs.forEach(function(img,idx){
+      h+='<img src="'+img.url+'" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--bd);flex-shrink:0;cursor:pointer;background:var(--card)" onclick="openLightbox('+JSON.stringify(urls).replace(/"/g,"&quot;")+','+idx+')">';
+    });
+    h+='</div></div>';
+  }
+
+  h+='<div style="display:flex;gap:8px;padding:0 14px 12px">';
+  var btnColor=(r.f==="H"||r.overSeuil)?"var(--hors)":"var(--eco)";
+  if(r.f==="C")btnColor="var(--int)";
+  h+='<button onclick="confirmRes()" style="flex:1;padding:12px;border-radius:10px;background:'+btnColor+';color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer">\u2713 C\u2019est bon</button>';
+  h+='<button onclick="correctRes()" style="padding:12px 16px;border-radius:10px;background:var(--card);color:var(--tx2);font-size:13px;font-weight:600;border:1px solid var(--bd);cursor:pointer">\u270F</button>';
+  h+='<button onclick="openUserImgUpload()" style="padding:12px 16px;border-radius:10px;background:var(--card);color:var(--tx2);font-size:13px;font-weight:600;border:1px solid var(--bd);cursor:pointer">\u{1F4F7}</button>';
+  h+='</div>';
 
   document.getElementById("res-body").innerHTML=h;
 }
@@ -1011,7 +1074,7 @@ function showMulti(){
     if(r.cropImage)h+='<img src="'+r.cropImage+'" style="width:64px;object-fit:cover;flex-shrink:0;border-right:3px solid '+s.bn+'">';
     h+='<div class="rc-info"><h4>'+r.n+'</h4><p>'+(r.x||"")+(r.vol?" · "+r.vol:"")+'</p>'+confBar(r.conf);
     // Reference image comparison for multi
-    var mRef=getProductImages(r.n);
+    var mRef=getProductImages(r.n,r.f);
     if(mRef.length&&r.cropImage)h+='<div style="margin-top:5px;display:flex;gap:4px;align-items:center"><div style="flex:1;text-align:center"><div style="font-size:8px;color:var(--tx3);font-weight:700">TERRAIN</div><img src="'+r.cropImage+'" style="width:100%;max-height:48px;object-fit:contain;border-radius:4px;margin-top:2px"></div><div style="font-size:10px;color:var(--tx3)">vs</div><div style="flex:1;text-align:center"><div style="font-size:8px;color:var(--tx3);font-weight:700">REF</div><img src="'+mRef[0].url+'" style="width:100%;max-height:48px;object-fit:contain;border-radius:4px;margin-top:2px"></div></div>';
     else if(mRef.length)h+='<div style="margin-top:4px"><img src="'+mRef[0].url+'" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--bd)"></div>';
 
@@ -1296,7 +1359,7 @@ document.getElementById("btn-user-img-save").addEventListener("click",function()
     body:JSON.stringify({
       code:sess.code,action:"save",agent:sess.agent,
       imageData:pendingUserImg.base64,imageMime:pendingUserImg.mime,
-      item:{productName:productName,alt:productName,source:"terrain",isPrimary:isFirst,order:getProductImages(productName).length}
+      item:{productName:productName,alt:productName,source:"terrain",isPrimary:isFirst,order:getProductImages(productName).length,imageFlux:st.result?st.result.f:""}
     })
   }).then(function(r){return r.json()}).then(function(d){
     btn.disabled=false;btn.textContent="Enregistrer la photo";
@@ -1326,6 +1389,25 @@ document.getElementById("btn-user-img-save").addEventListener("click",function()
     msgEl.textContent=e.message||"Erreur d'envoi";
   });
 });
+
+
+// ===== LIGHTBOX =====
+var _lbImages=[];var _lbIdx=0;
+function openLightbox(urls,idx){
+  _lbImages=urls||[];_lbIdx=idx||0;
+  if(!_lbImages.length)return;
+  document.getElementById("lightbox-img").src=_lbImages[_lbIdx];
+  document.getElementById("lightbox").classList.add("on");
+}
+window.openLightbox=openLightbox;
+function closeLightbox(e){if(e.target.id==="lightbox")document.getElementById("lightbox").classList.remove("on")}
+function lightboxNav(dir){
+  _lbIdx+=dir;
+  if(_lbIdx<0)_lbIdx=_lbImages.length-1;
+  if(_lbIdx>=_lbImages.length)_lbIdx=0;
+  document.getElementById("lightbox-img").src=_lbImages[_lbIdx];
+}
+window.lightboxNav=lightboxNav;
 
 // ===== INIT =====
 loadSess();loadJournal();
