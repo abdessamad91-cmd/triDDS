@@ -780,7 +780,7 @@ function usageTotal(){return sess.monthlyLimit>0?sess.monthlyLimit:(sess.trialTo
 function usageRemaining(){return sess.monthlyLimit>0?(sess.monthlyRemaining||0):(sess.trialRemaining||0)}
 function hasAiAccess(){return usageRemaining()>0}
 function applyUsage(u){if(!u)return;sess.plan=u.plan||sess.plan;sess.clientName=u.clientName||sess.clientName||"";sess.agentRole=u.agentRole||sess.agentRole||"agent";sess.canManageUsers=!!u.canManageUsers;sess.canManageCatalog=!!u.canManageCatalog;sess.memoryEnabled=!!u.memoryEnabled;sess.aiEnabled=!!u.aiEnabled;sess.trialTotal=u.trialTotal||0;sess.trialUsed=u.trialUsed||0;sess.trialRemaining=u.trialRemaining||0;sess.monthlyLimit=u.monthlyLimit||0;sess.monthlyUsed=u.monthlyUsed||0;sess.monthlyRemaining=u.monthlyRemaining||0;saveSess();}
-function addHist(r){st.history=[{nm:r.n,f:r.f,x:r.x||"",s:r.s||"",vol:r.vol||"",img:r.imageUrl||r.cropImage||""}].concat(st.history).slice(0,15);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
+function addHist(r){st.history=[{nm:r.n,f:r.f,x:r.x||"",s:r.s||"",vol:r.vol||"",img:r.imageUrl||r.cropImage||"",overSeuil:!!r.overSeuil}].concat(st.history).slice(0,15);localStorage.setItem("tridds_h",JSON.stringify(st.history))}
 
 // ===== SEARCH =====
 function norm(s){return(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim()}
@@ -945,21 +945,17 @@ window._selectLive=function(i){
 window._openHist=function(i){
   if(!st.history||!st.history[i])return;
   var x=st.history[i];
-  // Search for full product data in database
   var res=searchAll(x.nm);
-  if(res.length&&res[0].n===x.nm){
-    // Found exact match - show full result with all data
-    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm,x.f)||x.img||null});
-    showRes();
-  } else if(res.length&&res[0].score>=80){
-    // Close match
-    st.result=Object.assign({},res[0],{conf:res[0].score||85,imageUrl:getProductImage(x.nm,x.f)||x.img||null});
-    showRes();
-  } else {
-    // Not found in DB - show with history data
-    st.result={n:x.nm,f:x.f,x:x.x||"",s:x.s||"",c:"",conf:85,nv:false,vol:x.vol||"",imageUrl:getProductImage(x.nm,x.f)||x.img||null};
-    showRes();
-  }
+  var base=res.length&&(res[0].n===x.nm||res[0].score>=80)?Object.assign({},res[0]):{n:x.nm,x:x.x||"",s:x.s||"",c:""};
+  // Always preserve the flux and overSeuil from history
+  st.result=Object.assign(base,{
+    f:x.f||base.f||"E",
+    conf:85,
+    nv:false,
+    overSeuil:!!x.overSeuil,
+    imageUrl:getProductImage(x.nm,x.f)||x.img||null
+  });
+  showRes();
 };
 function doSearch(){
   var q=(document.getElementById("in-search").value||"").trim();
