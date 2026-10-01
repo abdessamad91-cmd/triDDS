@@ -827,7 +827,7 @@ async function handleSiteAdmin(request, env) {
       if (!name) return json({ error: "Nom requis" }, 400);
       if (site.agents.find(a => a.name.toLowerCase() === name.toLowerCase())) return json({ error: "Ce profil existe déjà" }, 400);
       const max = maxAgentsFor(site);
-      if (max != null && site.agents.length >= max) return json({ error: `Votre offre comprend ${max} profils. Contactez TriDDS pour en ajouter.` }, 403);
+      if (max != null && site.agents.length >= max) return json({ error: `Ce site est limité à ${max} profils. Retirez un profil inutilisé, ou contactez TriDDS pour relever la limite.` }, 403);
       site.agents.push({ name, role: "agent", joined: nowIso(), lastSeen: null });
     } else {
       const target = site.agents.find(a => a.name === name);

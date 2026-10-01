@@ -100,7 +100,7 @@ ok(r.status === 401, "clé admin incorrecte refusée");
 r = await admin("dashboard");
 ok(r.status === 200 && r.data.requests.length >= 2 && r.data.stats.openRequests >= 2, "tableau de bord avec demandes");
 const legacySite = r.data.sites.find(s => s.code === "LUDR-2026-ABC");
-ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === null, "usage par site, agents illimités en offre Déchèterie");
+ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === 25, "usage par site, 25 profils max en offre Déchèterie");
 ok(legacySite.teamLocked === false && legacySite.trialTotal === legacySite.trialUsed, "site v1 : responsable autonome, pas de scans d'essai en plus sur une offre payante");
 sent.length = 0;
 r = await admin("create", { site: "Déchèterie de Château-Salins", client: "SIVOM du Saulnois", responsable: "Claire Martin", principalEmail: "c.martin@sivom.fr", agents: ["Luc", "Ana", "luc"], plan: "essentiel", requestId: "REQ-TEST0001", sendEmail: true });
@@ -167,6 +167,17 @@ ok(r.data.site.monthlyLimit === 150, "site v1 Réseau : l'admin peut revenir au 
 r = await admin("update", { code: "TRY-OLDTRIAL", plan: "essentiel" });
 r = await call("auth", { action: "login", code: "TRY-OLDTRIAL" });
 ok(r.data.memoryEnabled === false, "site v1 passé en Essentiel : règles de la nouvelle offre");
+
+console.log("Plafond de profils");
+r = await admin("create", { site: "Déchèterie de Toul", responsable: "Max", plan: "pro", agents: Array.from({ length: 24 }, (_, i) => "Agent " + (i + 1)) });
+const T2 = r.data.code;
+r = await call("auth", { action: "start-session", code: T2, agent: "Max" });
+const M = { code: T2, agent: "Max", sessionId: r.data.sessionId };
+r = await call("site-admin", Object.assign({ action: "add-user", name: "Encore un" }, M));
+ok(r.status === 403 && /25 profils/.test(r.data.error), "26e profil refusé au responsable (25 max)");
+await admin("update", { code: T2, agentsOverride: 40 });
+r = await call("site-admin", Object.assign({ action: "add-user", name: "Encore un" }, M));
+ok(r.status === 200, "plafond relevé par l'admin pour ce site");
 
 console.log("Essai gratuit d'un mois");
 r = await admin("create", { site: "Déchèterie de Pompey", responsable: "Nadia", plan: "pro", billing: "essai", paidUntil: "2020-01-31" });

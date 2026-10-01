@@ -30,9 +30,9 @@ const PLANS = {
     label: "Déchèterie",
     price: 29,
     scans: 200,
-    agents: null,
+    agents: 25,
     pitch: "Tout TriDDS pour une déchèterie, agents illimités.",
-    features: ["Agents illimités", "200 photos analysées par mois", "Recherche illimitée, même sans réseau", "Mémoire de l'équipe", "Photos de référence et fiches du site", "Journal des tris"],
+    features: ["Tous les agents du site (jusqu'à 25 profils)", "200 photos analysées par mois", "Recherche illimitée, même sans réseau", "Mémoire de l'équipe", "Photos de référence et fiches du site", "Journal des tris"],
     public: true,
     featured: true
   },
@@ -41,7 +41,7 @@ const PLANS = {
     label: "Réseau (ancienne offre)",
     price: 69,
     scans: 150,
-    agents: null,
+    agents: 25,
     sites: 5,
     pitch: "",
     features: [],
@@ -52,7 +52,7 @@ const PLANS = {
     label: "Collectivité ou réseau",
     price: null,
     scans: 200,
-    agents: null,
+    agents: 25,
     pitch: "À partir de 3 déchèteries, tarif dégressif par site.",
     features: ["Tout l'offre Déchèterie, sur chaque site", "24 € par site dès 3 sites, 19 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
     public: true
@@ -908,7 +908,7 @@ async function handleSiteAdmin(request, env) {
       if (!name) return json({ error: "Nom requis" }, 400);
       if (site.agents.find(a => a.name.toLowerCase() === name.toLowerCase())) return json({ error: "Ce profil existe déjà" }, 400);
       const max = maxAgentsFor(site);
-      if (max != null && site.agents.length >= max) return json({ error: `Votre offre comprend ${max} profils. Contactez TriDDS pour en ajouter.` }, 403);
+      if (max != null && site.agents.length >= max) return json({ error: `Ce site est limité à ${max} profils. Retirez un profil inutilisé, ou contactez TriDDS pour relever la limite.` }, 403);
       site.agents.push({ name, role: "agent", joined: nowIso(), lastSeen: null });
     } else {
       const target = site.agents.find(a => a.name === name);
