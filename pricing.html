@@ -1,154 +1,134 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TriDDS — Tarifs</title>
-<link rel="icon" type="image/x-icon" href="./favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
-<link rel="manifest" href="./manifest.json">
-<style>
-:root{--bg:#f3f7ff;--panel:#fff;--panel2:#f8fafc;--text:#0f172a;--muted:#64748b;--border:#dbe4f0;--blue:#c22829;--blue2:#a31f20;--green:#5a8a19;--green2:#4d7c0f;--purple:#7c3aed;--shadow:0 18px 50px rgba(15,23,42,.08);--radius:24px}
-*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff,#f8fbff 35%,#f5f7fa);color:var(--text)}
-a{text-decoration:none}button,input{font:inherit}.wrap{max-width:1220px;margin:0 auto;padding:28px 18px 60px}.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:28px;flex-wrap:wrap}.top-left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.brand-mini{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(15,23,42,.05)}.brand-mini img{height:30px;width:auto;display:block}.pill,.ghost-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 15px;border-radius:999px;border:1px solid var(--border);background:#fff;color:#334155;font-weight:700}.ghost-btn:hover{border-color:#bfd0e8}.hero{background:linear-gradient(135deg,#1c1917,#2d4a0f);color:#fff;border-radius:32px;padding:34px 30px;box-shadow:var(--shadow);margin-bottom:22px}.hero h1{margin:0;font-size:48px;line-height:1.02;letter-spacing:-1.6px}.hero p{margin:14px 0 0;color:#dbeafe;max-width:760px;font-size:18px;line-height:1.6}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.hero .hero-btn{display:inline-flex;padding:13px 18px;border-radius:16px;font-weight:800}.hero .hero-btn.primary{background:#fff;color:#1c1917}.hero .hero-btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:22px}.card{background:var(--panel);border:1px solid #e6edf8;border-radius:var(--radius);padding:22px;box-shadow:0 10px 30px rgba(15,23,42,.05);position:relative;display:flex;flex-direction:column}.card.featured{border:2px solid var(--blue);transform:translateY(-2px)}.tag{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin-bottom:14px;width:max-content}.tag.blue{background:#dbeafe;color:#1d4ed8}.tag.green{background:#dcfce7;color:#166534}.tag.purple{background:#ede9fe;color:#6d28d9}.price{font-size:44px;font-weight:900;letter-spacing:-1.2px;margin:8px 0}.price small{font-size:18px;font-weight:800}.muted{color:var(--muted)}ul{padding-left:18px;line-height:1.7;color:#334155;margin:12px 0 0}.card .cta{margin-top:auto;padding-top:18px}.btn{width:100%;border:none;border-radius:16px;padding:13px 16px;font-weight:800;cursor:pointer}.btn-blue{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff}.btn-green{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff}.btn-soft{background:#fff;border:1px solid var(--border);color:#1c1917}.benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}.benefit{background:#fff;border:1px solid #e6edf8;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.04)}.benefit strong{display:block;font-size:15px;margin-bottom:6px}.checkout{display:none;background:#fff;border:1px solid #e6edf8;border-radius:30px;padding:24px;box-shadow:var(--shadow)}.checkout.show{display:block}.checkout-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}.selected-plan{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;padding:10px 14px;border-radius:16px;font-weight:800}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:7px}.field label{font-size:13px;font-weight:800;color:#334155}.field input{padding:13px 14px;border:1px solid #d7e0ec;border-radius:14px;outline:none;background:#fff}.field input:focus{border-color:var(--blue)}.checkout-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}.checkout-actions .btn{width:auto;min-width:220px}.msg{margin-top:12px;padding:13px 14px;border-radius:14px;font-size:14px;font-weight:700;display:none}.msg.err{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.msg.ok{display:block;background:#ecfeff;color:#155e75;border:1px solid #a5f3fc}.faq{margin-top:22px;background:#fff;border:1px solid #e6edf8;border-radius:26px;padding:22px;box-shadow:0 8px 24px rgba(15,23,42,.04)}.faq h2{margin:0 0 16px;font-size:24px}.faq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.faq-item{padding:16px;border:1px solid #edf2f7;border-radius:18px;background:#fbfdff}.faq-item strong{display:block;margin-bottom:8px}.footer-note{margin-top:14px;color:#64748b;font-size:13px}.hidden{display:none!important}
-@media(max-width:980px){.grid,.benefits,.faq-grid,.form-grid{grid-template-columns:1fr}.hero h1{font-size:36px}.checkout-actions .btn{width:100%}.wrap{padding:18px 14px 40px}}
-</style>
+<meta name="theme-color" content="#1b2420">
+<title>TriDDS : offres et demande d'accès</title>
+<meta name="description" content="TriDDS indique en deux secondes si un déchet dangereux va en EcoDDS, hors EcoDDS ou s'il doit être refusé. Dès 19 € HT par mois et par déchèterie, sans engagement.">
+<meta property="og:title" content="TriDDS : le bon bac en deux secondes">
+<meta property="og:description" content="Assistant de tri des déchets dangereux pour les agents de déchèterie. Recherche, scan d'étiquette, mémoire de l'équipe.">
+<meta property="og:image" content="https://tridds.com/assets/icon-maskable-512.png">
+<link rel="icon" href="./favicon.ico">
+<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+<link rel="preload" href="./fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./css/fonts.css?v=2.0.0">
+<link rel="stylesheet" href="./css/base.css?v=2.0.0">
+<link rel="stylesheet" href="./css/app.css?v=2.0.0">
+<link rel="stylesheet" href="./css/site.css?v=2.0.0">
 </head>
-<body>
-<div class="wrap">
-  <div class="topbar">
-    <div class="top-left">
-      <a class="brand-mini" href="./index.html"><img src="./assets/tridds-wordmark.png" alt="TriDDS"></a>
-      <a class="ghost-btn" href="./index.html">← Retour à l’accueil</a>
-      <a class="ghost-btn" href="./index.html">J’ai déjà un code</a>
+<body class="site">
+
+<header class="site-nav"><div class="site-w">
+  <a class="site-brand" href="./pricing.html"><img src="./assets/symbol-128.png" alt="" width="38" height="38"><b>TriDDS</b></a>
+  <a class="link hide-sm" href="#offres">Offres</a>
+  <a class="link" href="./">Se connecter</a>
+  <a class="btn btn-eco hide-sm" href="#demande">Demander un accès</a>
+</div></header>
+
+<main>
+<section class="hero"><div class="site-w">
+  <div>
+    <h1>Le bon bac, en deux secondes.</h1>
+    <p class="lead">Vos agents tapent le nom d'un produit ou photographient l'étiquette. TriDDS affiche s'il va en EcoDDS, en hors EcoDDS ou s'il doit être refusé, avec le seuil à vérifier et les consignes de sécurité.</p>
+    <div class="hero-cta">
+      <a class="btn btn-eco btn-lg" href="#demande">Demander un accès</a>
+      <a class="btn btn-ghost btn-lg" href="#offres">Voir les offres</a>
     </div>
-    <a class="pill" href="./index.html">Essayer gratuitement</a>
+    <p class="hero-proof" data-count>Plus de 480 produits classés selon le référentiel EcoDDS.</p>
   </div>
 
-  <section class="hero">
-    <div class="tag blue" style="background:rgba(255,255,255,.14);color:#fff">TriDDS • Tarifs</div>
-    <h1>Commencez librement, choisissez ensuite le bon plan.</h1>
-    <p>Choisissez le mode d’accès adapté à votre activité : accès de base, essai IA ou abonnement selon vos besoins.</p>
-    <div class="hero-actions">
-      <a class="hero-btn primary" href="./index.html">Commencer gratuitement</a>
-      <a class="hero-btn secondary" href="#plans">Voir les offres</a>
+  <div class="demo" aria-label="Démonstration de la recherche">
+    <div class="demo-head">
+      <label for="demo-q">Essayez avec un produit apporté en déchèterie</label>
+      <div class="search-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="demo-q" type="search" autocomplete="off" spellcheck="false" placeholder="white spirit, pH moins, bombe de peinture…"></div>
+      <div class="demo-chips" data-chips></div>
     </div>
-  </section>
+    <div data-demo-out><div class="demo-empty">Le bac s'affiche ici, comme sur le téléphone des agents.</div></div>
+    <div class="demo-foot" data-demo-foot></div>
+  </div>
+</div></section>
 
-  <section class="benefits">
-    <div class="benefit"><strong>Accès de base</strong><span class="muted">Consultation de base et recherche manuelle, sans engagement.</span></div>
-    <div class="benefit"><strong>Essai IA</strong><span class="muted">2 scans IA offerts une seule fois pour découvrir l’analyse photo.</span></div>
-    <div class="benefit"><strong>Paiement uniquement pour les plans payants</strong><span class="muted">Le paiement n’apparaît qu’après le choix d’un plan payant.</span></div>
-  </section>
+<section class="band paper"><div class="site-w">
+  <h2>Pensé pour le local DDS, pas pour un bureau.</h2>
+  <p class="sub">Gros boutons utilisables avec des gants, lisible en plein soleil, fonctionne même sans réseau pour la recherche.</p>
+  <div class="steps">
+    <div class="step"><b>Cherchez ou scannez</b><p>Nom, marque ou photo de l'étiquette. La recherche tolère les fautes et le vocabulaire du terrain.</p></div>
+    <div class="step"><b>Lisez le bac</b><p>EcoDDS, hors EcoDDS ou refusé, le seuil du contenant à vérifier et les consignes : ne pas mélanger, isoler, porter les EPI.</p></div>
+    <div class="step"><b>L'équipe apprend</b><p>Chaque scan validé ou corrigé enrichit la mémoire du site. Le journal garde la trace des cas à vérifier.</p></div>
+  </div>
+</div></section>
 
-  <section id="plans" class="grid">
-    <article class="card">
-      <div class="tag green">Découverte</div>
-      <h2>Accès Base</h2>
-      <div class="price">0 €</div>
-      <div class="muted">Sans engagement</div>
-      <ul>
-        <li>Recherche manuelle</li>
-        <li>Consultation de la base</li>
-        <li>Sans scan photo IA</li>
-        <li>2 scans IA offerts une seule fois</li>
-      </ul>
-      <div class="cta">
-        <a class="btn btn-blue" href="./index.html">Commencer gratuitement</a>
+<section class="band" id="offres"><div class="site-w">
+  <h2>Un prix par déchèterie, sans engagement.</h2>
+  <p class="sub">La recherche est illimitée dans toutes les offres. Le scan photo est compté par mois et repart à zéro le 1er.</p>
+  <div class="billing" role="group" aria-label="Période de facturation">
+    <button data-billing="month" aria-pressed="true">Mensuel</button>
+    <button data-billing="year" aria-pressed="false">Annuel, 2 mois offerts</button>
+  </div>
+  <div class="plans" data-plans></div>
+  <p class="plans-note">Prix hors taxes. Facture mensuelle ou annuelle, paiement par virement ou mandat administratif. Résiliable à tout moment, l'accès reste ouvert jusqu'à la fin de la période payée.</p>
+</div></section>
+
+<section class="band paper" id="demande"><div class="site-w">
+  <div class="open-grid">
+    <div>
+      <h2>Ouvrir un accès</h2>
+      <p class="sub">Chaque accès est préparé à la main : vous gardez la maîtrise de qui utilise TriDDS sur votre site.</p>
+      <ol class="timeline">
+        <li><b>Vous envoyez la demande</b><span>Quelques informations sur votre structure et vos déchèteries.</span></li>
+        <li><b>On fait le point sous 48 h</b><span>Par téléphone ou par email : nombre de sites, d'agents, volume de scans.</span></li>
+        <li><b>Vous recevez le code du site</b><span>Avec les profils de vos agents déjà créés. Un essai de scans photo peut être ouvert avant de vous engager.</span></li>
+        <li><b>La facture suit</b><span>Au mois ou à l'année, sans engagement de durée.</span></li>
+      </ol>
+    </div>
+
+    <form class="request" data-request novalidate>
+      <h3>Demande d'accès</h3>
+      <div class="two">
+        <label class="field"><span>Nom et prénom</span><input class="input" name="name" autocomplete="name" required></label>
+        <label class="field"><span>Structure</span><input class="input" name="organisation" autocomplete="organization" placeholder="Commune, syndicat, exploitant…" required></label>
       </div>
-    </article>
-
-    <article class="card featured">
-      <div class="tag blue">Le plus choisi</div>
-      <h2>Pro Site</h2>
-      <div class="price">39 €<small>/mois</small></div>
-      <ul>
-        <li>1 site</li>
-        <li>Agents illimités</li>
-        <li>200 scans IA / mois</li>
-        <li>Mémoire partagée</li>
-        <li>Historique</li>
-      </ul>
-      <div class="cta">
-        <button class="btn btn-blue pick-plan" data-plan="pro" data-label="Pro Site" data-price="39 €/mois">Choisir ce plan</button>
+      <div class="two">
+        <label class="field"><span>Email</span><input class="input" type="email" name="email" autocomplete="email" required></label>
+        <label class="field"><span>Téléphone (facultatif)</span><input class="input" type="tel" name="phone" autocomplete="tel"></label>
       </div>
-    </article>
-
-    <article class="card">
-      <div class="tag purple">Réseau</div>
-      <h2>Multi-sites</h2>
-      <div class="price">99 €<small>/mois</small></div>
-      <ul>
-        <li>Jusqu’à 5 sites</li>
-        <li>750 scans IA / mois</li>
-        <li>Gestion centralisée</li>
-        <li>Support prioritaire</li>
-      </ul>
-      <div class="cta">
-        <button class="btn btn-green pick-plan" data-plan="multisite" data-label="Multi-sites" data-price="99 €/mois">Choisir ce plan</button>
+      <div class="two">
+        <label class="field"><span>Déchèterie principale</span><input class="input" name="siteName" placeholder="Nom ou commune"></label>
+        <label class="field"><span>Nombre de déchèteries</span><input class="input" type="number" name="sites" min="1" max="500" value="1" inputmode="numeric"></label>
       </div>
-    </article>
-  </section>
+      <label class="field"><span>Offre envisagée</span><select class="select" name="plan" data-plan-select></select></label>
+      <label class="field"><span>Message (facultatif)</span><textarea class="textarea" name="message" placeholder="Nombre d'agents, besoins particuliers, date de démarrage souhaitée…"></textarea></label>
+      <label class="hp" aria-hidden="true">Site web<input name="website" tabindex="-1" autocomplete="off"></label>
+      <div data-msg></div>
+      <button class="btn btn-primary btn-lg" type="submit">Envoyer la demande</button>
+      <p class="hint">Vos coordonnées servent uniquement à vous recontacter au sujet de TriDDS.</p>
+    </form>
+  </div>
+</div></section>
 
-  <section id="checkout" class="checkout">
-    <div class="checkout-head">
-      <div>
-        <h2 style="margin:0 0 6px;font-size:30px;letter-spacing:-.8px">Préparer votre accès</h2>
-        <div class="muted">Renseignez vos informations. Le paiement n’est proposé que pour le plan sélectionné.</div>
-      </div>
-      <div id="selected-plan" class="selected-plan">Aucun plan sélectionné</div>
-    </div>
+<section class="band"><div class="site-w">
+  <h2>Questions fréquentes</h2>
+  <div class="faq">
+    <details><summary>Qu'est-ce qu'un scan photo ?</summary><p>Une photo analysée par l'IA pour lire les étiquettes et classer les produits. Une photo compte pour un scan, même si plusieurs produits y figurent. La recherche par nom n'est jamais décomptée.</p></details>
+    <details><summary>Que se passe-t-il si le quota est atteint ?</summary><p>La recherche continue de fonctionner normalement. Les scans reprennent le 1er du mois suivant, ou plus tôt si vous passez à l'offre supérieure.</p></details>
+    <details><summary>Faut-il installer une application ?</summary><p>Non. TriDDS s'ouvre dans le navigateur du téléphone et peut être ajouté à l'écran d'accueil. La recherche fonctionne même sans réseau.</p></details>
+    <details><summary>Qui peut se connecter ?</summary><p>Uniquement les profils créés pour votre site, avec le code du site. Un profil ne peut être connecté que sur un appareil à la fois. En cas de besoin, le code peut être changé.</p></details>
+    <details><summary>Le classement est-il fiable ?</summary><p>La base suit le référentiel EcoDDS. Les lectures IA incertaines sont signalées « à vérifier » et l'agent garde toujours la décision finale.</p></details>
+    <details><summary>Peut-on ajouter nos propres produits ?</summary><p>Oui, à partir de l'offre Pro : le responsable du site ajoute des fiches qui apparaissent dans la recherche de toute l'équipe.</p></details>
+  </div>
+</div></section>
+</main>
 
-    <div class="form-grid">
-      <div class="field"><label>Nom du site</label><input id="siteName" placeholder="Ex. Déchèterie de Faulquemont"></div>
-      <div class="field"><label>Nom administrateur</label><input id="adminName" placeholder="Ex. Abdessamad"></div>
-      <div class="field"><label>Email administrateur</label><input id="adminEmail" type="email" placeholder="Ex. admin@monsite.fr"></div>
-      <div class="field"><label>Contact (optionnel)</label><input id="contact" placeholder="Téléphone ou email"></div>
-    </div>
+<footer class="site-foot"><div class="site-w">
+  <span class="grow">TriDDS, assistant de tri des déchets diffus spécifiques.</span>
+  <a href="./">Se connecter</a>
+  <a href="#demande">Demander un accès</a>
+</div></footer>
 
-    <div class="checkout-actions">
-      <button id="paySelected" class="btn btn-blue">Continuer vers le paiement</button>
-      <button id="clearSelection" class="btn btn-soft">Changer d’avis</button>
-    </div>
-    <div id="msg" class="msg"></div>
-    <div class="footer-note">Aucun paiement n’est lancé tant que vous ne cliquez pas sur “Continuer vers le paiement”.</div>
-  </section>
-
-  <section class="faq">
-    <h2>Questions fréquentes</h2>
-    <div class="faq-grid">
-      <div class="faq-item"><strong>Puis-je revenir en arrière ?</strong><span class="muted">Oui. Vous pouvez retourner à l’accueil, commencer gratuitement, ou fermer la préparation d’accès sans payer.</span></div>
-      <div class="faq-item"><strong>Le gratuit est-il vraiment disponible ?</strong><span class="muted">Oui. L’accès Base est utilisable sans abonnement. L’IA payante n’est pas obligatoire.</span></div>
-      <div class="faq-item"><strong>Quand l’accès est-il créé ?</strong><span class="muted">Après paiement validé. Le site, le code d’accès et l’email administrateur sont créés automatiquement.</span></div>
-    </div>
-  </section>
-</div>
-
-<script src="config.js"></script>
-<script>
-(function(){
-const API_BASE=(window.APP_CONFIG&&window.APP_CONFIG.API_BASE)||"https://wild-morning-f974.abdessamad91.workers.dev/api";
-const checkout=document.getElementById('checkout');
-const selectedPlanBox=document.getElementById('selected-plan');
-const msg=document.getElementById('msg');
-const payBtn=document.getElementById('paySelected');
-const clearBtn=document.getElementById('clearSelection');
-let currentPlan='';
-
-function showMsg(text,type='err'){msg.className='msg '+type;msg.style.display='block';msg.textContent=text;}
-function hideMsg(){msg.style.display='none';msg.textContent='';msg.className='msg';}
-function setPlan(plan,label,price){currentPlan=plan;selectedPlanBox.textContent=label+' • '+price;checkout.classList.add('show');hideMsg();checkout.scrollIntoView({behavior:'smooth',block:'start'});}
-function clearPlan(){currentPlan='';selectedPlanBox.textContent='Aucun plan sélectionné';checkout.classList.remove('show');hideMsg();}
-function bodyForPlan(plan){return {plan,siteName:document.getElementById('siteName').value.trim(),adminName:document.getElementById('adminName').value.trim(),adminEmail:document.getElementById('adminEmail').value.trim(),contact:document.getElementById('contact').value.trim()};}
-async function startCheckout(plan){hideMsg();const payload=bodyForPlan(plan);if(!payload.siteName||!payload.adminName||!payload.adminEmail){showMsg("Renseignez au minimum le nom du site, le nom administrateur et l'email.");return;}try{payBtn.disabled=true;payBtn.textContent='Création de la session de paiement…';const res=await fetch(API_BASE+'/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await res.json();if(!res.ok||!data.url) throw new Error(data.error||'Impossible de créer le paiement');showMsg('Redirection vers le paiement…','ok');window.location.href=data.url;}catch(e){showMsg(e.message||'Erreur de paiement');payBtn.disabled=false;payBtn.textContent='Continuer vers le paiement';}}
-
-document.querySelectorAll('.pick-plan').forEach(btn=>btn.addEventListener('click',()=>setPlan(btn.dataset.plan,btn.dataset.label,btn.dataset.price)));
-payBtn.addEventListener('click',()=>{if(!currentPlan){showMsg('Sélectionnez d’abord un plan payant.');return;}startCheckout(currentPlan);});
-clearBtn.addEventListener('click',clearPlan);
-if(new URLSearchParams(location.search).get('cancel')){showMsg('Paiement annulé. Vous pouvez revenir à l’accueil, continuer gratuitement, ou reprendre plus tard.');}
-})();
-</script>
+<script src="./config.js?v=2.0.0"></script>
+<script src="./data.js?v=2.0.0" defer></script>
+<script type="module" src="./js/site/offres.js"></script>
 </body>
 </html>
