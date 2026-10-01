@@ -1,0 +1,26 @@
+name = "wild-morning-f974"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Stockages existants (mêmes identifiants que le Worker en ligne)
+[[kv_namespaces]]
+binding = "AUTH_STORE"
+id = "c023803851e3437284107ad231abfc97"
+
+[[kv_namespaces]]
+binding = "MEMORY_STORE"
+id = "5b0a5bf80a63468d8f490a95afa0f16a"
+
+[[r2_buckets]]
+binding = "IMAGES_BUCKET"
+bucket_name = "tridds-images"
+
+[vars]
+SITE_BASE_URL = "https://tridds.com"
+
+# Secrets déjà en place (à ne pas mettre ici) :
+#   TRIDDS_ADMIN_KEY, ANTHROPIC_API_KEY, RESEND_API_KEY, RESEND_FROM
+# Nouveau secret à ajouter une fois :
+#   npx wrangler secret put NOTIFY_EMAIL   -> adresse qui reçoit les demandes d'accès
+# Secrets devenus inutiles (paiement en ligne retiré) :
+#   STRIPE_SECRET_KEY, STRIPE_PRICE_PRO, STRIPE_PRICE_MULTISITE
