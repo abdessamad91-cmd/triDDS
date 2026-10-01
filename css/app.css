@@ -33,7 +33,10 @@ body.app { background: var(--concrete); min-height: 100dvh; overscroll-behavior-
 .search-field input::-webkit-search-cancel-button { display: none; }
 .search-field .mini { width: 44px; height: 44px; margin-right: 6px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); }
 .search-field .mini svg { width: 22px; height: 22px; }
-.search-field .mini.listening { background: var(--int-soft); color: var(--int); }
+.search-field .mini { touch-action: none; user-select: none; -webkit-user-select: none; }
+.search-field .mini.listening { background: var(--int); color: #fff; animation: pulse 1s ease-in-out infinite; }
+.search-field .mini.listening::after { content: "Parlez…"; position: absolute; right: 64px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 700; color: var(--int); animation: none; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(198, 40, 40, .25); } }
 .scan-btn { width: 60px; height: 60px; border-radius: 16px; background: var(--ink); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
 .scan-btn svg { width: 28px; height: 28px; }
 .scan-btn:active { transform: translateY(1px); }

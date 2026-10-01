@@ -38,7 +38,7 @@ export const homeView = {
       <div class="searchbox"><div class="search-row wrap">
         <label class="search-field"><span class="sr-only">Rechercher un produit</span>${icon("search")}
           <input type="search" data-q placeholder="Produit ou marque" value="${app.state.query}" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
-          <button class="mini" data-voice aria-label="Dicter le nom">${icon("mic")}</button>
+          <button class="mini" data-voice aria-label="Maintenir pour dicter">${icon("mic")}</button>
         </label>
         <button class="scan-btn" data-scan aria-label="Prendre en photo">${icon("camera")}</button>
       </div></div>
@@ -58,11 +58,11 @@ export const homeView = {
       else { redraw(); input.blur(); }
     });
     if (app.state.query && !matchMedia("(pointer:coarse)").matches) input.focus();
+    bindVoice(el.querySelector("[data-voice]"), input, app, redraw);
 
     el.addEventListener("click", e => {
       const t = e.target;
       if (t.closest("[data-scan]")) return startScan(app);
-      if (t.closest("[data-voice]")) return dictate(t.closest("[data-voice]"), input, app, redraw);
       if (t.closest("[data-clear]")) { clearHistory(); return redraw(); }
       if (t.closest("[data-nonid]")) {
         return openProduct(app, { n: "Produit non identifié", label: app.state.query.trim(), f: "H", x: NON_ID, c: "Isolez le produit, ne le mélangez pas, portez les EPI.", s: "" });
@@ -94,65 +94,86 @@ export function startScan(app) {
   app.go("scan");
 }
 
+// Dictée « appuyer pour parler » : on maintient le bouton enfoncé le temps de parler, on relâche pour chercher.
+// Un appui bref (moins de 0,4 s) laisse l'écoute ouverte jusqu'à la fin de la phrase.
 let rec = null;
-function dictate(btn, input, app, redraw) {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return toast("La dictée n'est pas disponible sur ce navigateur. Sur iPhone, utilisez le micro du clavier.", { ms: 4500 });
-  if (rec) { try { rec.stop(); } catch (e) { /* déjà arrêté */ } return; }
-  if (navigator.onLine === false) return toast("La dictée a besoin du réseau.", { error: true });
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const MSGS = {
+  "not-allowed": "Autorisez le micro pour dicter (réglages du navigateur).",
+  "service-not-allowed": "Autorisez le micro pour dicter (réglages du navigateur).",
+  "audio-capture": "Aucun micro détecté.",
+  network: "La dictée a besoin du réseau.",
+  "no-speech": "Rien entendu. Maintenez le bouton et parlez près du téléphone."
+};
 
-  const r = new SR();
-  rec = r;
-  r.lang = "fr-FR";
-  r.continuous = false;
-  r.interimResults = true;
-  r.maxAlternatives = 1;
-  let finalText = "";
-  let gotSomething = false;
-  const stopUi = () => {
-    rec = null;
-    clearTimeout(guard);
-    btn.classList.remove("listening");
-    btn.setAttribute("aria-label", "Dicter le nom");
-  };
-  const apply = text => {
-    input.value = text;
-    app.state.query = text;
-    redraw();
-  };
-  const guard = setTimeout(() => { try { r.stop(); } catch (e) { /* ignore */ } }, 10000);
-
-  btn.classList.add("listening");
-  btn.setAttribute("aria-label", "Écoute en cours, touchez pour arrêter");
-  input.blur();
-  r.onresult = e => {
-    let interim = "";
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalText += t; else interim += t;
-    }
-    gotSomething = true;
-    apply((finalText || interim).trim());
-  };
-  r.onerror = ev => {
-    stopUi();
-    const msgs = {
-      "not-allowed": "Autorisez le micro pour dicter (réglages du navigateur).",
-      "service-not-allowed": "Autorisez le micro pour dicter (réglages du navigateur).",
-      "audio-capture": "Aucun micro détecté.",
-      network: "La dictée a besoin du réseau.",
-      "no-speech": "Rien entendu. Réessayez en parlant plus près du téléphone."
+function bindVoice(btn, input, app, redraw) {
+  if (!SR) {
+    btn.addEventListener("click", () => toast("La dictée n'est pas disponible sur ce navigateur. Sur iPhone, utilisez le micro du clavier.", { ms: 4500 }));
+    return;
+  }
+  let pressedAt = 0;
+  let holdTimer = null;
+  const start = () => {
+    if (rec) { try { rec.abort(); } catch (e) { /* ignore */ } rec = null; }
+    if (navigator.onLine === false) return toast("La dictée a besoin du réseau.", { error: true });
+    const r = new SR();
+    rec = r;
+    r.lang = "fr-FR";
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    let finalText = "";
+    let heard = false;
+    const guard = setTimeout(() => { try { r.stop(); } catch (e) { /* ignore */ } }, 15000);
+    const done = () => {
+      clearTimeout(guard);
+      if (rec === r) rec = null;
+      btn.classList.remove("listening");
+      btn.setAttribute("aria-label", "Maintenir pour dicter");
     };
-    if (ev.error !== "aborted") toast(msgs[ev.error] || "Dictée interrompue (" + ev.error + ").", { error: ev.error !== "no-speech", ms: 4000 });
+    const apply = text => { input.value = text; app.state.query = text; redraw(); };
+    btn.classList.add("listening");
+    btn.setAttribute("aria-label", "Écoute en cours");
+    input.blur();
+    r.onresult = e => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += (finalText ? " " : "") + t.trim(); else interim += t;
+      }
+      heard = true;
+      apply((finalText + " " + interim).trim());
+    };
+    r.onerror = ev => {
+      done();
+      if (ev.error === "aborted") return;
+      toast(MSGS[ev.error] || "Dictée interrompue (" + ev.error + ").", { error: ev.error !== "no-speech", ms: 4000 });
+    };
+    r.onend = () => {
+      done();
+      if (!heard) return;
+      const q = (finalText || input.value).trim();
+      if (!q) return;
+      apply(q);
+      const res = search(q, 12);
+      if (res.length && isClearHit(res)) openProduct(app, res[0]);
+    };
+    try { r.start(); } catch (e) { done(); toast("Impossible de démarrer la dictée.", { error: true }); }
   };
-  r.onend = () => {
-    stopUi();
-    if (!gotSomething) return;
-    const q = (finalText || input.value).trim();
-    if (!q) return;
-    apply(q);
-    const res = search(q, 12);
-    if (res.length && isClearHit(res)) openProduct(app, res[0]);
+  const release = () => {
+    clearTimeout(holdTimer);
+    if (!rec) return;
+    if (Date.now() - pressedAt < 400) return; // appui bref : on laisse l'écoute se terminer seule
+    try { rec.stop(); } catch (e) { /* ignore */ }
   };
-  try { r.start(); } catch (e) { stopUi(); toast("Impossible de démarrer la dictée.", { error: true }); }
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    if (rec && Date.now() - pressedAt >= 400) { try { rec.stop(); } catch (err) { /* ignore */ } return; }
+    pressedAt = Date.now();
+    if (navigator.vibrate) navigator.vibrate(15);
+    start();
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(ev => btn.addEventListener(ev, release));
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+  btn.addEventListener("click", e => e.preventDefault());
 }
