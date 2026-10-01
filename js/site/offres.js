@@ -28,7 +28,7 @@ function showDemo() {
   }
   const res = search(q, 3);
   if (!res.length) {
-    out.innerHTML = `<div class="demo-empty">Aucun produit pour « ${esc(q)} ». Sur le terrain, l'agent photographierait l'étiquette.</div>`;
+    out.innerHTML = `<div class="demo-empty">Aucun produit pour « ${esc(q)} ». Sur le terrain, l'agent prendrait le produit en photo.</div>`;
     foot.textContent = "";
     return;
   }

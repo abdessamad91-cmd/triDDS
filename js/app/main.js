@@ -1,7 +1,7 @@
 // Point d'entrée de l'appli agent : routage par écrans (avec bouton retour du téléphone),
 // barre d'onglets, reprise de session et battement de cœur.
 
-import { esc, icon, toast, raw, closeTopOverlay } from "../shared/ui.js";
+import { esc, icon, toast, raw, closeTopOverlay, clearToast } from "../shared/ui.js";
 import { post, ApiError } from "../shared/api.js";
 import { loadBase } from "../shared/catalog.js";
 import { sess, isLoggedIn, isDemo, applyAccess, clearSess, saveSess, toReview, cache, deviceName } from "./store.js";
@@ -94,12 +94,14 @@ export const app = {
 
 function show(name, { keepScroll = false } = {}) {
   if (currentView && currentView.unmount) currentView.unmount();
+  if (name !== current) clearToast();
   current = name;
   currentView = VIEWS[name];
   const y = window.scrollY;
   root.innerHTML = `<div class="screen ${currentView.tabs === false ? "no-tabs" : ""}" data-screen="${name}">${currentView.render(app)}</div>`;
   if (currentView.mount) currentView.mount(root.firstElementChild, app);
   root.querySelectorAll("[data-back]").forEach(b => b.addEventListener("click", () => app.back()));
+  root.querySelectorAll("[data-tab-go]").forEach(b => b.addEventListener("click", () => app.go(b.dataset.tabGo, { replace: true })));
   renderTabs();
   window.scrollTo(0, keepScroll ? y : 0);
   const h = root.querySelector("h1");
@@ -175,7 +177,13 @@ export async function heartbeat(force = false) {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") heartbeat(true); });
 
 // Photo introuvable : on masque l'icône d'image cassée.
-document.addEventListener("error", e => { if (e.target && e.target.tagName === "IMG") e.target.classList.add("broken"); }, true);
+document.addEventListener("error", e => {
+  const img = e.target;
+  if (!img || img.tagName !== "IMG") return;
+  if (img.classList.contains("thumb")) { img.outerHTML = `<span class="thumb empty">${icon("box")}</span>`; return; }
+  const holder = img.closest(".gallery > button, .compare figure, .person .av");
+  if (holder) holder.hidden = true; else img.classList.add("broken");
+}, true);
 
 // ---------- démarrage ----------
 loadBase([]);

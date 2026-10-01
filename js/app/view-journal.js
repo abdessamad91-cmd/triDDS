@@ -2,20 +2,21 @@
 
 import { html, icon, relTime } from "../shared/ui.js";
 import { destination } from "../shared/catalog.js";
-import { journal, updateJournal } from "./store.js";
+import { siteJournal, updateJournal } from "./store.js";
 import { learn } from "./memory.js";
 import { topbar, pickProduct } from "./common.js";
 
 const FILTERS = [
   { id: "all", label: "Tout", test: () => true },
   { id: "review", label: "À vérifier", test: e => !e.reviewed },
-  { id: "ok", label: "Validés", test: e => e.reviewed && e.validationType !== "corrected" },
+  { id: "ok", label: "Validés", test: e => e.reviewed && !["corrected", "consulted"].includes(e.validationType) },
   { id: "corrected", label: "Corrigés", test: e => e.validationType === "corrected" }
 ];
 
 function statusOf(e) {
   if (e.validationType === "corrected") return html`<span class="status fixed">Corrigé</span>`;
   if (!e.reviewed) return html`<span class="status review">À vérifier</span>`;
+  if (e.validationType === "consulted") return html`<span class="status">Consulté</span>`;
   return html`<span class="status ok">${e.validationType === "auto" ? "Lu par l'IA" : "Validé"}</span>`;
 }
 
@@ -23,6 +24,7 @@ export const journalView = {
   tab: "journal",
   render(app) {
     const f = FILTERS.find(x => x.id === app.state.jrnFilter) || FILTERS[0];
+    const journal = siteJournal();
     const list = journal.filter(f.test);
     return html`${topbar({ title: "Journal" })}
       <div class="wrap">
@@ -54,7 +56,7 @@ export const journalView = {
       }
       const fix = e.target.closest("[data-fix]");
       if (fix) {
-        const it = journal.find(x => x.id === fix.dataset.fix);
+        const it = siteJournal().find(x => x.id === fix.dataset.fix);
         const p = await pickProduct({ sub: "Lu : " + (it ? it.name : ""), initial: it ? it.name : "" });
         if (!p || !it) return;
         updateJournal(it.id, { correctedTo: p.n, correctedFlux: p.f, correctedCategory: p.x, validationType: "corrected", reviewed: true });

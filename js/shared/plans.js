@@ -43,7 +43,7 @@ export const PLANS = {
     agents: null,
     sites: 5,
     pitch: "Jusqu'à 5 déchèteries, un seul interlocuteur.",
-    features: ["Jusqu'à 5 sites", "750 scans par mois au total", "Agents illimités", "Tout le plan Pro", "Suivi centralisé"],
+    features: ["Jusqu'à 5 sites", "750 scans photo par mois au total", "Agents illimités", "Tout le plan Pro", "Suivi centralisé"],
     public: true
   },
   enterprise: {

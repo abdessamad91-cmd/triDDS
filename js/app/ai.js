@@ -136,7 +136,7 @@ export function matchOne(ai) {
   }
 
   // 2. Rapprochement avec la base à partir de la lecture IA.
-  if (name.length < 2 && brand.length < 2) return { n: "Produit non identifié", f: "H", x: NON_ID, c: "Porter les EPI. Ne pas mélanger.", conf: 0, vol, aiData: ai };
+  if (name.length < 2 && brand.length < 2) return { n: "Produit non identifié", f: "H", x: NON_ID, c: "Isolez le produit, ne le mélangez pas, portez les EPI.", conf: 0, vol, aiData: ai };
   const aiFlux = ai.filiere ? FILIERE(ai.filiere) : null;
   const results = searchMany([ref, name, brand, cat && ref ? ref + " " + cat : ""].filter(Boolean));
   const sameCat = cat ? results.filter(r => r.x === cat) : [];
@@ -150,5 +150,5 @@ export function matchOne(ai) {
     const fixed = fluxForCategory(cat);
     return { n: display || ref, f: fixed || aiFlux, x: cat, c: ai.consigne || "", s: "", conf: Math.min(conf, 65), vol, aiData: ai, notInBase: true };
   }
-  return { n: display || "Produit non identifié", f: "H", x: NON_ID, c: "Porter les EPI. Ne pas mélanger.", conf: 0, vol, aiData: ai };
+  return { n: "Produit non identifié", label: display, f: "H", x: NON_ID, c: "Isolez le produit, ne le mélangez pas, portez les EPI.", conf: 0, vol, aiData: ai };
 }

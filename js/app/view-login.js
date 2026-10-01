@@ -21,7 +21,7 @@ export const loginView = {
     if (step === "names" && pending) {
       card = html`<div class="login-card">
         <div><div class="hint">Site</div><div style="font-size:20px;font-weight:700">${pending.site}</div></div>
-        <div class="field"><span>Qui êtes-vous ?</span>
+        <div class="field"><span>Qui êtes-vous ?</span>
           ${pending.agents.length
             ? html`<div class="names">${pending.agents.map(n => html`<button class="name-btn" data-agent="${n}"><span class="av">${initials(n)}</span>${n}</button>`)}</div>`
             : html`<p class="note hors">Aucun profil n'est encore créé sur ce site. Demandez à votre responsable ou à TriDDS d'ajouter votre nom.</p>`}
@@ -41,7 +41,7 @@ export const loginView = {
     } else {
       card = html`<form class="login-card" data-code>
         <label class="field"><span>Code du site</span>
-          <input class="input code-input" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-1234" required value="${(last && last.code) || ""}"></label>
+          <input class="input code-input" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ex. : NANC-7K2P4F" required value="${(last && last.code) || ""}"></label>
         ${m}
         <button class="btn btn-primary btn-lg" type="submit">Continuer</button>
       </form>`;
@@ -55,7 +55,7 @@ export const loginView = {
       <div class="login-in">
         <div class="login-brand"><img src="./assets/symbol-128.png" alt="" width="52" height="52"><b>TriDDS</b></div>
         <div><h1>Le bon bac, en deux secondes.</h1>
-        <p class="lead" style="margin-top:8px">Cherchez un produit ou photographiez son étiquette : TriDDS indique s'il va en EcoDDS, hors EcoDDS ou s'il doit être refusé.</p></div>
+        <p class="lead" style="margin-top:8px">Cherchez un produit ou prenez-le en photo : TriDDS indique s'il va en EcoDDS, hors EcoDDS ou s'il doit être refusé.</p></div>
         ${resume}
         ${card}
       </div>

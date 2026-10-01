@@ -60,21 +60,25 @@ export function deviceName() {
 // ---------- historique (15 derniers produits orientés) ----------
 export let history = load(K.hist, []);
 if (!Array.isArray(history)) history = [];
+// Historique propre au site connecté (un téléphone peut servir à plusieurs codes).
+export const siteHistory = () => history.filter(h => (h.code || "") === sess.code);
 export function addHistory(r) {
-  const entry = { nm: r.n, f: r.f, x: r.x || "", s: r.s || "", vol: r.vol || "", overSeuil: !!r.overSeuil, at: Date.now() };
+  const entry = { nm: r.n, f: r.f, x: r.x || "", s: r.s || "", vol: r.vol || "", overSeuil: !!r.overSeuil, at: Date.now(), code: sess.code };
   history = [entry].concat(history.filter(h => !(h.nm === entry.nm && h.overSeuil === entry.overSeuil))).slice(0, 15);
   save(K.hist, history);
 }
-export function clearHistory() { history = []; save(K.hist, history); }
+export function clearHistory() { history = history.filter(h => (h.code || "") !== sess.code); save(K.hist, history); }
 
 // ---------- journal (200 dernières décisions) ----------
 export let journal = load(K.jrn, []);
 if (!Array.isArray(journal)) journal = [];
 const saveJournal = () => save(K.jrn, journal.slice(0, 200));
+export const siteJournal = () => journal.filter(e => (e.code || "") === sess.code);
 export function addJournal(e) {
   e.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   e.timestamp = Date.now();
   e.agent = sess.agent;
+  e.code = sess.code;
   e.reviewed = e.validationType !== "auto" || (e.confidence || 0) >= 70;
   journal.unshift(e);
   journal = journal.slice(0, 200);
@@ -86,7 +90,7 @@ export function updateJournal(id, patch) {
   if (e) { Object.assign(e, patch); saveJournal(); }
   return e;
 }
-export const toReview = () => journal.filter(e => !e.reviewed).length;
+export const toReview = () => siteJournal().filter(e => !e.reviewed).length;
 
 export const cache = {
   get catalog() { return load(K.cat, null); },

@@ -58,6 +58,7 @@ export function icon(name, cls = "") {
 
 // ---------- toasts ----------
 let toastHost;
+export function clearToast() { if (toastHost) toastHost.innerHTML = ""; }
 export function toast(msg, { error = false, ms = 2800 } = {}) {
   if (!toastHost) {
     toastHost = document.createElement("div");

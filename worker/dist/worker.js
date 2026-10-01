@@ -44,7 +44,7 @@ const PLANS = {
     agents: null,
     sites: 5,
     pitch: "Jusqu'à 5 déchèteries, un seul interlocuteur.",
-    features: ["Jusqu'à 5 sites", "750 scans par mois au total", "Agents illimités", "Tout le plan Pro", "Suivi centralisé"],
+    features: ["Jusqu'à 5 sites", "750 scans photo par mois au total", "Agents illimités", "Tout le plan Pro", "Suivi centralisé"],
     public: true
   },
   enterprise: {
@@ -968,8 +968,8 @@ async function handleAnalyze(request, env) {
     const u = usageView(site);
     if (!u.aiEnabled) {
       const msg = u.monthlyLimit > 0
-        ? "Quota de scans du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
-        : "Le scan photo n'est pas inclus dans cet accès. Contactez TriDDS pour l'activer.";
+        ? "Quota de photos du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
+        : "L'analyse photo n'est pas incluse dans cet accès. Contactez TriDDS pour l'activer.";
       return json({ error: msg, usage: buildAccessPayload(site, code, agent.name) }, 403);
     }
     if (u.monthlyRemaining > 0) { site.monthlyUsed = (site.monthlyUsed || 0) + 1; charged = "monthly"; }
@@ -1010,7 +1010,7 @@ async function handleAnalyze(request, env) {
     if (charged === "trial") site.trialUsed = Math.max(0, (site.trialUsed || 0) - 1);
     if (mode === "retry" && agent) agent.retryLeft = 1;
     await writeJsonKV(env.AUTH_STORE, code, site);
-    return json({ error: (data && data.error && data.error.message) || "Le service d'analyse ne répond pas. Le scan n'a pas été décompté.", usage: buildAccessPayload(site, code, v.agent.name) }, 502);
+    return json({ error: (data && data.error && data.error.message) || "Le service d'analyse ne répond pas. La photo n'a pas été décomptée.", usage: buildAccessPayload(site, code, v.agent.name) }, 502);
   }
   return json({ content: data.content || [], model: data.model, usage: buildAccessPayload(site, code, v.agent.name) });
 }

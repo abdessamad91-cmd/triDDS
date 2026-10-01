@@ -27,14 +27,14 @@ export const guideView = {
           <ol>
             <li>De quelle famille est le produit ? Lisez l'étiquette, pas seulement la marque.</li>
             <li>Le contenant respecte-t-il le seuil EcoDDS ? Au-delà, il passe en hors EcoDDS.</li>
-            <li>Est-ce un faux ami ou un produit hors périmètre ? Dans le doute, scannez.</li>
+            <li>Est-ce un faux ami ou un produit hors périmètre ? Dans le doute, prenez-le en photo.</li>
           </ol>
         </section>
 
         <section class="guide-block">
           <h2>Bacs EcoDDS</h2>
           <div class="families">${FAMILIES.map(([b, s]) => html`<div class="family"><b>${b}</b><span>${s}</span></div>`)}
-            <div class="family hors"><b>Cas à part</b><span>Filtres à huile, bidons de combustible vides</span></div>
+            <div class="family hors"><b>Bacs dédiés</b><span>Filtres à huile de voiture, bidons de combustible vides</span></div>
           </div>
         </section>
 
@@ -47,7 +47,7 @@ export const guideView = {
           <h2>Cas fréquents</h2>
           <ul>
             <li><b>Piscine</b> : chlore et brome en galets en comburants, chlore liquide et pH+ en bases, pH− en acides, algicide en phytos. Détartrant de ligne d'eau et testeur de pH : hors EcoDDS.</li>
-            <li><b>Voiture</b> : seuls peinture carrosserie, dégivrant, anti-goudron, liquide de refroidissement, antigel, polish et filtres à huile de voiture vont en EcoDDS.</li>
+            <li><b>Voiture</b> : seuls peinture carrosserie, dégivrant, anti-goudron, liquide de refroidissement, antigel et polish vont en EcoDDS ; les filtres à huile de voiture ont leur bac dédié. Tout le reste (huile moteur, liquide de frein…) : hors EcoDDS.</li>
             <li><b>Peintre</b> : pinceaux, rouleaux, bacs et spatules dans le bac outillage. Chiffons souillés et seaux divers : refusés.</li>
             <li><b>Jardin</b> : mention « Emploi autorisé dans les jardins » : EcoDDS. Logo ADIVALOR ou « utilisable en agriculture biologique » : hors EcoDDS.</li>
           </ul>
@@ -58,7 +58,7 @@ export const guideView = {
           <p>Acide picrique (explosif), arsénite de soude. Acide fluorhydrique : à isoler et signaler.</p>
         </section>
 
-        ${mem ? html`<section class="guide-block"><h2>Mémoire de l'équipe</h2><p>${mem} marque${mem > 1 ? "s" : ""} déjà reconnue${mem > 1 ? "s" : ""} par les agents de ce site. Elles sont réutilisées automatiquement lors des scans.</p></section>` : ""}
+        ${mem ? html`<section class="guide-block"><h2>Mémoire de l'équipe</h2><p>${mem} marque${mem > 1 ? "s" : ""} déjà reconnue${mem > 1 ? "s" : ""} par les agents de ce site, réutilisée${mem > 1 ? "s" : ""} automatiquement lors des photos.</p></section>` : ""}
       </div>`.toString();
   }
 };

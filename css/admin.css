@@ -47,7 +47,8 @@ body.admin { background: var(--concrete); }
 .tbl td { padding: 10px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
 .tbl tr.click { cursor: pointer; }
 .tbl tr.click:hover td { background: var(--paper-2); }
-.tbl .sub { display: block; font-size: 13px; color: var(--muted); }
+.tbl span.sub { display: block; font-size: 13px; color: var(--muted); }
+.tbl td.sub { font-size: 13px; color: var(--muted); }
 .tbl .mono { white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; letter-spacing: .02em; }
 .usage { min-width: 120px; }
 .usage .bar { height: 7px; border-radius: 999px; background: var(--line-2); overflow: hidden; margin-top: 4px; }
