@@ -42,7 +42,23 @@ node test/dev-server.mjs 8787 # API locale avec des données d'exemple
 
 Après une modification des consignes dans `data.js` : `node scripts/build-prompt.mjs`.
 
-## Déployer
+## Déployer sans rien installer (depuis le tableau de bord Cloudflare)
+
+Le fichier `dist/worker.js` contient tout le Worker en un seul morceau (généré par `node scripts/bundle.mjs`,
+testé à l'identique des sources).
+
+1. Dans Cloudflare : **Workers & Pages › wild-morning-f974 › Settings › Variables and Secrets › Add**,
+   type *Secret*, nom `NOTIFY_EMAIL`, valeur = l'adresse qui reçoit les demandes d'accès. Enregistrer.
+2. Toujours dans *Settings › Bindings*, vérifier que sont présents : KV `AUTH_STORE`, KV `MEMORY_STORE`,
+   R2 `IMAGES_BUCKET` (bucket `tridds-images`). Ajouter une variable (texte) `SITE_BASE_URL` = `https://tridds.com` si absente.
+3. Fusionner la pull request sur GitHub (le site se met à jour en une à deux minutes).
+4. Onglet **Edit code** du Worker : tout sélectionner (Ctrl+A), supprimer, coller le contenu de `dist/worker.js`
+   (ouvrir le fichier sur GitHub, bouton *Raw*, Ctrl+A, Ctrl+C), puis **Deploy**.
+5. Vérifier : https://wild-morning-f974.abdessamad91.workers.dev/ doit répondre `TriDDS API v2 OK`.
+
+Retour arrière : *Deployments* › version précédente › *Rollback*.
+
+## Déployer avec wrangler (Node.js installé)
 
 1. Ajouter l'adresse qui reçoit les demandes (une seule fois) :
    ```bash
