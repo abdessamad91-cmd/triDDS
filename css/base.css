@@ -125,7 +125,7 @@ a { color: inherit; }
 .note.int { background: var(--int-soft); border-color: var(--int-line); color: var(--int-text); }
 
 /* ---------- toast ---------- */
-.toast-host { position: fixed; left: 0; right: 0; bottom: calc(88px + var(--safe-b)); display: grid; justify-items: center; pointer-events: none; z-index: 400; padding: 0 16px; }
+.toast-host { position: fixed; left: 0; right: 0; top: calc(66px + var(--safe-t)); display: grid; justify-items: center; pointer-events: none; z-index: 400; padding: 0 16px; }
 .toast {
   background: var(--ink); color: #fff; padding: 12px 16px; border-radius: var(--r);
   font-weight: 600; font-size: 15px; box-shadow: var(--shadow); max-width: 480px;
@@ -158,3 +158,4 @@ a { color: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .ico { width: 20px; height: 20px; flex-shrink: 0; }
+img.broken { visibility: hidden; }

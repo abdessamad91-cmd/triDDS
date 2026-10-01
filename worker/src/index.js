@@ -41,8 +41,14 @@ function randomString(len, alphabet) {
   return Array.from(bytes, b => alphabet[b % alphabet.length]).join("");
 }
 const generateSessionId = () => randomString(24, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+// Préfixe tiré du nom de la commune plutôt que de « Déchèterie de… ».
+const CODE_SKIP = new Set(["dechetterie", "decheterie", "decheteries", "site", "centre", "ecopoint", "de", "du", "des", "la", "le", "les", "d", "l", "sur", "en"]);
+function codePrefix(siteName) {
+  const words = (siteName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z]+/).filter(w => w && !CODE_SKIP.has(w));
+  return (words[0] || "tri").slice(0, 4).toUpperCase();
+}
 function generateAccessCode(siteName) {
-  const pfx = (siteName || "").normalize("NFD").replace(/[^a-zA-Z]/g, "").slice(0, 4).toUpperCase() || "TRI";
+  const pfx = codePrefix(siteName);
   return pfx + "-" + randomString(6, "ABCDEFGHJKLMNPQRSTUVWXYZ23456789");
 }
 function safeEqual(a, b) {
@@ -626,6 +632,18 @@ async function handleAdmin(request, env) {
     normalizeRoles(data);
     await writeJsonKV(env.AUTH_STORE, code, data);
     return json({ ok: true, site: siteSummary(code, data) });
+  }
+
+  if (action === "images-all") {
+    // Toutes les photos (globales et par site) avec leur code, pour l'écran Produits de l'admin.
+    const origin = new URL(request.url).origin;
+    const index = await readIndex(env);
+    const out = [];
+    for (const code of [GLOBAL_CODE].concat(index.codes)) {
+      const store = await readJsonKV(env.MEMORY_STORE, "images-" + code) || { items: [] };
+      (store.items || []).filter(i => i.status !== "deleted").forEach(i => out.push(Object.assign({}, i, { code, url: i.r2Key ? origin + "/api/img/" + i.r2Key : i.url })));
+    }
+    return json({ ok: true, items: out });
   }
 
   if (action === "catalog-admin-list" || action === "knowledge-admin-list") {

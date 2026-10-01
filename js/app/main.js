@@ -155,6 +155,9 @@ export async function heartbeat(force = false) {
 ["click", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, () => heartbeat(false), { passive: true }));
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") heartbeat(true); });
 
+// Photo introuvable : on masque l'icône d'image cassée.
+document.addEventListener("error", e => { if (e.target && e.target.tagName === "IMG") e.target.classList.add("broken"); }, true);
+
 // ---------- démarrage ----------
 loadBase([]);
 initImages();

@@ -1,0 +1,135 @@
+// Tests du Worker v2 : node worker/test/api.test.mjs
+import assert from "node:assert/strict";
+import worker from "../src/index.js";
+import { makeEnv, sent } from "./env.mjs";
+
+const env = await makeEnv();
+const ctx = { waitUntil: p => p };
+async function call(path, body, { method = "POST", key, ip = "1.1.1.1" } = {}) {
+  const headers = { "Content-Type": "application/json", "CF-Connecting-IP": ip };
+  if (key) headers.Authorization = "Bearer " + key;
+  const res = await worker.fetch(new Request("http://w.test/api/" + path, { method, headers, body: method === "GET" ? undefined : JSON.stringify(body || {}) }), env, ctx);
+  return { status: res.status, data: await res.json().catch(() => ({})) };
+}
+const admin = (action, body = {}) => call("admin", Object.assign({ action }, body), { key: "cle-test" });
+let n = 0;
+const ok = (cond, msg) => { assert.ok(cond, msg); n++; console.log("  ✓ " + msg); };
+
+console.log("Site existant (format v1)");
+let r = await call("auth", { action: "login", code: "ludr-2026-abc" });
+ok(r.status === 200 && r.data.planName === "Pro" && r.data.monthlyLimit === 200, "connexion par code, offre Pro reconnue");
+ok(r.data.agents.length === 3, "liste des profils");
+r = await call("auth", { action: "register-agent", code: "LUDR-2026-ABC", agent: "Intrus" });
+ok(r.status === 400, "plus d'auto-inscription d'un agent avec le seul code");
+r = await call("auth", { action: "start-session", code: "LUDR-2026-ABC", agent: "Cyril Guilbert", deviceName: "Android" });
+ok(r.status === 200 && r.data.sessionId, "ouverture de session");
+const S = { code: "LUDR-2026-ABC", agent: "Cyril Guilbert", sessionId: r.data.sessionId };
+ok(r.data.canManageUsers === false, "un agent ne gère pas l'équipe");
+r = await call("auth", { action: "start-session", code: "LUDR-2026-ABC", agent: "Cyril Guilbert", deviceName: "iPhone" });
+ok(r.status === 409, "session déjà ouverte ailleurs signalée");
+
+console.log("Sécurité des écritures");
+r = await call("memory-set", { code: "LUDR-2026-ABC", brand: "destop", product: "x" });
+ok(r.status === 401, "mémoire : écriture refusée sans session");
+r = await call("memory-set", Object.assign({ brand: "Destop", product: "Déboucheur liquide", flux: "E", category: "Bases" }, S));
+ok(r.status === 200, "mémoire : écriture avec session");
+r = await call("memory-set", Object.assign({ brand: "destop", action: "delete" }, S));
+ok(r.status === 403, "mémoire : suppression réservée au responsable");
+r = await call("product-images", { code: "_GLOBAL", action: "save", item: { productName: "x", url: "https://x" } });
+ok(r.status === 403, "photos : écriture globale refusée sans clé admin");
+r = await call("product-images", { code: "LUDR-2026-ABC", action: "delete", id: "img1" });
+ok(r.status === 401, "photos : suppression refusée sans session");
+r = await call("product-images", Object.assign({ action: "save", item: { productName: "White spirit", url: "https://exemple.fr/p.jpg" } }, S));
+ok(r.status === 200 && r.data.item.addedBy === "Cyril Guilbert", "photos : un agent ajoute une photo à son site");
+r = await call("product-images", Object.assign({ action: "delete", id: r.data.item.id }, S));
+ok(r.status === 403, "photos : un agent ne supprime pas");
+r = await call("analyze", { code: "LUDR-2026-ABC", image: "AAAA", prompt: "x" });
+ok(r.status === 401, "analyse IA refusée sans session");
+
+console.log("Analyse IA et quotas");
+r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", system: "s", model: "haiku", mode: "final" }, S));
+ok(r.status === 200 && r.data.usage.monthlyUsed === 169, "scan compté (169/200)");
+ok(r.data.system_cached === true, "consignes envoyées en cache de prompt");
+r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", model: "sonnet", mode: "retry" }, S));
+ok(r.status === 200 && r.data.usage.monthlyUsed === 169, "seconde passe Sonnet non comptée");
+r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", model: "sonnet", mode: "retry" }, S));
+ok(r.status === 409, "pas de seconde passe gratuite à répétition");
+
+console.log("Ancien essai gratuit épuisé");
+r = await call("auth", { action: "start-session", code: "TRY-OLDTRIAL", agent: "Marc" });
+const T = { code: "TRY-OLDTRIAL", agent: "Marc", sessionId: r.data.sessionId };
+ok(r.data.planName === "Essai" && r.data.aiEnabled === false, "essai reconnu, scans épuisés");
+r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p" }, T));
+ok(r.status === 403 && /pas inclus|Quota/.test(r.data.error), "scan refusé avec un message clair");
+
+console.log("Demande d'accès");
+sent.length = 0;
+r = await call("request-access", { name: "Paul Petit", email: "PAUL@mairie.fr", organisation: "Mairie de Seichamps", sites: "1", plan: "essentiel", message: "Bonjour" });
+ok(r.status === 200 && r.data.id, "demande enregistrée");
+ok(sent.length === 2 && sent[0].to[0] === "admin@exemple.fr" && sent[1].to[0] === "paul@mairie.fr", "email à l'admin et confirmation au prospect");
+r = await call("request-access", { name: "Robot", email: "r@x.fr", organisation: "x", website: "spam" });
+ok(r.status === 200 && !r.data.id, "champ piège : robot ignoré sans erreur");
+for (let i = 0; i < 4; i++) await call("request-access", { name: "A", email: "a@b.fr", organisation: "o" }, { ip: "9.9.9.9" });
+r = await call("request-access", { name: "A", email: "a@b.fr", organisation: "o" }, { ip: "9.9.9.9" });
+ok(r.status === 200, "5e demande de la même IP acceptée");
+r = await call("request-access", { name: "A", email: "a@b.fr", organisation: "o" }, { ip: "9.9.9.9" });
+ok(r.status === 429, "6e demande de la même IP bloquée");
+for (const p of ["create-trial", "create-checkout"]) { r = await call(p, {}); ok(r.status === 410, p + " fermé (410)"); }
+
+console.log("Administration");
+r = await call("admin", { action: "dashboard" }, { key: "mauvaise" });
+ok(r.status === 401, "clé admin incorrecte refusée");
+r = await admin("dashboard");
+ok(r.status === 200 && r.data.requests.length >= 2 && r.data.stats.openRequests >= 2, "tableau de bord avec demandes");
+const legacySite = r.data.sites.find(s => s.code === "LUDR-2026-ABC");
+ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === 10, "usage et limite d'agents par site");
+sent.length = 0;
+r = await admin("create", { site: "Déchèterie de Château-Salins", client: "SIVOM du Saulnois", responsable: "Claire Martin", principalEmail: "c.martin@sivom.fr", agents: ["Luc", "Ana", "luc"], plan: "essentiel", requestId: "REQ-TEST0001", sendEmail: true });
+ok(r.status === 200 && /^CHAT-[A-Z0-9]{6}$/.test(r.data.code), "accès créé, code généré : " + r.data.code);
+const C = r.data.code;
+ok(r.data.email.sent && sent[0].text.includes(C), "email d'accès avec le code");
+r = await admin("requests-list");
+ok(r.data.items.find(x => x.id === "REQ-TEST0001").status === "convertie", "demande marquée convertie");
+r = await call("auth", { action: "login", code: C });
+ok(r.data.agents.join(",") === "Claire Martin,Luc,Ana", "responsable et agents créés, sans doublon");
+r = await call("auth", { action: "start-session", code: C, agent: "Claire Martin" });
+const R = { code: C, agent: "Claire Martin", sessionId: r.data.sessionId };
+ok(r.data.agentRole === "responsable" && r.data.canManageUsers === false && r.data.teamLocked, "équipe verrouillée par défaut");
+r = await call("site-admin", Object.assign({ action: "add-user", name: "Zoé" }, R));
+ok(r.status === 403, "le responsable ne peut pas ajouter d'agent si l'équipe est verrouillée");
+await admin("update", { code: C, teamLocked: false });
+r = await call("site-admin", Object.assign({ action: "add-user", name: "Zoé" }, R));
+ok(r.status === 403 && /3 profils/.test(r.data.error), "limite de 3 profils de l'offre Essentiel");
+await admin("update", { code: C, agentsOverride: 5 });
+r = await call("site-admin", Object.assign({ action: "add-user", name: "Zoé" }, R));
+ok(r.status === 200, "limite relevée par l'admin, ajout possible");
+r = await call("site-admin", Object.assign({ action: "catalog-save", item: { n: "x", x: "y" } }, R));
+ok(r.status === 403, "fiches du site réservées à l'offre Pro");
+r = await admin("update", { code: C, plan: "pro", scansOverride: 300 });
+ok(r.data.site.monthlyLimit === 300 && r.data.site.planName === "Pro", "changement d'offre et quota spécifique");
+r = await call("auth", { action: "heartbeat", code: C, agent: "Claire Martin", sessionId: R.sessionId });
+ok(r.status === 401, "changement d'offre : sessions fermées");
+r = await admin("regenerate-code", { code: C });
+const C2 = r.data.code;
+ok(C2 && C2 !== C, "nouveau code généré");
+r = await call("auth", { action: "login", code: C });
+ok(r.status === 401, "ancien code refusé");
+r = await call("auth", { action: "login", code: C2 });
+ok(r.status === 200 && r.data.site === "Déchèterie de Château-Salins", "nouveau code valide");
+r = await admin("rename-agent", { code: C2, agent: "Ana", newName: "Ana Lopes" });
+ok(r.data.site.agentsList.some(a => a.name === "Ana Lopes"), "profil renommé");
+r = await admin("update", { code: C2, active: false });
+r = await call("auth", { action: "login", code: C2 });
+ok(r.status === 403, "accès suspendu");
+
+console.log("Photos publiques");
+r = await call("public-images", null, { method: "GET" });
+ok(r.status === 200 && r.data.items.some(i => i.url.endsWith("/api/img/_GLOBAL/img1.jpg")), "liste publique avec URL R2");
+r = await call("admin-images", { action: "save", code: "_GLOBAL", imageData: Buffer.from("img").toString("base64"), imageMime: "image/png", item: { productName: "Acide Borique", imageFlux: "H" } }, { key: "cle-test" });
+ok(r.status === 200 && r.data.item.r2Key.startsWith("_GLOBAL/"), "upload admin vers R2");
+r = await call("public-images", null, { method: "GET" });
+ok(r.data.items.some(i => i.productName === "Acide Borique"), "cache public vidé après ajout");
+r = await admin("images-all");
+ok(r.data.items.every(i => i.code), "liste admin des photos avec code du site");
+
+console.log(`\n${n} vérifications réussies`);
