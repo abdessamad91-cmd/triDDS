@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import worker from "../src/index.js";
 import { makeEnv, sent, anthropicCalls } from "./env.mjs";
 const lastAnthropic = () => anthropicCalls[anthropicCalls.length - 1];
+const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1, 1, 0, 0, 1]).toString("base64");
+const JPG2 = Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0, 16, 69, 120, 105, 102, 0, 0, 2, 0, 0, 1]).toString("base64");
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 73, 72, 68, 82]).toString("base64");
 
 const env = await makeEnv();
 const ctx = { waitUntil: p => p };
@@ -46,30 +49,35 @@ r = await call("product-images", { code: "LUDR-2026-ABC", action: "delete", id: 
 ok(r.status === 401, "photos : suppression refusée sans session");
 r = await call("product-images", Object.assign({ action: "save", item: { productName: "White spirit", url: "https://exemple.fr/p.jpg" } }, S));
 ok(r.status === 400, "photos : un agent ne peut pas pointer vers une URL externe");
-r = await call("product-images", Object.assign({ action: "save", imageData: Buffer.from("x").toString("base64"), item: { productName: "White spirit", r2Key: "_GLOBAL/img1.jpg" } }, S));
+r = await call("product-images", Object.assign({ action: "save", imageData: JPG, imageMime: "image/jpeg", item: { productName: "White spirit", r2Key: "_GLOBAL/img1.jpg" } }, S));
 ok(r.status === 200 && r.data.item.addedBy === "Cyril Guilbert" && r.data.item.r2Key.startsWith("LUDR-2026-ABC/"), "photos : un agent ajoute une vraie photo, rangée sous son site");
 r = await call("product-images", Object.assign({ action: "delete", id: r.data.item.id }, S));
 ok(r.status === 403, "photos : un agent ne supprime pas");
-r = await call("analyze", { code: "LUDR-2026-ABC", image: "AAAA", prompt: "x" });
+r = await call("product-images", Object.assign({ action: "save", imageData: Buffer.from("<svg onload=alert(1)>").toString("base64"), imageMime: "image/svg+xml", item: { productName: "x" } }, S));
+ok(r.status === 400, "photos : SVG ou HTML refusés");
+r = await call("product-images", Object.assign({ action: "save", imageData: Buffer.from("<html><body>x</body></html>").toString("base64"), imageMime: "image/jpeg", item: { productName: "x" } }, S));
+ok(r.status === 400, "photos : faux JPEG refusé (contenu vérifié)");
+r = await call("analyze", { code: "LUDR-2026-ABC", image: JPG, prompt: "x" });
 ok(r.status === 401, "analyse IA refusée sans session");
 
 console.log("Analyse IA et quotas");
-r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", system: "s", model: "haiku", mode: "final" }, S));
+r = await call("analyze", Object.assign({ image: JPG, prompt: "p", system: "s", model: "haiku", mode: "final" }, S));
 ok(r.status === 200 && r.data.usage.monthlyUsed === 169, "scan compté (169/200)");
 ok(lastAnthropic().system[0].cache_control && lastAnthropic().system[0].text.length > 20000, "consignes métier côté serveur, en cache de prompt");
 ok(!JSON.stringify(lastAnthropic()).includes('"s"'), "le prompt système envoyé par le client est ignoré");
-r = await call("analyze", Object.assign({ image: "BBBB", mode: "retry" }, S));
+ok(lastAnthropic().messages[0].content[1].text.includes('"onyx"'), "mémoire du site ajoutée côté serveur");
+r = await call("analyze", Object.assign({ image: JPG2, mode: "retry" }, S));
 ok(r.status === 409, "seconde passe refusée sur une autre photo");
-r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", model: "sonnet", mode: "retry" }, S));
+r = await call("analyze", Object.assign({ image: JPG, prompt: "p", model: "sonnet", mode: "retry" }, S));
 ok(r.status === 200 && r.data.usage.monthlyUsed === 169 && lastAnthropic().model.includes("sonnet"), "seconde passe Sonnet non comptée");
-r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", model: "sonnet", mode: "retry" }, S));
+r = await call("analyze", Object.assign({ image: JPG, prompt: "p", model: "sonnet", mode: "retry" }, S));
 ok(r.status === 409, "pas de seconde passe gratuite à répétition");
 
 console.log("Ancien essai gratuit épuisé");
 r = await call("auth", { action: "start-session", code: "TRY-OLDTRIAL", agent: "Marc" });
 const T = { code: "TRY-OLDTRIAL", agent: "Marc", sessionId: r.data.sessionId };
 ok(r.data.planName === "Essai" && r.data.aiEnabled === false, "essai reconnu, scans épuisés");
-r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p" }, T));
+r = await call("analyze", Object.assign({ image: JPG, prompt: "p" }, T));
 ok(r.status === 403 && /pas inclus|Quota/.test(r.data.error), "scan refusé avec un message clair");
 
 console.log("Demande d'accès");
@@ -133,10 +141,16 @@ r = await admin("update", { code: C2, active: false });
 r = await call("auth", { action: "login", code: C2 });
 ok(r.status === 403, "accès suspendu");
 
+r = await admin("update", { code: "TRI-RESEAU01", scansOverride: "" });
+ok(r.data.site.monthlyLimit === 150, "site v1 : l'admin peut revenir au quota standard (pas écrasé par la migration)");
+r = await admin("update", { code: "TRY-OLDTRIAL", plan: "essentiel" });
+r = await call("auth", { action: "login", code: "TRY-OLDTRIAL" });
+ok(r.data.memoryEnabled === false, "site v1 passé en Essentiel : règles de la nouvelle offre");
+
 console.log("Photos publiques");
 r = await call("public-images", null, { method: "GET" });
 ok(r.status === 200 && r.data.items.some(i => i.url.endsWith("/api/img/_GLOBAL/img1.jpg")), "liste publique avec URL R2");
-r = await call("admin-images", { action: "save", code: "_GLOBAL", imageData: Buffer.from("img").toString("base64"), imageMime: "image/png", item: { productName: "Acide Borique", imageFlux: "H" } }, { key: "cle-test" });
+r = await call("admin-images", { action: "save", code: "_GLOBAL", imageData: PNG, imageMime: "image/png", item: { productName: "Acide Borique", imageFlux: "H" } }, { key: "cle-test" });
 ok(r.status === 200 && r.data.item.r2Key.startsWith("_GLOBAL/"), "upload admin vers R2");
 r = await call("public-images", null, { method: "GET" });
 ok(r.data.items.some(i => i.productName === "Acide Borique"), "cache public vidé après ajout");

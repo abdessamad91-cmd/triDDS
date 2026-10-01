@@ -25,8 +25,30 @@ self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(p => new Request(p, { cache: "reload" })))));
 });
 
+// Filet de sécurité si VERSION n'a pas été changée lors d'une mise en ligne :
+// l'appli demande « check », on compare les fichiers texte avec le serveur ; si l'un a changé,
+// « refresh » recharge tous les fichiers d'un coup (jamais de mélange) puis l'appli se recharge.
+const TEXT = /\.(js|css|html|json)$|\/$/;
+async function shellIsStale() {
+  const c = await caches.open(VERSION);
+  for (const p of SHELL.filter(x => TEXT.test(x))) {
+    const [cached, fresh] = await Promise.all([c.match(p, { ignoreSearch: true }), fetch(p, { cache: "no-cache" })]);
+    if (!cached || !fresh.ok) continue;
+    if ((await cached.text()) !== (await fresh.text())) return true;
+  }
+  return false;
+}
+async function refreshShell() {
+  const responses = await Promise.all(SHELL.map(p => fetch(new Request(p, { cache: "reload" }))));
+  if (responses.some(r => !r.ok)) throw new Error("incomplet");
+  const c = await caches.open(VERSION);
+  await Promise.all(SHELL.map((p, i) => c.put(p, responses[i])));
+}
+
 self.addEventListener("message", e => {
   if (e.data === "skipWaiting") self.skipWaiting();
+  if (e.data === "check") e.waitUntil(shellIsStale().then(stale => { if (stale && e.source) e.source.postMessage("stale"); }).catch(() => {}));
+  if (e.data === "refresh") e.waitUntil(refreshShell().then(() => e.source && e.source.postMessage("refreshed")).catch(() => {}));
 });
 
 self.addEventListener("activate", e => {

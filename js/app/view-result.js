@@ -16,7 +16,7 @@ function placard(r, flip) {
   const logo = d.tone === "eco" ? "./assets/eco-dds-96.png" : "./assets/hors-eco-dds-96.png";
   return html`<section class="placard ${d.tone} ${flip ? "flip" : ""}" aria-live="polite">
     <div class="placard-kicker">${d.tone !== "int" ? html`<img src="${logo}" alt="" width="36" height="36">` : icon("alert")}<span>${d.kicker}</span></div>
-    <div class="placard-label">${d.tone === "int" ? "Consigne" : needsThreshold(r) || r.seuilUnknown ? "Bac, si le seuil est respecté" : "Mettre dans le bac"}</div>
+    <div class="placard-label">${d.tone === "int" ? "Consigne" : needsThreshold(r) ? "Bac, si le seuil est respecté" : r.seuilUnknown ? "Dans le doute, mettre dans le bac" : "Mettre dans le bac"}</div>
     <div class="placard-bac">${d.bac}</div>
     <div class="placard-prod">${r.n}${r.label && r.label !== r.n ? html`<small>Lu sur l'étiquette : ${r.label}</small>` : ""}</div>
   </section>`;
@@ -33,7 +33,7 @@ function thresholdBlock(r) {
     </div>`;
   }
   if (r.seuilUnknown) {
-    return html`<div class="note hors"><b>Contenance à vérifier.</b> Lisez-la sur l'étiquette avant de déposer : jusqu'à ${v}, bac EcoDDS ${r.x} ; au-delà, hors EcoDDS (${horsBacFor(r.x)}). Dans le doute, hors EcoDDS. <button class="btn btn-quiet" data-seuil="reset">Répondre</button></div>`;
+    return html`<div class="note hors"><b>Contenance non vérifiée : hors EcoDDS par précaution.</b> Si l'étiquette indique ${v} ou moins, le produit peut aller dans le bac EcoDDS ${r.x}. <button class="btn btn-quiet" data-seuil="reset">J'ai vérifié</button></div>`;
   }
   return r.overSeuil
     ? html`<div class="note hors">Contenant au-delà de ${v} : il ne va pas en EcoDDS. <button class="btn btn-quiet" data-seuil="reset">Modifier</button></div>`
@@ -124,9 +124,10 @@ export const resultView = {
         if (v === "reset") { r.seuilAnswered = false; r.overSeuil = false; r.seuilUnknown = false; if (r.source === "search") r.validated = false; }
         else {
           r.seuilAnswered = true;
-          r.overSeuil = v === "over";
+          // « Je ne sais pas » : par précaution, traité comme un dépassement (hors EcoDDS).
+          r.overSeuil = v === "over" || v === "unknown";
           r.seuilUnknown = v === "unknown";
-          if (v === "over") flipNext = true;
+          if (r.overSeuil) flipNext = true;
           if (r.source === "search") record(r, r.seuilUnknown ? "unsure" : "confirmed");
           else if (r.validated && r.jrnId) updateJournal(r.jrnId, { overSeuil: r.overSeuil, reviewed: !r.seuilUnknown });
         }

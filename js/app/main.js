@@ -1,7 +1,7 @@
 // Point d'entrée de l'appli agent : routage par écrans (avec bouton retour du téléphone),
 // barre d'onglets, reprise de session et battement de cœur.
 
-import { esc, icon, toast, raw } from "../shared/ui.js";
+import { esc, icon, toast, raw, closeTopOverlay } from "../shared/ui.js";
 import { post, ApiError } from "../shared/api.js";
 import { loadBase } from "../shared/catalog.js";
 import { sess, isLoggedIn, isDemo, applyAccess, clearSess, saveSess, toReview, cache, deviceName } from "./store.js";
@@ -130,8 +130,11 @@ function renderTabs() {
 }
 
 window.addEventListener("popstate", e => {
-  // Bouton retour du téléphone : on ferme aussi les fenêtres ouvertes par-dessus l'écran.
-  document.querySelectorAll(".sheet-backdrop, .lightbox").forEach(x => x.remove());
+  // Bouton retour du téléphone avec une fenêtre ouverte : on ferme la fenêtre et on reste sur l'écran.
+  if (closeTopOverlay()) {
+    history.pushState({ s: current }, "", "#" + current);
+    return;
+  }
   const name = (e.state && e.state.s) || "home";
   show(isLoggedIn() ? name : "login");
 });
@@ -155,12 +158,14 @@ window.addEventListener("offline", updateOnline);
 let lastBeat = 0;
 export async function heartbeat(force = false) {
   if (!isLoggedIn() || isDemo() || !sess.sessionId || !navigator.onLine) return;
+  if (document.querySelector(".analyzing")) return; // pas pendant un scan
   if (!force && Date.now() - lastBeat < 60000) return;
   lastBeat = Date.now();
   try {
     const d = await post("auth", { action: "heartbeat", code: sess.code, agent: sess.agent, sessionId: sess.sessionId, deviceName: sess.deviceName || deviceName() }, { timeout: 12000 });
     applyAccess(d);
     app.updateQuota();
+    if (current === "profile") app.softRefresh();
   } catch (e) {
     if (e instanceof ApiError && (e.status === 401 || e.status === 403)) app.sessionLost(e.status === 403 ? e.message : "Session fermée ou reprise sur un autre appareil.");
   }
@@ -194,23 +199,36 @@ if (isLoggedIn()) {
 // Hors ligne et mises à jour : la nouvelle version s'installe en arrière-plan, l'agent choisit le moment.
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   let reloading = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloading) { reloading = true; location.reload(); } });
+  const hadController = !!navigator.serviceWorker.controller;
+  // Rechargement seulement lors d'une mise à jour, jamais à la toute première installation.
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloading) { reloading = true; location.reload(); } });
+  navigator.serviceWorker.addEventListener("message", e => {
+    if (e.data === "stale") offer(navigator.serviceWorker.controller, "refresh");
+    if (e.data === "refreshed") location.reload();
+  });
+  let lastCheck = 0;
+  const check = () => {
+    if (!navigator.serviceWorker.controller || !navigator.onLine || Date.now() - lastCheck < 30 * 60000) return;
+    lastCheck = Date.now();
+    navigator.serviceWorker.controller.postMessage("check");
+  };
+  function offer(w, msg = "skipWaiting") {
+    if (!w || !navigator.serviceWorker.controller || document.querySelector(".update-bar")) return;
+    const bar = document.createElement("div");
+    bar.className = "update-bar";
+    bar.setAttribute("role", "status");
+    bar.innerHTML = `<span>Nouvelle version de TriDDS disponible.</span><button class="btn btn-eco btn-sm">Mettre à jour</button>`;
+    bar.querySelector("button").addEventListener("click", () => { bar.querySelector("button").disabled = true; w.postMessage(msg); });
+    document.body.appendChild(bar);
+  }
+  setTimeout(check, 8000);
   navigator.serviceWorker.register("./sw.js").then(reg => {
-    const offer = w => {
-      if (!w || !navigator.serviceWorker.controller || document.querySelector(".update-bar")) return;
-      const bar = document.createElement("div");
-      bar.className = "update-bar";
-      bar.setAttribute("role", "status");
-      bar.innerHTML = `<span>Nouvelle version de TriDDS disponible.</span><button class="btn btn-eco btn-sm">Mettre à jour</button>`;
-      bar.querySelector("button").addEventListener("click", () => w.postMessage("skipWaiting"));
-      document.body.appendChild(bar);
-    };
     if (reg.waiting) offer(reg.waiting);
     reg.addEventListener("updatefound", () => {
       const w = reg.installing;
       if (w) w.addEventListener("statechange", () => { if (w.state === "installed") offer(w); });
     });
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reg.update().catch(() => {}); });
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { reg.update().catch(() => {}); check(); } });
   }).catch(() => {});
 }
 

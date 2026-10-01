@@ -75,6 +75,16 @@ export function toast(msg, { error = false, ms = 2800 } = {}) {
   toast._t = setTimeout(() => el.remove(), ms);
 }
 
+// ---------- fenêtres ouvertes (pour le bouton retour) ----------
+const overlays = [];
+export function registerOverlay(close) { overlays.push(close); return () => { const i = overlays.indexOf(close); if (i >= 0) overlays.splice(i, 1); }; }
+export function closeTopOverlay() {
+  const close = overlays.pop();
+  if (!close) return false;
+  close();
+  return true;
+}
+
 // ---------- feuilles ----------
 // openSheet({ title, sub, body, foot, onMount }) → { el, close }
 export function openSheet({ title, sub = "", body = "", foot = "", onMount, onClose, label }) {
@@ -86,9 +96,11 @@ export function openSheet({ title, sub = "", body = "", foot = "", onMount, onCl
     <div class="sheet-body">${body}</div>${foot ? `<div class="sheet-foot">${foot}</div>` : ""}</div>`;
   const prevFocus = document.activeElement;
   let closed = false;
+  let unregister = () => {};
   const close = () => {
     if (closed) return;
     closed = true;
+    unregister();
     back.remove();
     document.removeEventListener("keydown", onKey);
     if (onClose) onClose();
@@ -98,6 +110,7 @@ export function openSheet({ title, sub = "", body = "", foot = "", onMount, onCl
   back.addEventListener("click", e => { if (e.target === back || e.target.closest("[data-close]")) close(); });
   document.addEventListener("keydown", onKey);
   document.body.appendChild(back);
+  unregister = registerOverlay(close);
   const sheet = back.querySelector(".sheet");
   if (onMount) onMount(sheet, close);
   const first = sheet.querySelector("input, textarea, select");

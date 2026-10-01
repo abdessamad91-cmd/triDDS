@@ -345,8 +345,12 @@ async function handleAuth(request, env) {
     if (!agent || !agent.activeSession || isSessionExpired(agent.activeSession) || agent.activeSession.sessionId !== sessionId) {
       return json({ error: "SESSION_INVALID", message: "Session fermée ou reprise sur un autre appareil." }, 401);
     }
-    touchSession(agent, sessionId, agent.activeSession.deviceName || deviceName);
-    await writeJsonKV(env.AUTH_STORE, code, site);
+    // On n'écrit que si la dernière trace a plus de 3 minutes : moins d'écritures concurrentes
+    // avec un scan en cours (KV n'est pas transactionnel), session de 30 minutes inchangée.
+    if (action === "resume-session" || Date.now() - new Date(agent.activeSession.lastSeenAt).getTime() > 180000) {
+      touchSession(agent, sessionId, agent.activeSession.deviceName || deviceName);
+      await writeJsonKV(env.AUTH_STORE, code, site);
+    }
     return json(Object.assign(buildAccessPayload(site, code, agentName), { ok: true, sessionId, activeSession: sessionView(agent) }));
   }
 
@@ -569,10 +573,14 @@ async function handleAdmin(request, env) {
     const code = normalizeCode(body.code);
     const data = await readJsonKV(env.AUTH_STORE, code);
     if (!data) return json({ error: "Code introuvable" }, 404);
+    ensureUsageState(data); // migration des sites v1 AVANT d'appliquer les réglages de l'admin
     const prevPlan = data.plan, prevActive = data.active;
     const fields = { client: "clientName", principal: "principalName", principalEmail: "principalEmail", site: "site", contact: "contact", notes: "notes", billing: "billing", paidUntil: "paidUntil" };
     Object.entries(fields).forEach(([k, f]) => { if (body[k] !== undefined) data[f] = clip(body[k], k === "notes" ? 2000 : 200); });
-    if (body.plan !== undefined && PLANS[body.plan]) data.plan = body.plan;
+    if (body.plan !== undefined && PLANS[body.plan]) {
+      if (body.plan !== data.plan) data.legacyFeatures = false; // nouvelle offre : ses propres règles s'appliquent
+      data.plan = body.plan;
+    }
     if (body.active !== undefined) data.active = !!body.active;
     if (body.teamLocked !== undefined) data.teamLocked = !!body.teamLocked;
     if (body.trialTotal !== undefined) data.trialTotal = Math.max(0, parseInt(body.trialTotal, 10) || 0);
@@ -831,6 +839,14 @@ async function handleSiteCatalog(request, env) {
 }
 
 // ---------- analyse IA ----------
+// Marques déjà validées par l'équipe du site, ajoutées à la demande (construites côté serveur).
+async function memoryContext(env, code) {
+  const mem = await readJsonKV(env.MEMORY_STORE, "mem-" + code);
+  const entries = Object.entries((mem && mem.brands) || {}).sort((a, b) => (b[1].n || 0) - (a[1].n || 0)).slice(0, 60);
+  if (!entries.length) return "";
+  return "Marques déjà identifiées par l'équipe de ce site :\n" + entries.map(([b, e]) => `- "${clip(b, 60)}" → ${clip(e.p, 100)} [${clip(e.c, 60)} / ${e.f === "E" ? "EcoDDS" : "Hors EcoDDS"}] (vu ${Number(e.n) || 1} fois)`).join("\n");
+}
+
 // Consignes de lecture : fixées côté serveur, le client n'envoie que l'image et la mémoire du site.
 const USER_PROMPT = `Analyse cette photo prise en déchèterie (local DDS). Pour CHAQUE produit distinct visible :
 1) lis le texte exact de l'étiquette ; 2) déduis le type si l'emballage est reconnaissable ; 3) estime le volume ou la masse du contenant ;
@@ -854,11 +870,14 @@ async function handleAnalyze(request, env) {
   const mode = body.mode === "retry" ? "retry" : "final";
   if (!image || typeof image !== "string") return json({ error: "Image manquante" }, 400);
   if (image.length > MAX_IMAGE_B64) return json({ error: "Image trop lourde" }, 413);
+  const badImage = checkImage(image, mime);
+  if (badImage) return json({ error: badImage }, 400);
   const imageHash = await sha256(image);
 
   // On réserve le scan avant l'appel IA (plus de dépassement par appels simultanés), remboursé en cas d'échec.
-  let site = ensureUsageState(await readJsonKV(env.AUTH_STORE, code));
+  let site = ensureUsageState(await readJsonKV(env.AUTH_STORE, code) || v.site);
   let agent = ensureAgents(site).find(x => x.name === v.agent.name);
+  if (!agent) return json({ error: "Session expirée. Reconnectez-vous." }, 401);
   let charged = null;
   if (mode === "retry") {
     if (!agent.retryLeft || agent.lastScanHash !== imageHash || !agent.lastScanAt || Date.now() - new Date(agent.lastScanAt).getTime() > 180000) {
@@ -882,7 +901,7 @@ async function handleAnalyze(request, env) {
   await writeJsonKV(env.AUTH_STORE, code, site);
 
   const model = mode === "retry" ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
-  const context = clip(body.context, 6000);
+  const context = await memoryContext(env, code);
   const reqBody = {
     model,
     max_tokens: 2500,
@@ -917,6 +936,17 @@ async function handleAnalyze(request, env) {
 }
 
 // ---------- images ----------
+// Seules de vraies images JPEG, PNG ou WebP sont acceptées (type déclaré ET contenu).
+function checkImage(b64, mime) {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(mime)) return "Format refusé : JPEG, PNG ou WebP uniquement.";
+  let head;
+  try { head = atob(String(b64).slice(0, 24)); } catch (e) { return "Image illisible"; }
+  const b = i => head.charCodeAt(i);
+  const ok = (mime === "image/jpeg" && b(0) === 0xff && b(1) === 0xd8 && b(2) === 0xff)
+    || (mime === "image/png" && b(0) === 0x89 && head.slice(1, 4) === "PNG")
+    || (mime === "image/webp" && head.slice(0, 4) === "RIFF" && head.slice(8, 12) === "WEBP");
+  return ok ? "" : "Le fichier ne correspond pas à une image " + mime.split("/")[1].toUpperCase() + ".";
+}
 const mimeToExt = m => ({ "image/jpeg": "jpg", "image/jpg": "jpg", "image/png": "png", "image/webp": "webp" }[(m || "").toLowerCase()] || "jpg");
 
 async function handleImageServe(env, r2Key) {
@@ -970,6 +1000,8 @@ async function handleProductImages(request, env, { admin = false } = {}) {
     let r2Key = clip(item.r2Key, 200);
     if (body.imageData) {
       if (!env.IMAGES_BUCKET) return json({ error: "Stockage d'images non configuré" }, 500);
+      const bad = checkImage(body.imageData, body.imageMime);
+      if (bad) return json({ error: bad }, 400);
       if (String(body.imageData).length > MAX_IMAGE_B64) return json({ error: "Image trop lourde (5 Mo max)" }, 413);
       const ext = mimeToExt(body.imageMime);
       r2Key = `${code}/${id}.${ext}`;
@@ -1083,6 +1115,8 @@ async function handleCatImages(request, env) {
     if (c && c.r2Key && env.IMAGES_BUCKET) { try { await env.IMAGES_BUCKET.delete(c.r2Key); } catch (e) {} }
     delete data.categories[category];
   } else if (body.imageData && env.IMAGES_BUCKET) {
+    const bad = checkImage(body.imageData, body.imageMime);
+    if (bad) return json({ error: bad }, 400);
     const r2Key = "_cat/" + category.replace(/[^a-zA-Z0-9àâéèêëïîôùûüç -]/g, "_") + "." + mimeToExt(body.imageMime);
     await env.IMAGES_BUCKET.put(r2Key, Uint8Array.from(atob(body.imageData), c => c.charCodeAt(0)), { httpMetadata: { contentType: body.imageMime || "image/jpeg" } });
     data.categories[category] = { url: new URL(request.url).origin + "/api/img/" + r2Key, r2Key, updatedAt: nowIso() };

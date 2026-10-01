@@ -1,6 +1,6 @@
 // Éléments d'interface communs aux écrans de l'appli agent.
 
-import { html, raw, icon, esc, openSheet, debounce } from "../shared/ui.js";
+import { html, raw, icon, esc, openSheet, debounce, registerOverlay } from "../shared/ui.js";
 import { destination, search, NON_ID, allProducts, seuilText, norm } from "../shared/catalog.js";
 import { thumbFor } from "./images.js";
 import { sess, quota, isDemo } from "./store.js";
@@ -113,7 +113,8 @@ export function lightbox(urls, start = 0) {
     el.innerHTML = `<img src="${esc(urls[i])}" alt="">
       <div class="row-btns">${urls.length > 1 ? `<button class="btn" data-p>Précédente</button><button class="btn" data-n>Suivante</button>` : ""}<button class="btn" data-x>Fermer</button></div>`;
   };
-  const close = () => { el.remove(); document.removeEventListener("keydown", key); };
+  let unregister = () => {};
+  const close = () => { unregister(); el.remove(); document.removeEventListener("keydown", key); };
   const key = e => { if (e.key === "Escape") close(); if (e.key === "ArrowRight") { i = (i + 1) % urls.length; draw(); } if (e.key === "ArrowLeft") { i = (i - 1 + urls.length) % urls.length; draw(); } };
   el.addEventListener("click", e => {
     if (e.target.closest("[data-x]") || e.target === el) return close();
@@ -123,6 +124,7 @@ export function lightbox(urls, start = 0) {
   document.addEventListener("keydown", key);
   draw();
   document.body.appendChild(el);
+  unregister = registerOverlay(close);
 }
 
 export const productTotal = () => allProducts().length;

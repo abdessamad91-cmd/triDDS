@@ -148,7 +148,8 @@ export function destination(r) {
     return { tone: "eco", kicker: "EcoDDS", bac: r.x || NON_ID, action: "Bac", fluxLabel: "EcoDDS" };
   }
   const bac = r.overSeuil ? horsBacFor(r.x) : (r.x || NON_ID);
-  return { tone: "hors", kicker: r.overSeuil ? "Hors EcoDDS · seuil dépassé" : "Hors EcoDDS", bac, action: "Bac", fluxLabel: "Hors EcoDDS" };
+  const kicker = r.seuilUnknown ? "Hors EcoDDS, contenance non vérifiée" : r.overSeuil ? "Hors EcoDDS, seuil dépassé" : "Hors EcoDDS";
+  return { tone: "hors", kicker, bac, action: "Bac", fluxLabel: "Hors EcoDDS" };
 }
 
 export function seuilText(s) {
