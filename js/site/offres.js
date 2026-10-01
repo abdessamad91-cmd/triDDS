@@ -118,7 +118,7 @@ form.addEventListener("submit", async e => {
   try {
     await post("request-access", Object.assign(data, { source: "page-offres" }));
     form.innerHTML = html`<div class="done">${icon("check")}<h3>Demande envoyée</h3>
-      <p>Merci ${data.name.split(" ")[0]}. Vous recevez une confirmation par email, et je reviens vers vous sous 48 h ouvrées pour préparer l'accès.</p>
+      <p>Merci ${data.name.split(" ")[0]}. Je reviens vers vous sous 48 h ouvrées, par email ou par téléphone, pour préparer l'accès.</p>
       <a class="btn btn-ghost" href="./">Essayer la recherche en attendant</a></div>`.toString();
   } catch (err) {
     btn.disabled = false;

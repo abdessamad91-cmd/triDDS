@@ -3,7 +3,7 @@
 
 import { html, raw, icon, esc, toast, openSheet } from "../shared/ui.js";
 import { post } from "../shared/api.js";
-import { destination, seuilText, findByName } from "../shared/catalog.js";
+import { destination, seuilText, findByName, horsBacFor } from "../shared/catalog.js";
 import { sess, isDemo, addHistory, addJournal, updateJournal } from "./store.js";
 import { photosFor, addLocalPhoto, refreshImages } from "./images.js";
 import { learn } from "./memory.js";
@@ -16,7 +16,7 @@ function placard(r, flip) {
   const logo = d.tone === "eco" ? "./assets/eco-dds-96.png" : "./assets/hors-eco-dds-96.png";
   return html`<section class="placard ${d.tone} ${flip ? "flip" : ""}" aria-live="polite">
     <div class="placard-kicker">${d.tone !== "int" ? html`<img src="${logo}" alt="" width="36" height="36">` : icon("alert")}<span>${d.kicker}</span></div>
-    <div class="placard-label">${d.tone === "int" ? "Consigne" : needsThreshold(r) ? "Bac, si le seuil est respecté" : "Mettre dans le bac"}</div>
+    <div class="placard-label">${d.tone === "int" ? "Consigne" : needsThreshold(r) || r.seuilUnknown ? "Bac, si le seuil est respecté" : "Mettre dans le bac"}</div>
     <div class="placard-bac">${d.bac}</div>
     <div class="placard-prod">${r.n}${r.label && r.label !== r.n ? html`<small>Lu sur l'étiquette : ${r.label}</small>` : ""}</div>
   </section>`;
@@ -31,6 +31,9 @@ function thresholdBlock(r) {
       <div class="two"><button class="btn btn-eco btn-lg" data-seuil="ok">Oui, ${v} ou moins</button><button class="btn btn-hors btn-lg" data-seuil="over">Non, il dépasse</button></div>
       <button class="btn btn-quiet" data-seuil="unknown">Je ne sais pas</button>
     </div>`;
+  }
+  if (r.seuilUnknown) {
+    return html`<div class="note hors"><b>Contenance à vérifier.</b> Lisez-la sur l'étiquette avant de déposer : jusqu'à ${v}, bac EcoDDS ${r.x} ; au-delà, hors EcoDDS (${horsBacFor(r.x)}). Dans le doute, hors EcoDDS. <button class="btn btn-quiet" data-seuil="reset">Répondre</button></div>`;
   }
   return r.overSeuil
     ? html`<div class="note hors">Contenant au-delà de ${v} : il ne va pas en EcoDDS. <button class="btn btn-quiet" data-seuil="reset">Modifier</button></div>`
@@ -75,6 +78,9 @@ function factsBlock(r) {
 
 function actionsBlock(r) {
   if (needsThreshold(r)) return "";
+  if (r.source !== "scan") {
+    return html`<div class="result-actions three"><button class="btn btn-ghost btn-icon btn-lg" data-photo aria-label="Ajouter une photo de référence">${icon("image")}</button><button class="btn btn-ghost btn-lg" data-fix>${icon("edit")}Autre</button><button class="btn btn-primary btn-lg" data-new>${icon("search")}Suivant</button></div>`;
+  }
   if (r.validated) {
     return html`<div class="result-actions"><button class="btn btn-ghost btn-icon btn-lg" data-photo aria-label="Ajouter une photo de référence">${icon("image")}</button><button class="btn btn-primary btn-lg" data-new>${icon("search")}Produit suivant</button></div>`;
   }
@@ -115,12 +121,14 @@ export const resultView = {
       const s = t.closest("[data-seuil]");
       if (s) {
         const v = s.dataset.seuil;
-        if (v === "reset") { r.seuilAnswered = false; r.overSeuil = false; r.validated = false; }
+        if (v === "reset") { r.seuilAnswered = false; r.overSeuil = false; r.seuilUnknown = false; if (r.source === "search") r.validated = false; }
         else {
           r.seuilAnswered = true;
           r.overSeuil = v === "over";
+          r.seuilUnknown = v === "unknown";
           if (v === "over") flipNext = true;
-          if (r.source === "search") record(r, "confirmed");
+          if (r.source === "search") record(r, r.seuilUnknown ? "unsure" : "confirmed");
+          else if (r.validated && r.jrnId) updateJournal(r.jrnId, { overSeuil: r.overSeuil, reviewed: !r.seuilUnknown });
         }
         return app.refresh();
       }
@@ -129,7 +137,7 @@ export const resultView = {
         r.conf = Math.max(r.conf || 0, 80);
         const brand = r.aiData ? (r.aiData.marque || r.aiData.nom || r.n) : r.n;
         learn(brand, r.n, r.f, r.x, "learn");
-        if (r.jrnId) updateJournal(r.jrnId, { reviewed: true, validationType: "confirmed", confidence: r.conf });
+        if (r.jrnId) updateJournal(r.jrnId, { reviewed: !r.seuilUnknown, validationType: "confirmed", confidence: r.conf, overSeuil: !!r.overSeuil });
         addHistory(r);
         saveCropAsReference(r);
         syncMulti(app, r);
@@ -141,10 +149,10 @@ export const resultView = {
         if (!p) return;
         const next = Object.assign({}, p, { source: r.source, conf: 100, cropImage: r.cropImage, aiData: r.aiData, label: r.label, vol: r.vol, jrnId: r.jrnId, multiIndex: r.multiIndex, validated: r.source === "scan", seuilAnswered: false });
         if (r.aiData) learn(r.aiData.marque || r.aiData.nom || r.n, p.n, p.f, p.x, "correct");
-        if (r.jrnId) updateJournal(r.jrnId, { correctedTo: p.n, correctedFlux: p.f, correctedCategory: p.x, validationType: "corrected", reviewed: true });
+        if (r.jrnId) updateJournal(r.jrnId, { correctedTo: p.n, correctedFlux: p.f, correctedCategory: p.x, validationType: "corrected", reviewed: true, overSeuil: false });
         app.state.result = next;
         if (r.source === "scan") { addHistory(next); saveCropAsReference(next); syncMulti(app, next); }
-        else next._recorded = false;
+        else { next.validated = false; next._recorded = false; next._replaced = r._replaced || r.n; }
         toast("Corrigé");
         return app.refresh();
       }
@@ -164,11 +172,15 @@ export const resultView = {
   }
 };
 
+// Recherche manuelle : une seule ligne de journal par produit consulté, mise à jour si l'agent
+// change sa réponse au seuil ou choisit un autre produit.
 function record(r, type) {
-  if (r._recorded) return;
+  const entry = { name: r.n, flux: r.f, overSeuil: !!r.overSeuil, category: r.x, confidence: 100, validationType: type, source: r.source || "search", reviewed: type !== "unsure" };
+  if (r.jrnId) updateJournal(r.jrnId, Object.assign(entry, type === "confirmed" && r._replaced ? { validationType: "corrected", correctedTo: r.n, correctedFlux: r.f, correctedCategory: r.x, name: r._replaced } : {}));
+  else r.jrnId = addJournal(entry).id;
+  if (type === "unsure") updateJournal(r.jrnId, { reviewed: false });
   r._recorded = true;
   addHistory(r);
-  addJournal({ name: r.n, flux: r.f, overSeuil: !!r.overSeuil, category: r.x, confidence: 100, validationType: type, source: r.source || "search" });
   r.validated = true;
 }
 

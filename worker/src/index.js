@@ -3,6 +3,7 @@
 // écritures (images, mémoire, analyse IA) liées à une session agent valide.
 
 import { PLANS, planOf, planLabel } from "./plans.js";
+import { SYSTEM_PROMPT } from "./prompt.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -142,7 +143,25 @@ function maxAgentsFor(site) {
   if (site.agentsOverride != null && site.agentsOverride !== "") return Number(site.agentsOverride) || null;
   return planOf(site.plan).agents;
 }
+// Sites créés par la v1 : on préserve ce qu'ils avaient (quotas Réseau/Groupe, mémoire et fiches
+// pour tous, pas de scans d'essai en plus sur les offres payantes). Marqués une seule fois.
+function migrateLegacy(site) {
+  if (site.schema >= 2) return site;
+  site.schema = 2;
+  site.legacyFeatures = true;
+  if (site.teamLocked === undefined) site.teamLocked = true;
+  if (site.scansOverride == null) {
+    if (site.plan === "multisite") site.scansOverride = 750;
+    if (site.plan === "enterprise") site.scansOverride = 999999;
+  }
+  if (site.plan && site.plan !== "free") site.trialTotal = Math.min(site.trialTotal || 0, site.trialUsed || 0);
+  return site;
+}
+const isTeamLocked = site => site.teamLocked !== false;
+const hasPro = site => !!site.legacyFeatures || !["free", "essentiel"].includes(site.plan);
+
 function ensureUsageState(site) {
+  migrateLegacy(site);
   if (!PLANS[site.plan]) site.plan = "free";
   if (site.trialTotal === undefined) site.trialTotal = 0;
   if (site.trialUsed === undefined) site.trialUsed = 0;
@@ -171,12 +190,12 @@ function buildAccessPayload(site, code, agentName) {
     planName: planLabel(site.plan, site.trialTotal),
     code,
     agents: (site.agents || []).map(a => a.name),
-    memoryEnabled: site.plan !== "free" && site.plan !== "essentiel" ? true : !!site.memoryForced,
+    memoryEnabled: hasPro(site),
     agentRole,
     maxAgents: maxAgentsFor(site),
-    teamLocked: !!site.teamLocked,
-    canManageUsers: isResp && !site.teamLocked,
-    canManageCatalog: isResp && site.plan !== "free" && site.plan !== "essentiel"
+    teamLocked: isTeamLocked(site),
+    canManageUsers: isResp && !isTeamLocked(site),
+    canManageCatalog: isResp && hasPro(site)
   }, usageView(site));
 }
 
@@ -277,15 +296,6 @@ async function handleRequestAccess(request, env) {
       html: emailShell("Nouvelle demande d'accès", `<table style="font-size:14px;border-collapse:collapse">${rows}</table><p style="margin-top:18px"><a href="${base}/admin.html#demandes" style="color:#2f7d32;font-weight:700">Traiter la demande dans l'admin</a></p>`),
       text: `Nouvelle demande d'accès\n${req.name} — ${req.email} — ${req.phone}\n${req.organisation} / ${req.siteName} (${req.sites} site(s))\nOffre : ${req.plan}\n\n${req.message}`
     }).catch(() => null);
-    if (req.email) {
-      await sendEmail(env, {
-        to: req.email,
-        replyTo: notify,
-        subject: "TriDDS — demande bien reçue",
-        html: emailShell("Demande bien reçue", `<p style="font-size:15px;line-height:1.6;margin:0">Bonjour ${escHtml(req.name)},<br><br>Merci pour votre demande. Je reviens vers vous sous 48 h ouvrées pour préparer votre accès TriDDS (code du site et profils de votre équipe).</p>`),
-        text: `Bonjour ${req.name},\n\nMerci pour votre demande. Je reviens vers vous sous 48 h ouvrées pour préparer votre accès TriDDS.`
-      }).catch(() => null);
-    }
   }
   return json({ ok: true, id: req.id });
 }
@@ -299,8 +309,16 @@ async function handleAuth(request, env) {
   const sessionId = clip(body.sessionId, 64);
   if (!code) return json({ error: "Code requis" }, 400);
 
+  // Essais de codes au hasard : 20 codes inconnus par quart d'heure et par adresse IP.
+  const ip = request.headers.get("CF-Connecting-IP") || "inconnue";
+  const rlKey = "_rl_auth_" + ip;
+  const fails = parseInt(await env.AUTH_STORE.get(rlKey) || "0", 10);
+  if (fails >= 20) return json({ error: "Trop d'essais. Patientez un quart d'heure." }, 429);
   let site = await readJsonKV(env.AUTH_STORE, code);
-  if (!site) return json({ error: "Code inconnu. Vérifiez la saisie ou contactez votre responsable." }, 401);
+  if (!site) {
+    await env.AUTH_STORE.put(rlKey, String(fails + 1), { expirationTtl: 900 });
+    return json({ error: "Code inconnu. Vérifiez la saisie ou contactez votre responsable." }, 401);
+  }
   if (site.active === false) return json({ error: "Accès suspendu. Contactez TriDDS." }, 403);
   site = cleanupAgentSessions(ensureUsageState(site));
 
@@ -409,7 +427,7 @@ function siteSummary(code, raw) {
     maxAgents: maxAgentsFor(data),
     agentsOverride: data.agentsOverride ?? null,
     scansOverride: data.scansOverride ?? null,
-    teamLocked: !!data.teamLocked,
+    teamLocked: isTeamLocked(data),
     contact: data.contact || "",
     notes: data.notes || "",
     billing: data.billing || "",
@@ -516,6 +534,7 @@ async function handleAdmin(request, env) {
       agentsOverride: body.agentsOverride === "" || body.agentsOverride == null ? null : Number(body.agentsOverride),
       scansOverride: body.scansOverride === "" || body.scansOverride == null ? null : Number(body.scansOverride),
       requestId: clip(body.requestId, 20),
+      schema: 2,
       agents
     });
     normalizeRoles(site);
@@ -756,10 +775,10 @@ async function handleSiteAdmin(request, env) {
   if (!isResp) return json({ error: "Réservé au responsable du site" }, 403);
 
   if (action === "team") {
-    return json({ ok: true, teamLocked: !!site.teamLocked, maxAgents: maxAgentsFor(site), team: site.agents.map(a => ({ name: a.name, role: normalizeRole(a.role), lastSeen: a.lastSeen || null, activeSession: sessionView(a) })) });
+    return json({ ok: true, teamLocked: isTeamLocked(site), maxAgents: maxAgentsFor(site), team: site.agents.map(a => ({ name: a.name, role: normalizeRole(a.role), lastSeen: a.lastSeen || null, activeSession: sessionView(a) })) });
   }
   if (action === "add-user" || action === "remove-user" || action === "set-user-role") {
-    if (site.teamLocked) return json({ error: "L'équipe de ce site est gérée par TriDDS. Envoyez-nous le nom à ajouter ou retirer." }, 403);
+    if (isTeamLocked(site)) return json({ error: "L'équipe de ce site est gérée par TriDDS. Envoyez-nous le nom à ajouter ou retirer." }, 403);
     const name = clip(body.name, 80);
     if (action === "add-user") {
       if (!name) return json({ error: "Nom requis" }, 400);
@@ -812,65 +831,89 @@ async function handleSiteCatalog(request, env) {
 }
 
 // ---------- analyse IA ----------
+// Consignes de lecture : fixées côté serveur, le client n'envoie que l'image et la mémoire du site.
+const USER_PROMPT = `Analyse cette photo prise en déchèterie (local DDS). Pour CHAQUE produit distinct visible :
+1) lis le texte exact de l'étiquette ; 2) déduis le type si l'emballage est reconnaissable ; 3) estime le volume ou la masse du contenant ;
+4) classe-le dans le référentiel (nom_referentiel, categorie, filiere) en traduisant les noms commerciaux ; 5) donne sa position bbox={x,y,w,h} en % de l'image ; 6) donne une confiance de 0 à 100.
+Réponds UNIQUEMENT en JSON : {"produits":[{"texte_lu":"","nom":"","marque":"","nom_referentiel":"","categorie":"","filiere":"EcoDDS|Hors EcoDDS|Cas spécial","volume_estime":"","confiance":0,"consigne":"","bbox":{"x":0,"y":0,"w":0,"h":0}}]}`;
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
+
 async function handleAnalyze(request, env) {
   if (!env.ANTHROPIC_API_KEY) return json({ error: "Analyse IA indisponible (clé API manquante)" }, 500);
   const body = await request.json().catch(() => ({}));
   const v = await verifySession(env, body);
   if (v.error) return json({ error: v.error === "SESSION_INVALID" ? "Session expirée. Reconnectez-vous." : v.error }, v.status);
   const { code } = v;
-  let site = v.site;
   const image = body.image;
   const mime = ["image/jpeg", "image/png", "image/webp"].includes(body.mime) ? body.mime : "image/jpeg";
-  // final = scan compté ; retry = deuxième passe (modèle plus fort) du même scan, non comptée ; prescan = non compté.
-  const mode = ["prescan", "retry"].includes(body.mode) ? body.mode : "final";
+  // final = scan compté ; retry = seconde lecture (modèle plus fort) de la MÊME photo, non comptée, une seule fois.
+  const mode = body.mode === "retry" ? "retry" : "final";
   if (!image || typeof image !== "string") return json({ error: "Image manquante" }, 400);
   if (image.length > MAX_IMAGE_B64) return json({ error: "Image trop lourde" }, 413);
+  const imageHash = await sha256(image);
 
+  // On réserve le scan avant l'appel IA (plus de dépassement par appels simultanés), remboursé en cas d'échec.
+  let site = ensureUsageState(await readJsonKV(env.AUTH_STORE, code));
+  let agent = ensureAgents(site).find(x => x.name === v.agent.name);
+  let charged = null;
   if (mode === "retry") {
-    // Une seule deuxième passe gratuite, dans les 3 minutes qui suivent un scan compté.
-    const a = v.agent;
-    if (!a.retryLeft || !a.lastScanAt || Date.now() - new Date(a.lastScanAt).getTime() > 180000) {
-      return json({ error: "Deuxième analyse indisponible. Relancez un scan." }, 409);
+    if (!agent.retryLeft || agent.lastScanHash !== imageHash || !agent.lastScanAt || Date.now() - new Date(agent.lastScanAt).getTime() > 180000) {
+      return json({ error: "Seconde analyse indisponible. Relancez un scan." }, 409);
     }
+    agent.retryLeft = 0;
+  } else {
+    const u = usageView(site);
+    if (!u.aiEnabled) {
+      const msg = u.monthlyLimit > 0
+        ? "Quota de scans du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
+        : "Le scan photo n'est pas inclus dans cet accès. Contactez TriDDS pour l'activer.";
+      return json({ error: msg, usage: buildAccessPayload(site, code, agent.name) }, 403);
+    }
+    if (u.monthlyRemaining > 0) { site.monthlyUsed = (site.monthlyUsed || 0) + 1; charged = "monthly"; }
+    else { site.trialUsed = (site.trialUsed || 0) + 1; charged = "trial"; }
+    agent.lastScanAt = nowIso();
+    agent.lastScanHash = imageHash;
+    agent.retryLeft = 1;
   }
-  const u = usageView(site);
-  if (mode !== "retry" && !u.aiEnabled) {
-    const msg = u.monthlyLimit > 0
-      ? "Quota de scans du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
-      : "Le scan photo n'est pas inclus dans cet accès. Contactez TriDDS pour l'activer.";
-    return json({ error: msg, usage: buildAccessPayload(site, code, v.agent.name) }, 403);
-  }
+  await writeJsonKV(env.AUTH_STORE, code, site);
 
-  const model = { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" }[body.model] || "claude-haiku-4-5-20251001";
+  const model = mode === "retry" ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
+  const context = clip(body.context, 6000);
   const reqBody = {
     model,
-    max_tokens: mode === "prescan" ? 200 : 2500,
-    messages: [{ role: "user", content: [{ type: "image", source: { type: "base64", media_type: mime, data: image } }, { type: "text", text: clip(body.prompt, 4000) }] }]
+    max_tokens: 2500,
+    // Consignes métier identiques à chaque appel : mises en cache côté Anthropic (plus rapide, moins cher).
+    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: [{ type: "image", source: { type: "base64", media_type: mime, data: image } }, { type: "text", text: USER_PROMPT + (context ? "\n\n" + context : "") }] }]
   };
-  // Consignes métier identiques à chaque appel : mises en cache côté Anthropic (plus rapide, moins cher).
-  if (body.system) reqBody.system = [{ type: "text", text: String(body.system).slice(0, 200000), cache_control: { type: "ephemeral" } }];
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-    body: JSON.stringify(reqBody)
-  });
-  const data = await response.json().catch(() => ({ error: "Réponse IA illisible" }));
-
-  if (response.ok && mode !== "prescan") {
-    site = ensureUsageState(await readJsonKV(env.AUTH_STORE, code) || site);
-    const a = ensureAgents(site).find(x => x.name === v.agent.name);
-    if (mode === "final") {
-      if (usageView(site).monthlyRemaining > 0) site.monthlyUsed = (site.monthlyUsed || 0) + 1;
-      else site.trialUsed = (site.trialUsed || 0) + 1;
-      if (a) { a.lastScanAt = nowIso(); a.retryLeft = 1; }
-    } else if (a) {
-      a.retryLeft = 0;
-    }
-    await writeJsonKV(env.AUTH_STORE, code, site);
+  let response, data;
+  try {
+    response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify(reqBody)
+    });
+    data = await response.json().catch(() => ({}));
+  } catch (e) {
+    response = { ok: false };
+    data = {};
   }
-  if (!response.ok) return json({ error: (data && data.error && data.error.message) || "Erreur du service IA" }, 502);
-  return json(Object.assign({}, data, { usage: buildAccessPayload(site, code, v.agent.name) }));
+
+  site = ensureUsageState(await readJsonKV(env.AUTH_STORE, code) || site);
+  agent = ensureAgents(site).find(x => x.name === v.agent.name) || agent;
+  if (!response.ok) {
+    if (charged === "monthly") site.monthlyUsed = Math.max(0, (site.monthlyUsed || 0) - 1);
+    if (charged === "trial") site.trialUsed = Math.max(0, (site.trialUsed || 0) - 1);
+    if (mode === "retry" && agent) agent.retryLeft = 1;
+    await writeJsonKV(env.AUTH_STORE, code, site);
+    return json({ error: (data && data.error && data.error.message) || "Le service d'analyse ne répond pas. Le scan n'a pas été décompté.", usage: buildAccessPayload(site, code, v.agent.name) }, 502);
+  }
+  return json({ content: data.content || [], model: data.model, usage: buildAccessPayload(site, code, v.agent.name) });
 }
 
 // ---------- images ----------
@@ -911,6 +954,13 @@ async function handleProductImages(request, env, { admin = false } = {}) {
     if (v.error) return json({ error: v.error }, v.status);
     by = v.agent.name;
     if (action !== "save") return json({ error: "Réservé à l'administration" }, 403);
+    // Un agent envoie une vraie photo (pas d'URL externe ni de clé R2 existante), 40 par jour et par site au plus.
+    if (!body.imageData) return json({ error: "Photo requise" }, 400);
+    body.item = Object.assign({}, body.item, { url: "", r2Key: "", id: "" });
+    const dayKey = "_rl_img_" + code + "_" + nowIso().slice(0, 10);
+    const used = parseInt(await env.AUTH_STORE.get(dayKey) || "0", 10);
+    if (used >= 40) return json({ error: "Limite de photos atteinte pour aujourd'hui." }, 429);
+    await env.AUTH_STORE.put(dayKey, String(used + 1), { expirationTtl: 172800 });
   }
 
   if (action === "save") {
@@ -953,7 +1003,8 @@ async function handleProductImages(request, env, { admin = false } = {}) {
   if (action === "delete") {
     const id = clip(body.id, 64);
     const item = store.items.find(i => i.id === id);
-    if (item && item.r2Key && env.IMAGES_BUCKET) { try { await env.IMAGES_BUCKET.delete(item.r2Key); } catch (e) {} }
+    // On ne supprime dans R2 que les fichiers rangés sous le code de ce site.
+    if (item && item.r2Key && item.r2Key.startsWith(code + "/") && env.IMAGES_BUCKET) { try { await env.IMAGES_BUCKET.delete(item.r2Key); } catch (e) {} }
     store.items = store.items.filter(i => i.id !== id);
     await writeJsonKV(env.MEMORY_STORE, key, store);
     await purgePublicImagesCache(request);

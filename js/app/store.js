@@ -32,8 +32,11 @@ export function applyAccess(d) {
   const fields = ["site", "clientName", "plan", "planName", "agentRole", "memoryEnabled", "aiEnabled", "trialTotal", "trialUsed", "trialRemaining", "monthlyLimit", "monthlyUsed", "monthlyRemaining", "maxAgents"];
   fields.forEach(f => { if (d[f] !== undefined && d[f] !== null) sess[f] = d[f]; });
   if (d.maxAgents === null) sess.maxAgents = null;
-  sess.canManageUsers = !!d.canManageUsers;
-  sess.canManageCatalog = !!d.canManageCatalog;
+  // Une réponse sans profil (ancien Worker, analyse) ne doit pas retirer les droits du responsable.
+  if (d.agentRole) {
+    sess.canManageUsers = !!d.canManageUsers;
+    sess.canManageCatalog = !!d.canManageCatalog;
+  }
   sess.teamLocked = d.teamLocked === undefined ? sess.teamLocked : !!d.teamLocked;
   saveSess();
 }

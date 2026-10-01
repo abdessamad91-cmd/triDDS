@@ -80,7 +80,9 @@ function dedupe(prods) {
 
 async function callModel(b64, model, mode) {
   const d = await post("analyze", {
-    image: b64, mime: "image/jpeg", system: SYS, prompt: PROMPT + memoryContext(),
+    // Worker v2 : consignes côté serveur, seule la mémoire du site est envoyée (context).
+    // Worker v1 : utilise system et prompt.
+    image: b64, mime: "image/jpeg", system: SYS, prompt: PROMPT + memoryContext(), context: memoryContext().trim(),
     model, mode, code: sess.code, agent: sess.agent, sessionId: sess.sessionId
   }, { timeout: model === "sonnet" ? 60000 : 40000 });
   const text = d.content && d.content[0] ? d.content[0].text : "";

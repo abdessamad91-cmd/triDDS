@@ -1,7 +1,8 @@
 // Tests du Worker v2 : node worker/test/api.test.mjs
 import assert from "node:assert/strict";
 import worker from "../src/index.js";
-import { makeEnv, sent } from "./env.mjs";
+import { makeEnv, sent, anthropicCalls } from "./env.mjs";
+const lastAnthropic = () => anthropicCalls[anthropicCalls.length - 1];
 
 const env = await makeEnv();
 const ctx = { waitUntil: p => p };
@@ -28,6 +29,10 @@ ok(r.data.canManageUsers === false, "un agent ne gère pas l'équipe");
 r = await call("auth", { action: "start-session", code: "LUDR-2026-ABC", agent: "Cyril Guilbert", deviceName: "iPhone" });
 ok(r.status === 409, "session déjà ouverte ailleurs signalée");
 
+r = await call("auth", { action: "login", code: "TRY-OLDTRIAL" });
+ok(r.data.memoryEnabled === true, "site v1 gratuit : la mémoire partagée reste active");
+r = await call("auth", { action: "login", code: "TRI-RESEAU01" });
+ok(r.data.monthlyLimit === 750 && r.data.monthlyRemaining === 350, "client Réseau v1 : quota de 750 scans conservé");
 console.log("Sécurité des écritures");
 r = await call("memory-set", { code: "LUDR-2026-ABC", brand: "destop", product: "x" });
 ok(r.status === 401, "mémoire : écriture refusée sans session");
@@ -40,7 +45,9 @@ ok(r.status === 403, "photos : écriture globale refusée sans clé admin");
 r = await call("product-images", { code: "LUDR-2026-ABC", action: "delete", id: "img1" });
 ok(r.status === 401, "photos : suppression refusée sans session");
 r = await call("product-images", Object.assign({ action: "save", item: { productName: "White spirit", url: "https://exemple.fr/p.jpg" } }, S));
-ok(r.status === 200 && r.data.item.addedBy === "Cyril Guilbert", "photos : un agent ajoute une photo à son site");
+ok(r.status === 400, "photos : un agent ne peut pas pointer vers une URL externe");
+r = await call("product-images", Object.assign({ action: "save", imageData: Buffer.from("x").toString("base64"), item: { productName: "White spirit", r2Key: "_GLOBAL/img1.jpg" } }, S));
+ok(r.status === 200 && r.data.item.addedBy === "Cyril Guilbert" && r.data.item.r2Key.startsWith("LUDR-2026-ABC/"), "photos : un agent ajoute une vraie photo, rangée sous son site");
 r = await call("product-images", Object.assign({ action: "delete", id: r.data.item.id }, S));
 ok(r.status === 403, "photos : un agent ne supprime pas");
 r = await call("analyze", { code: "LUDR-2026-ABC", image: "AAAA", prompt: "x" });
@@ -49,9 +56,12 @@ ok(r.status === 401, "analyse IA refusée sans session");
 console.log("Analyse IA et quotas");
 r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", system: "s", model: "haiku", mode: "final" }, S));
 ok(r.status === 200 && r.data.usage.monthlyUsed === 169, "scan compté (169/200)");
-ok(r.data.system_cached === true, "consignes envoyées en cache de prompt");
+ok(lastAnthropic().system[0].cache_control && lastAnthropic().system[0].text.length > 20000, "consignes métier côté serveur, en cache de prompt");
+ok(!JSON.stringify(lastAnthropic()).includes('"s"'), "le prompt système envoyé par le client est ignoré");
+r = await call("analyze", Object.assign({ image: "BBBB", mode: "retry" }, S));
+ok(r.status === 409, "seconde passe refusée sur une autre photo");
 r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", model: "sonnet", mode: "retry" }, S));
-ok(r.status === 200 && r.data.usage.monthlyUsed === 169, "seconde passe Sonnet non comptée");
+ok(r.status === 200 && r.data.usage.monthlyUsed === 169 && lastAnthropic().model.includes("sonnet"), "seconde passe Sonnet non comptée");
 r = await call("analyze", Object.assign({ image: "AAAA", prompt: "p", model: "sonnet", mode: "retry" }, S));
 ok(r.status === 409, "pas de seconde passe gratuite à répétition");
 
@@ -66,7 +76,7 @@ console.log("Demande d'accès");
 sent.length = 0;
 r = await call("request-access", { name: "Paul Petit", email: "PAUL@mairie.fr", organisation: "Mairie de Seichamps", sites: "1", plan: "essentiel", message: "Bonjour" });
 ok(r.status === 200 && r.data.id, "demande enregistrée");
-ok(sent.length === 2 && sent[0].to[0] === "admin@exemple.fr" && sent[1].to[0] === "paul@mairie.fr", "email à l'admin et confirmation au prospect");
+ok(sent.length === 1 && sent[0].to[0] === "admin@exemple.fr" && sent[0].reply_to === "paul@mairie.fr", "email à l'admin seulement (pas de relais vers une adresse saisie)");
 r = await call("request-access", { name: "Robot", email: "r@x.fr", organisation: "x", website: "spam" });
 ok(r.status === 200 && !r.data.id, "champ piège : robot ignoré sans erreur");
 for (let i = 0; i < 4; i++) await call("request-access", { name: "A", email: "a@b.fr", organisation: "o" }, { ip: "9.9.9.9" });
@@ -83,6 +93,7 @@ r = await admin("dashboard");
 ok(r.status === 200 && r.data.requests.length >= 2 && r.data.stats.openRequests >= 2, "tableau de bord avec demandes");
 const legacySite = r.data.sites.find(s => s.code === "LUDR-2026-ABC");
 ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === 10, "usage et limite d'agents par site");
+ok(legacySite.teamLocked === true && legacySite.trialTotal === legacySite.trialUsed, "site v1 : équipe verrouillée, pas de scans d'essai en plus sur une offre payante");
 sent.length = 0;
 r = await admin("create", { site: "Déchèterie de Château-Salins", client: "SIVOM du Saulnois", responsable: "Claire Martin", principalEmail: "c.martin@sivom.fr", agents: ["Luc", "Ana", "luc"], plan: "essentiel", requestId: "REQ-TEST0001", sendEmail: true });
 ok(r.status === 200 && /^CHAT-[A-Z0-9]{6}$/.test(r.data.code), "accès créé, code généré : " + r.data.code);
@@ -131,5 +142,12 @@ r = await call("public-images", null, { method: "GET" });
 ok(r.data.items.some(i => i.productName === "Acide Borique"), "cache public vidé après ajout");
 r = await admin("images-all");
 ok(r.data.items.every(i => i.code), "liste admin des photos avec code du site");
+
+console.log("Essais de codes");
+for (let i = 0; i < 20; i++) await call("auth", { action: "login", code: "NOPE-" + i }, { ip: "6.6.6.6" });
+r = await call("auth", { action: "login", code: "LUDR-2026-ABC" }, { ip: "6.6.6.6" });
+ok(r.status === 429, "20 codes inconnus : adresse IP bloquée un quart d'heure");
+r = await call("auth", { action: "login", code: "LUDR-2026-ABC" }, { ip: "7.7.7.7" });
+ok(r.status === 200, "les autres adresses ne sont pas touchées");
 
 console.log(`\n${n} vérifications réussies`);

@@ -7,6 +7,7 @@ import { loadBase } from "../shared/catalog.js";
 import { sess, isLoggedIn, isDemo, applyAccess, clearSess, saveSess, toReview, cache, deviceName } from "./store.js";
 import { initImages, onImages } from "./images.js";
 import { syncMemory } from "./memory.js";
+import { quotaChip } from "./common.js";
 import { loadSiteCatalog } from "./session.js";
 
 import * as login from "./view-login.js";
@@ -58,6 +59,17 @@ export const app = {
     else app.go("home", { replace: true });
   },
   refresh() { if (current) show(current, { keepScroll: true }); },
+  // Mise à jour en arrière-plan : jamais pendant une saisie (le clavier se fermerait).
+  softRefresh() {
+    const a = document.activeElement;
+    if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+    if (document.querySelector(".sheet-backdrop, .lightbox, .analyzing")) return;
+    app.refresh();
+  },
+  updateQuota() {
+    const chip = root.querySelector(".quota-chip");
+    if (chip) chip.outerHTML = String(quotaChip());
+  },
   updateTabs: () => renderTabs(),
 
   async logout() {
@@ -118,6 +130,8 @@ function renderTabs() {
 }
 
 window.addEventListener("popstate", e => {
+  // Bouton retour du téléphone : on ferme aussi les fenêtres ouvertes par-dessus l'écran.
+  document.querySelectorAll(".sheet-backdrop, .lightbox").forEach(x => x.remove());
   const name = (e.state && e.state.s) || "home";
   show(isLoggedIn() ? name : "login");
 });
@@ -146,7 +160,7 @@ export async function heartbeat(force = false) {
   try {
     const d = await post("auth", { action: "heartbeat", code: sess.code, agent: sess.agent, sessionId: sess.sessionId, deviceName: sess.deviceName || deviceName() }, { timeout: 12000 });
     applyAccess(d);
-    if (current === "home" || current === "profile") app.refresh();
+    app.updateQuota();
   } catch (e) {
     if (e instanceof ApiError && (e.status === 401 || e.status === 403)) app.sessionLost(e.status === 403 ? e.message : "Session fermée ou reprise sur un autre appareil.");
   }
@@ -161,7 +175,7 @@ document.addEventListener("error", e => { if (e.target && e.target.tagName === "
 // ---------- démarrage ----------
 loadBase([]);
 initImages();
-onImages(() => { if (["home", "result", "multi"].includes(current)) app.refresh(); });
+onImages(() => { if (["home", "result", "multi"].includes(current)) app.softRefresh(); });
 updateOnline();
 
 if (isLoggedIn()) {
@@ -169,7 +183,7 @@ if (isLoggedIn()) {
   syncMemory();
   if (!isDemo()) {
     post("auth", { action: "resume-session", code: sess.code, agent: sess.agent, sessionId: sess.sessionId, deviceName: sess.deviceName || deviceName() }, { timeout: 12000 })
-      .then(d => { applyAccess(d); if (current === "home") app.refresh(); })
+      .then(d => { applyAccess(d); app.updateQuota(); })
       .catch(e => { if (e instanceof ApiError && (e.status === 401 || e.status === 403)) app.sessionLost(e.status === 403 ? e.message : "Session fermée ou reprise sur un autre appareil."); });
   }
   app.go("home", { replace: true });
@@ -177,8 +191,27 @@ if (isLoggedIn()) {
   app.go("login", { replace: true });
 }
 
-if ("serviceWorker" in navigator && location.protocol === "https:") {
-  navigator.serviceWorker.register("./sw.js").catch(() => {});
+// Hors ligne et mises à jour : la nouvelle version s'installe en arrière-plan, l'agent choisit le moment.
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloading) { reloading = true; location.reload(); } });
+  navigator.serviceWorker.register("./sw.js").then(reg => {
+    const offer = w => {
+      if (!w || !navigator.serviceWorker.controller || document.querySelector(".update-bar")) return;
+      const bar = document.createElement("div");
+      bar.className = "update-bar";
+      bar.setAttribute("role", "status");
+      bar.innerHTML = `<span>Nouvelle version de TriDDS disponible.</span><button class="btn btn-eco btn-sm">Mettre à jour</button>`;
+      bar.querySelector("button").addEventListener("click", () => w.postMessage("skipWaiting"));
+      document.body.appendChild(bar);
+    };
+    if (reg.waiting) offer(reg.waiting);
+    reg.addEventListener("updatefound", () => {
+      const w = reg.installing;
+      if (w) w.addEventListener("statechange", () => { if (w.state === "installed") offer(w); });
+    });
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reg.update().catch(() => {}); });
+  }).catch(() => {});
 }
 
 window.TriDDS = app; // aide au débogage

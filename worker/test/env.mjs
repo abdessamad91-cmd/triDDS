@@ -20,12 +20,14 @@ globalThis.caches = { default: {
 } };
 
 export const sent = [];
+export const anthropicCalls = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, init = {}) => {
   const u = String(url);
   if (u.startsWith("https://api.resend.com")) { sent.push(JSON.parse(init.body)); return new Response(JSON.stringify({ id: "mail_" + sent.length }), { status: 200 }); }
   if (u.startsWith("https://api.anthropic.com")) {
     const body = JSON.parse(init.body);
+    anthropicCalls.push(body);
     const text = JSON.stringify({ produits: [{ texte_lu: "White Spirit", nom: "White spirit", marque: "Onyx", nom_referentiel: "White spirit", categorie: "Autres DDS liquides", filiere: "EcoDDS", volume_estime: "1 L", confiance: 91, bbox: { x: 10, y: 10, w: 60, h: 80 } }] });
     return new Response(JSON.stringify({ content: [{ type: "text", text }], model: body.model, system_cached: Array.isArray(body.system) }), { status: 200 });
   }
@@ -41,7 +43,8 @@ export async function makeEnv() {
     agents: [{ name: "Yvan Aref", role: "responsable", lastSeen: "2026-09-30T09:00:00Z" }, { name: "Cyril Guilbert", role: "agent", lastSeen: "2026-09-29T15:00:00Z" }, { name: "Jura Beldor", role: "agent", lastSeen: null }] };
   await AUTH.put("LUDR-2026-ABC", JSON.stringify(legacy));
   await AUTH.put("TRY-OLDTRIAL", JSON.stringify({ site: "Essai Faulquemont", plan: "free", active: true, created: "2026-05-01T08:00:00Z", trialTotal: 2, trialUsed: 2, agents: [{ name: "Marc", role: "responsable" }], adminEmail: "marc@exemple.fr" }));
-  await AUTH.put("_index", JSON.stringify({ codes: ["LUDR-2026-ABC", "TRY-OLDTRIAL"] }));
+  await AUTH.put("TRI-RESEAU01", JSON.stringify({ site: "Réseau Est", plan: "multisite", active: true, created: "2026-06-01T08:00:00Z", trialTotal: 0, trialUsed: 0, monthlyUsed: 400, usageMonth: new Date().toISOString().slice(0, 7), agents: [{ name: "Paul", role: "responsable" }] }));
+  await AUTH.put("_index", JSON.stringify({ codes: ["LUDR-2026-ABC", "TRY-OLDTRIAL", "TRI-RESEAU01"] }));
   await AUTH.put("_requests", JSON.stringify({ items: [{ id: "REQ-TEST0001", createdAt: new Date(Date.now() - 3600e3).toISOString(), status: "nouvelle", name: "Claire Martin", email: "c.martin@sivom.fr", phone: "06 12 34 56 78", organisation: "SIVOM du Saulnois", siteName: "Déchèterie de Château-Salins", sites: 3, plan: "multisite", message: "Nous avons 3 déchèteries et 9 agents. Démarrage souhaité en novembre.", source: "page-offres" }] }));
   await MEM.put("mem-LUDR-2026-ABC", JSON.stringify({ brands: { onyx: { p: "White spirit", f: "E", c: "Autres DDS liquides", n: 6, d: "2026-09-20", by: ["Cyril Guilbert"] } } }));
   await MEM.put("images-_GLOBAL", JSON.stringify({ items: [{ id: "img1", productName: "White spirit", url: "", r2Key: "_GLOBAL/img1.jpg", isPrimary: true, order: 0, source: "admin", status: "active", imageFlux: "" }] }));

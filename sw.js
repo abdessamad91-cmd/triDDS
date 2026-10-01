@@ -1,5 +1,8 @@
 // Service worker TriDDS : l'appli s'ouvre et la recherche fonctionne sans réseau.
-// Changer VERSION à chaque mise en ligne pour renouveler le cache.
+// Tous les fichiers de l'appli viennent du cache de la version installée (jamais un mélange
+// d'anciens et de nouveaux fichiers). Une nouvelle version s'installe en arrière-plan et
+// s'active quand l'agent touche « Mettre à jour » (ou au prochain lancement).
+// Changer VERSION à chaque mise en ligne.
 
 const VERSION = "tridds-v2.0.0";
 const SHELL = [
@@ -14,9 +17,16 @@ const SHELL = [
   "./assets/symbol-128.png", "./assets/eco-dds-96.png", "./assets/hors-eco-dds-96.png", "./assets/favicon-32x32.png"
 ];
 const IMG_CACHE = "tridds-images";
+const scope = new URL(self.registration.scope);
+const SHELL_URLS = new Set(SHELL.map(p => new URL(p, scope).pathname));
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: "reload" : on contourne le cache HTTP du navigateur pour ne pas figer d'anciens fichiers.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(p => new Request(p, { cache: "reload" })))));
+});
+
+self.addEventListener("message", e => {
+  if (e.data === "skipWaiting") self.skipWaiting();
 });
 
 self.addEventListener("activate", e => {
@@ -38,43 +48,43 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Photos produits : immuables, servies depuis le cache.
+  // Photos produits (immuables) : cache d'abord. Requête CORS pour pouvoir les garder hors ligne.
   if (url.pathname.includes("/api/img/")) {
     e.respondWith(caches.open(IMG_CACHE).then(async c => {
-      const hit = await c.match(req);
+      const hit = await c.match(req.url);
       if (hit) return hit;
-      const res = await fetch(req);
-      if (res.ok) { c.put(req, res.clone()); trimCache(IMG_CACHE, 600); }
-      return res;
+      try {
+        const res = await fetch(req.url, { mode: "cors", credentials: "omit" });
+        if (res.ok) { c.put(req.url, res.clone()); trimCache(IMG_CACHE, 600); }
+        return res;
+      } catch (err) {
+        return fetch(req);
+      }
     }));
     return;
   }
-  // Autres appels API : toujours le réseau.
-  if (url.pathname.includes("/api/")) return;
-
   if (url.origin !== self.location.origin) return;
-  // Pages de l'admin et pages publiques : réseau d'abord.
-  if (/admin|pricing|offres|success/.test(url.pathname)) return;
 
-  // Page de l'appli : réseau d'abord (3 s max), sinon la version en cache.
-  if (req.mode === "navigate") {
-    e.respondWith(caches.open(VERSION).then(async c => {
-      const cached = await c.match("./index.html");
-      const net = fetch(req).then(res => { if (res.ok) c.put("./index.html", res.clone()); return res; });
-      if (!cached) return net;
-      const timeout = new Promise(r => setTimeout(() => r(cached), 3000));
-      return Promise.race([net.catch(() => cached), timeout]);
-    }));
+  // Page de l'appli : la version installée.
+  const isAppPage = req.mode === "navigate" && (url.pathname === scope.pathname || url.pathname === scope.pathname + "index.html");
+  if (isAppPage) {
+    e.respondWith(caches.open(VERSION).then(async c => (await c.match("./index.html", { ignoreSearch: true })) || fetch(req)));
     return;
   }
-
-  // Fichiers de l'appli : réponse immédiate depuis le cache, mise à jour en arrière-plan.
-  e.respondWith(caches.open(VERSION).then(async c => {
-    const hit = await c.match(req, { ignoreSearch: true });
-    const net = fetch(req).then(res => {
-      if (res.ok) c.put(req, res.clone());
-      return res;
-    }).catch(() => hit);
-    return hit || net;
-  }));
+  // Fichiers de l'appli, demandés par l'appli : uniquement ceux de la version installée.
+  // (Les pages Offres et Admin partagent certains fichiers mais passent par le réseau.)
+  if (SHELL_URLS.has(url.pathname)) {
+    e.respondWith((async () => {
+      const client = e.clientId ? await self.clients.get(e.clientId) : null;
+      const fromApp = client ? isAppUrl(new URL(client.url)) : req.destination === "document";
+      if (!fromApp) return fetch(req);
+      const c = await caches.open(VERSION);
+      return (await c.match(req, { ignoreSearch: true })) || fetch(req);
+    })());
+  }
+  // Tout le reste (admin, offres, API) : réseau normal.
 });
+
+function isAppUrl(u) {
+  return u.origin === self.location.origin && (u.pathname === scope.pathname || u.pathname === scope.pathname + "index.html");
+}
