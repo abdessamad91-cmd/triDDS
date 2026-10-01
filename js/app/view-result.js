@@ -18,7 +18,7 @@ function placard(r, flip) {
     <div class="placard-kicker">${d.tone !== "int" ? html`<img src="${logo}" alt="" width="36" height="36">` : icon("alert")}<span>${d.kicker}</span></div>
     <div class="placard-label">${d.tone === "int" ? "Consigne" : needsThreshold(r) ? "Bac, si le seuil est respecté" : r.seuilUnknown ? "Dans le doute, mettre dans le bac" : "Mettre dans le bac"}</div>
     <div class="placard-bac">${d.bac}</div>
-    <div class="placard-prod">${r.n}${r.label && r.label !== r.n ? html`<small>Lu sur l'étiquette : ${r.label}</small>` : ""}</div>
+    <div class="placard-prod">${r.n}${r.label && r.label !== r.n ? html`<small>${r.source === "scan" ? "Lu sur l'étiquette" : "Saisi"} : ${r.label}</small>` : ""}</div>
   </section>`;
 }
 
@@ -27,7 +27,7 @@ function thresholdBlock(r) {
   const v = seuilText(r.s);
   if (!r.seuilAnswered) {
     return html`<div class="threshold" role="group" aria-label="Seuil EcoDDS">
-      <p>EcoDDS accepte ce produit jusqu'à <b>${v}</b> par contenant.${r.vol ? html` Volume estimé : ${r.vol}.` : ""} Le contenant respecte-t-il ce seuil ?</p>
+      <p>EcoDDS accepte ce produit jusqu'à <b>${v}</b> par contenant.${r.vol ? html` Volume estimé : ${r.vol}.` : ""} Le contenant respecte-t-il ce seuil ?</p>
       <div class="two"><button class="btn btn-eco btn-lg" data-seuil="ok">Oui, ${v} ou moins</button><button class="btn btn-hors btn-lg" data-seuil="over">Non, il dépasse</button></div>
       <button class="btn btn-quiet" data-seuil="unknown">Je ne sais pas</button>
     </div>`;
@@ -72,14 +72,14 @@ function factsBlock(r) {
   const items = [];
   if (r.c) items.push(html`<div class="note int fact">${icon("alert")}<span>${r.c}</span></div>`);
   if (r.i && r.i !== r.c) items.push(html`<div class="note fact">${icon("book")}<span>${r.i}</span></div>`);
-  if (d.tone === "hors" && /non id/i.test(r.x || "")) items.push(html`<div class="note hors">Produit sans étiquette lisible : isolez-le, ne le mélangez pas, portez les EPI.</div>`);
+  if (!r.c && d.tone === "hors" && /non id/i.test(r.x || "")) items.push(html`<div class="note hors">Produit sans étiquette lisible : isolez-le, ne le mélangez pas, portez les EPI.</div>`);
   return items.length ? html`<div class="facts">${items}</div>` : "";
 }
 
 function actionsBlock(r) {
-  if (needsThreshold(r)) return "";
+  if (needsThreshold(r)) return html`<div class="result-actions" style="grid-template-columns:1fr"><button class="btn btn-ghost btn-lg" data-fix>${icon("edit")}Ce n'est pas le bon produit</button></div>`;
   if (r.source !== "scan") {
-    return html`<div class="result-actions three"><button class="btn btn-ghost btn-icon btn-lg" data-photo aria-label="Ajouter une photo de référence">${icon("image")}</button><button class="btn btn-ghost btn-lg" data-fix>${icon("edit")}Autre</button><button class="btn btn-primary btn-lg" data-new>${icon("search")}Suivant</button></div>`;
+    return html`<div class="result-actions three"><button class="btn btn-ghost btn-icon btn-lg" data-photo aria-label="Ajouter une photo de référence">${icon("image")}</button><button class="btn btn-ghost btn-lg" data-fix>${icon("edit")}Corriger</button><button class="btn btn-primary btn-lg" data-new>${icon("search")}Produit suivant</button></div>`;
   }
   if (r.validated) {
     return html`<div class="result-actions"><button class="btn btn-ghost btn-icon btn-lg" data-photo aria-label="Ajouter une photo de référence">${icon("image")}</button><button class="btn btn-primary btn-lg" data-new>${icon("search")}Produit suivant</button></div>`;
@@ -98,14 +98,14 @@ export const resultView = {
     const r = app.state.result;
     if (!r) return html`${topbar({ title: "Résultat", back: true })}<div class="empty-state"><b>Aucun produit sélectionné.</b></div>`.toString();
     const flip = flipNext; flipNext = false;
-    return html`${topbar({ title: r.multiIndex != null ? "Produit " + (r.multiIndex + 1) + " sur " + app.state.multi.length : "Où le mettre ?", back: true })}
+    return html`${topbar({ title: r.multiIndex != null ? "Produit " + (r.multiIndex + 1) + " sur " + app.state.multi.length : "Où le mettre ?", back: true })}
       <div class="wrap">${placard(r, flip)}
       <div class="result-body">
         ${thresholdBlock(r)}
         ${factsBlock(r)}
         ${confidenceBlock(r)}
         ${photosBlock(r)}
-        ${r.validated && r.source === "scan" ? html`<div class="validated">${icon("check")}Validé, l'équipe s'en souviendra</div>` : ""}
+        ${r.validated && r.source === "scan" ? html`<div class="validated">${icon("check")}Validé. L'équipe s'en souviendra</div>` : ""}
       </div></div>
       ${actionsBlock(r)}`.toString();
   },
@@ -114,7 +114,7 @@ export const resultView = {
     const r = app.state.result;
     if (!r) return;
     // Recherche manuelle sans question de seuil : on note directement le tri.
-    if (r.source === "search" && !r.validated && !needsThreshold(r)) record(r, "confirmed");
+    if (r.source === "search" && !r.validated && !needsThreshold(r)) record(r, "consulted");
 
     el.addEventListener("click", async e => {
       const t = e.target;
@@ -128,7 +128,7 @@ export const resultView = {
           r.overSeuil = v === "over" || v === "unknown";
           r.seuilUnknown = v === "unknown";
           if (r.overSeuil) flipNext = true;
-          if (r.source === "search") record(r, r.seuilUnknown ? "unsure" : "confirmed");
+          if (r.source === "search") record(r, r.seuilUnknown ? "unsure" : "consulted");
           else if (r.validated && r.jrnId) updateJournal(r.jrnId, { overSeuil: r.overSeuil, reviewed: !r.seuilUnknown });
         }
         return app.refresh();
@@ -177,7 +177,7 @@ export const resultView = {
 // change sa réponse au seuil ou choisit un autre produit.
 function record(r, type) {
   const entry = { name: r.n, flux: r.f, overSeuil: !!r.overSeuil, category: r.x, confidence: 100, validationType: type, source: r.source || "search", reviewed: type !== "unsure" };
-  if (r.jrnId) updateJournal(r.jrnId, Object.assign(entry, type === "confirmed" && r._replaced ? { validationType: "corrected", correctedTo: r.n, correctedFlux: r.f, correctedCategory: r.x, name: r._replaced } : {}));
+  if (r.jrnId) updateJournal(r.jrnId, Object.assign(entry, type === "consulted" && r._replaced ? { validationType: "corrected", correctedTo: r.n, correctedFlux: r.f, correctedCategory: r.x, name: r._replaced } : {}));
   else r.jrnId = addJournal(entry).id;
   if (type === "unsure") updateJournal(r.jrnId, { reviewed: false });
   r._recorded = true;

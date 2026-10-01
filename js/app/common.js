@@ -15,9 +15,9 @@ export function topbar({ title, back = false, right = "" } = {}) {
 export function quotaChip() {
   if (isDemo()) return html`<span class="quota-chip none">Démo</span>`;
   const q = quota();
-  if (!q.total) return html`<span class="quota-chip none" title="Scan photo non inclus">Sans scan</span>`;
+  if (!q.total) return html`<button class="quota-chip none" data-tab-go="profile">Sans photo</button>`;
   const low = q.left <= Math.max(3, Math.round(q.total * 0.1));
-  return html`<span class="quota-chip ${low ? "low" : ""}" title="Scans photo restants ${q.kind === "mois" ? "ce mois-ci" : "dans l'essai"}">${icon("camera")}${q.left}</span>`;
+  return html`<button class="quota-chip ${low ? "low" : ""}" data-tab-go="profile" aria-label="${q.left} photos restantes ${q.kind === "mois" ? "ce mois-ci" : "dans l'essai"}">${icon("camera")}${q.left} rest.</button>`;
 }
 
 export function homeBar() {
@@ -92,7 +92,7 @@ export function pickProduct({ title = "Corriger le produit", sub = "", initial =
           close();
         });
         el.querySelector("[data-nonid]").addEventListener("click", () => {
-          picked = { n: "Produit non identifié", f: "H", x: NON_ID, c: "Porter les EPI. Ne pas mélanger.", s: "" };
+          picked = { n: "Produit non identifié", f: "H", x: NON_ID, c: "Isolez le produit, ne le mélangez pas, portez les EPI.", s: "" };
           close();
         });
         if (initial) draw();

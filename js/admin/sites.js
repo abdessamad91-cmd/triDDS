@@ -12,7 +12,7 @@ function usageCell(s) {
   const total = s.monthlyLimit || s.trialTotal;
   const used = s.monthlyLimit ? s.monthlyUsed : s.trialUsed;
   const r = total ? used / total : 0;
-  return html`<div class="usage ${r >= 1 ? "full" : r >= 0.8 ? "high" : ""}"><span>${used ?? "?"} / ${total}${s.monthlyLimit ? "" : " (essai)"}</span><div class="bar"><i style="width:${Math.min(100, Math.round(r * 100))}%"></i></div></div>`;
+  return html`<div class="usage ${r >= 1 ? "full" : r >= 0.8 ? "high" : ""}"><span>${used ?? "?"} / ${total} utilisés${s.monthlyLimit ? "" : " (essai)"}</span><div class="bar"><i style="width:${Math.min(100, Math.round(r * 100))}%"></i></div></div>`;
 }
 
 export function sitesView(main, adm) {
@@ -30,7 +30,7 @@ export function sitesView(main, adm) {
         <td class="mono">${s.code}</td>
         <td><span class="pill ${s.active ? (PLANS[s.plan] && PLANS[s.plan].price ? "ok" : "") : "bad"}">${s.active ? planLabel(s.plan, s.trialTotal) : "Suspendu"}</span></td>
         <td>${usageCell(s)}</td>
-        <td>${s.agents}${s.maxAgents ? " / " + s.maxAgents : ""} ${s.teamLocked ? icon("lock") : ""}</td>
+        <td><span style="display:inline-flex;align-items:center;gap:6px">${s.agents}${s.maxAgents ? " / " + s.maxAgents : ""}${s.teamLocked ? html`<span title="Profils gérés par TriDDS" aria-label="Profils gérés par TriDDS">${icon("lock")}</span>` : ""}</span></td>
         <td class="sub">${s.lastSeen ? relTime(s.lastSeen) : "jamais"}</td></tr>`)}
     </tbody></table>` : html`<div class="empty-state">${icon("lock")}<b>Aucun site</b><span>Créez un accès pour ouvrir TriDDS à une déchèterie.</span></div>`}</div>`.toString();
 
@@ -79,7 +79,7 @@ export function openCreate(adm, req = null) {
         <label class="field"><span>Offre</span><select class="select" name="plan">${planOptions(plan)}</select></label>
         <label class="field"><span>Scans d'essai offerts</span><input class="input" type="number" name="trialTotal" min="0" value="${plan === "free" ? 20 : 0}"><span class="hint">Utilisés quand l'offre n'inclut pas (ou plus) de scans.</span></label>
       </div>
-      <label class="check"><input type="checkbox" name="teamLocked" checked><span><b>Je gère les profils moi-même</b><br><span class="hint">Le responsable ne peut ni ajouter ni retirer d'agents depuis l'appli.</span></span></label>
+      <label class="check"><input type="checkbox" name="teamLocked" checked><span><b>Profils gérés par TriDDS</b><br><span class="hint">Le responsable du site ne peut ni ajouter ni retirer d'agents depuis l'appli. Décoché : il le peut, dans la limite de l'offre.</span></span></label>
       <details><summary class="hint" style="cursor:pointer">Options avancées</summary>
         <div style="display:grid;gap:12px;margin-top:12px">
           <div class="grid2">
@@ -164,8 +164,8 @@ function siteBody(s) {
   return html`<div class="codebox"><b>${s.code}</b><button class="btn btn-ghost btn-sm" data-copy-code>${icon("copy")}Code</button><button class="btn btn-ghost btn-sm" data-copy-msg>${icon("copy")}Message</button></div>
     ${!s.active ? html`<div class="note int">Accès suspendu : plus personne ne peut se connecter.</div>` : ""}
     <div class="kpis" style="margin:0">
-      <div class="kpi"><span>Scans ce mois</span><b>${s.monthlyUsed ?? "?"}${lim ? " / " + lim : ""}</b></div>
-      <div class="kpi"><span>Essai</span><b>${s.trialUsed ?? 0} / ${s.trialTotal ?? 0}</b></div>
+      <div class="kpi"><span>Photos analysées ce mois</span><b>${s.monthlyUsed ?? "?"}${lim ? " / " + lim : ""}</b><small>${lim ? "utilisées sur le quota" : "pas de quota mensuel"}</small></div>
+      ${s.trialTotal ? html`<div class="kpi"><span>Scans d'essai</span><b>${s.trialUsed ?? 0} / ${s.trialTotal}</b><small>utilisés</small></div>` : ""}
     </div>
     <form data-edit style="display:grid;gap:12px">
       <div class="section-h">Informations et offre</div>
@@ -179,9 +179,9 @@ function siteBody(s) {
         <label class="field"><span>Quota mensuel spécifique</span><input class="input" type="number" min="0" name="scansOverride" value="${s.scansOverride ?? ""}" placeholder="selon l'offre"></label>
         <label class="field"><span>Agents max spécifique</span><input class="input" type="number" min="1" name="agentsOverride" value="${s.agentsOverride ?? ""}" placeholder="selon l'offre"></label>
         <label class="field"><span>Facturation</span><select class="select" name="billing">${["", "mensuelle", "annuelle", "offert"].map(v => html`<option value="${v}" ${raw(s.billing === v ? "selected" : "")}>${v || "À définir"}</option>`)}</select></label>
-        <label class="field"><span>Payé jusqu'au</span><input class="input" type="date" name="paidUntil" value="${s.paidUntil || ""}"></label>
+        <label class="field"><span>Payé jusqu'au</span><input class="input" type="date" name="paidUntil" value="${s.paidUntil || ""}" lang="fr-FR"></label>
       </div>
-      <label class="check"><input type="checkbox" name="teamLocked" ${raw(s.teamLocked ? "checked" : "")}><span><b>Je gère les profils moi-même</b><br><span class="hint">Décoché : le responsable ajoute ou retire ses agents dans la limite de l'offre.</span></span></label>
+      <label class="check"><input type="checkbox" name="teamLocked" ${raw(s.teamLocked ? "checked" : "")}><span><b>Profils gérés par TriDDS</b><br><span class="hint">Décoché : le responsable du site ajoute ou retire ses agents dans la limite de l'offre.</span></span></label>
       <label class="field"><span>Notes internes</span><textarea class="textarea" name="notes">${s.notes}</textarea></label>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" type="submit">Enregistrer</button><button class="btn btn-ghost" type="button" data-act="reset">Remettre les compteurs à zéro</button></div>
     </form>

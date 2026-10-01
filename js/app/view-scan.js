@@ -13,10 +13,10 @@ function stopCamera() {
 export const scanView = {
   tabs: false,
   render() {
-    return html`<div class="camera" role="dialog" aria-label="Scanner une étiquette">
+    return html`<div class="camera" role="dialog" aria-label="Prendre les produits en photo">
       <div class="camera-top">
         <button class="btn btn-sm" data-back>${icon("back")}Retour</button>
-        <p data-tip>Cadrez l'étiquette, de près et sans reflet</p>
+        <p data-tip>Un produit ou plusieurs, étiquettes vers vous</p>
         <span style="width:84px"></span>
       </div>
       <div class="camera-view" data-view>
@@ -53,7 +53,7 @@ export const scanView = {
       shot = dataUrl;
       stopCamera();
       view.innerHTML = `<img src="${esc(dataUrl)}" alt="Photo prise">`;
-      el.querySelector("[data-tip]").textContent = "L'étiquette est-elle lisible ?";
+      el.querySelector("[data-tip]").textContent = "Les étiquettes sont-elles lisibles ?";
       bar.className = "camera-bar review";
       bar.innerHTML = `<button class="btn btn-ghost btn-lg" data-retake>${icon("refresh")}Reprendre</button><button class="btn btn-eco btn-lg" data-analyze>${icon("search")}Analyser</button>`;
     };
@@ -108,7 +108,7 @@ async function runAnalysis(el, app, dataUrl) {
     app.state.photo = res.photo;
     const matches = res.matches;
     if (!matches.length) {
-      app.state.result = { n: "Produit non identifié", f: "H", x: "Produits non ID ou Laboratoire", c: "Aucune étiquette lisible. Isolez le produit, ne le mélangez pas, portez les EPI.", conf: 0, source: "scan", cropImage: null };
+      app.state.result = { n: "Produit non identifié", f: "H", x: "Produits non ID ou Laboratoire", c: "Rien de lisible sur la photo. Isolez le produit, ne le mélangez pas, portez les EPI.", conf: 0, source: "scan", cropImage: null };
       app.state.result.jrnId = addJournal({ name: "Produit non identifié", flux: "H", category: app.state.result.x, confidence: 0, validationType: "auto", model: res.model }).id;
       return app.go("result", { replace: true });
     }

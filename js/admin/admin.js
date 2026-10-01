@@ -49,7 +49,7 @@ const VIEWS = {
   sites: { label: "Sites et accès", icon: "lock", render: sitesView },
   produits: { label: "Produits et photos", icon: "image", render: productsView },
   fiches: { label: "Fiches des sites", icon: "box", render: catalogView },
-  memoire: { label: "Mémoire IA", icon: "brain", render: memoryView }
+  memoire: { label: "Mémoire des équipes", icon: "brain", render: memoryView }
 };
 
 function logout(msg) {

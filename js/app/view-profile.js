@@ -26,22 +26,22 @@ export const profileView = {
             ${sess.clientName && sess.clientName !== sess.site ? html`<dt>Structure</dt><dd>${sess.clientName}</dd>` : ""}
             <dt>Offre</dt><dd>${offer}</dd>
           </dl>
-          ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans scan photo ni journal partagé.</p>`
-            : q.total ? html`<div class="meter ${pct <= 10 ? "low" : ""}"><div style="display:flex;justify-content:space-between"><b>Scans photo</b><b>${q.left} / ${q.total}</b></div>
-                <div class="bar"><i style="width:${pct}%"></i></div><p>${q.kind === "mois" ? "Restants ce mois-ci. Le compteur repart le 1er du mois." : "Restants dans votre essai."}</p></div>`
-            : html`<p class="hint" style="margin-top:12px">Le scan photo n'est pas inclus dans cet accès. La recherche reste illimitée.</p>`}
+          ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans analyse photo ni journal partagé.</p>`
+            : q.total ? html`<div class="meter ${pct <= 10 ? "low" : ""}"><div style="display:flex;justify-content:space-between"><b>Photos analysées</b><b>${q.left} restantes sur ${q.total}</b></div>
+                <div class="bar"><i style="width:${pct}%"></i></div><p>${q.kind === "mois" ? "Le compteur repart le 1er du mois." : "Essai offert par TriDDS."}</p></div>`
+            : html`<p class="hint" style="margin-top:12px">L'analyse photo n'est pas incluse dans cet accès. La recherche reste illimitée.</p>`}
         </section>
 
         ${resp && !isDemo() ? html`<nav class="menu" aria-label="Outils du responsable">
           <button class="menu-item" data-go="team">${icon("team")}<div><b>Mon équipe</b><span>${sess.teamLocked ? "Profils gérés par TriDDS" : "Ajouter ou retirer un agent"}</span></div>${icon("chevron")}</button>
           <button class="menu-item" data-go="catalog">${icon("box")}<div><b>Produits du site</b><span>${sess.canManageCatalog ? "Fiches propres à votre déchèterie" : "Inclus à partir de l'offre Pro"}</span></div>${icon("chevron")}</button>
-          <button class="menu-item" data-go="memory">${icon("brain")}<div><b>Mémoire de l'équipe</b><span>${memoryCount()} marque${memoryCount() > 1 ? "s" : ""} reconnue${memoryCount() > 1 ? "s" : ""}</span></div>${icon("chevron")}</button>
+          <button class="menu-item" data-go="memory">${icon("brain")}<div><b>Mémoire de l'équipe</b><span>${memoryCount()} marque${memoryCount() > 1 ? "s" : ""} reconnue${memoryCount() > 1 ? "s" : ""} par les photos</span></div>${icon("chevron")}</button>
         </nav>` : ""}
 
         <nav class="menu">
           <a class="menu-item" href="./pricing.html">${icon("flash")}<div><b>${isDemo() ? "Obtenir un accès" : "Changer d'offre"}</b><span>Voir les offres et nous écrire</span></div>${icon("chevron")}</a>
           <button class="menu-item" data-install hidden>${icon("download")}<div><b>Installer sur ce téléphone</b><span>Ouvrir TriDDS comme une application</span></div>${icon("chevron")}</button>
-          <button class="menu-item" data-logout>${icon("logout")}<div><b>${isDemo() ? "Quitter la démonstration" : "Se déconnecter"}</b><span>${isDemo() ? "Retour à l'écran de connexion" : "Libère votre profil pour un autre appareil"}</span></div></button>
+          <button class="menu-item" data-logout>${icon("logout")}<div><b>${isDemo() ? "Quitter la démonstration" : "Se déconnecter"}</b><span>${isDemo() ? "Retour à l'écran de connexion" : "Libère votre profil pour un autre téléphone"}</span></div></button>
         </nav>
         <p class="hint" style="text-align:center">TriDDS ${esc((window.APP_CONFIG || {}).VERSION || "")}</p>
       </div>`.toString();
@@ -51,7 +51,7 @@ export const profileView = {
       const g = e.target.closest("[data-go]");
       if (g) { team = null; items = null; return app.go(g.dataset.go); }
       if (e.target.closest("[data-logout]")) {
-        if (isDemo() || await confirmDialog({ title: "Se déconnecter ?", message: "Vous devrez saisir le code du site pour revenir.", ok: "Se déconnecter" })) app.logout();
+        if (isDemo() || await confirmDialog({ title: "Se déconnecter ?", message: "Votre profil est libéré pour un autre appareil. Vous pourrez le reprendre en un geste depuis l'écran de connexion.", ok: "Se déconnecter" })) app.logout();
       }
       if (e.target.closest("[data-install]") && window.__installPrompt) {
         window.__installPrompt.prompt();
@@ -169,7 +169,7 @@ function editItem(app, it, done) {
       });
       const del = el.querySelector("[data-del]");
       if (del) del.addEventListener("click", async () => {
-        if (!(await confirmDialog({ title: "Supprimer cette fiche ?", ok: "Supprimer", danger: true }))) return;
+        if (!(await confirmDialog({ title: "Supprimer cette fiche ?", ok: "Supprimer", danger: true }))) return;
         try { await siteCall("catalog-delete", { id: it.id }); close(); toast("Fiche supprimée"); done(); } catch (e) { app.handleError(e); }
       });
     }
@@ -183,13 +183,13 @@ export const memoryView = {
     const entries = Object.entries(memory.brands || {}).sort((a, b) => (b[1].n || 0) - (a[1].n || 0));
     return html`${topbar({ title: "Mémoire de l'équipe", back: true })}
       <div class="profile wrap">
-        <p class="hint">Quand un agent valide ou corrige un scan, la marque lue est associée au bon produit. Les scans suivants la reconnaissent directement. Supprimez une association si elle est fausse.</p>
+        <p class="hint">Quand un agent valide ou corrige une photo, la marque lue est associée au bon produit. Les photos suivantes la reconnaissent directement. Supprimez une association si elle est fausse.</p>
         <div class="rows">${entries.length ? entries.map(([brand, e]) => {
           const d = destination({ f: e.f, x: e.c });
           return html`<div class="row ${d.tone}" style="cursor:default"><span class="row-main"><b>${brand}</b><span>${e.p || "?"}, vu ${e.n || 1} fois</span></span>
             <span class="row-dest"><b>${d.bac}</b><span>${d.fluxLabel}</span></span>
             <button class="btn btn-danger btn-sm" data-forget="${brand}" aria-label="Supprimer ${brand}">${icon("trash")}</button></div>`;
-        }) : html`<div class="empty-state">${icon("brain")}<b>Aucune marque apprise</b><span>Elles s'ajoutent à chaque scan validé.</span></div>`}</div>
+        }) : html`<div class="empty-state">${icon("brain")}<b>Aucune marque apprise</b><span>Elles s'ajoutent à chaque photo validée.</span></div>`}</div>
       </div>`.toString();
   },
   mount(el, app) {
@@ -198,7 +198,7 @@ export const memoryView = {
       const b = e.target.closest("[data-forget]");
       if (!b) return;
       const brand = b.dataset.forget;
-      if (!(await confirmDialog({ title: `Oublier « ${brand} » ?`, message: "Les prochains scans de cette marque ne s'appuieront plus sur cette association.", ok: "Oublier", danger: true }))) return;
+      if (!(await confirmDialog({ title: `Oublier « ${brand} » ?`, message: "Les prochaines photos de cette marque ne s'appuieront plus sur cette association.", ok: "Oublier", danger: true }))) return;
       try { await forget(brand); toast("Association supprimée"); app.refresh(); } catch (err) { app.handleError(err); }
     });
   }

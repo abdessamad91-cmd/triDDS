@@ -41,7 +41,8 @@ body.site { background: var(--concrete); }
 .demo-chips button:hover { border-color: var(--ink-2); }
 .demo .placard { min-height: 196px; }
 .demo .placard-bac { font-size: clamp(38px, 5vw, 56px); }
-.demo-foot { padding: 12px 14px 14px; font-size: 15px; color: var(--ink-2); min-height: 52px; }
+.demo-foot { padding: 12px 14px 14px; font-size: 15px; color: var(--ink-2); }
+.demo-foot:empty { display: none; }
 .demo-empty { padding: 30px 20px; min-height: 196px; display: grid; place-items: center; text-align: center; color: var(--muted); background: var(--paper-2); }
 
 /* ---------- sections ---------- */

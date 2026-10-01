@@ -171,10 +171,10 @@ export async function catalogView(main, adm) {
   const { sites = [], items = [] } = catData;
   main.innerHTML = html`<div class="adm-head"><h1>Fiches des sites</h1><button class="btn btn-primary" data-new>${icon("plus")}Nouvelle fiche</button></div>
     <p class="hint" style="margin:-8px 0 14px">Produits ajoutés pour un site précis (par son responsable ou par vous). Ils complètent la base commune dans la recherche de ce site.</p>
-    <div class="panel tbl-wrap">${items.length ? html`<table class="tbl"><thead><tr><th>Produit</th><th>Site</th><th>Flux</th><th>Bac</th><th>Seuil</th><th>Par</th></tr></thead><tbody>
-      ${items.map((it, i) => html`<tr class="click" data-i="${i}"><td><b>${it.n}</b>${it.y && it.y.length ? html`<span class="sub">${it.y.join(", ")}</span>` : ""}</td><td>${it.site}</td><td><span class="flux-tag ${destination(it).tone}">${destination(it).fluxLabel}</span></td><td>${it.x}</td><td>${it.s || ""}</td><td class="sub">${it.updatedBy || ""}</td></tr>`)}
-    </tbody></table>` : html`<div class="empty-state">${icon("box")}<b>Aucune fiche propre à un site</b></div>`}</div>`.toString();
-  main.querySelector("[data-new]").addEventListener("click", () => editCatalog(main, adm, null, sites));
+    <div class="panel tbl-wrap">${items.length ? html`<table class="tbl"><thead><tr><th>Produit</th><th>Site</th><th>Flux</th><th>Bac</th><th>Seuil</th><th>Par</th><th></th></tr></thead><tbody>
+      ${items.map((it, i) => html`<tr class="click" data-i="${i}"><td><b>${it.n}</b>${it.y && it.y.length ? html`<span class="sub">${it.y.join(", ")}</span>` : ""}</td><td>${it.site}</td><td><span class="flux-tag ${destination(it).tone}">${destination(it).fluxLabel}</span></td><td>${it.x}</td><td>${it.s || ""}</td><td class="sub">${it.updatedBy || ""}</td><td><button class="btn btn-ghost btn-sm">Modifier</button></td></tr>`)}
+    </tbody></table>` : html`<div class="empty-state">${icon("box")}<b>Aucune fiche propre à un site</b><span>Les fiches complètent la base commune pour une déchèterie précise.</span><button class="btn btn-primary" data-new>${icon("plus")}Nouvelle fiche</button></div>`}</div>`.toString();
+  main.querySelectorAll("[data-new]").forEach(b => b.addEventListener("click", () => editCatalog(main, adm, null, sites)));
   main.querySelector(".panel").addEventListener("click", e => { const r = e.target.closest("[data-i]"); if (r) editCatalog(main, adm, items[+r.dataset.i], sites); });
 }
 
@@ -214,10 +214,10 @@ export async function memoryView(main, adm) {
   if (!memData) { main.innerHTML = `<div class="empty-state"><span class="spinner"></span></div>`; memData = await adm.call("knowledge-admin-list"); }
   const q = mQuery.toLowerCase();
   const items = (memData.items || []).filter(i => !q || [i.brand, i.p, i.c, i.site].join(" ").toLowerCase().includes(q));
-  main.innerHTML = html`<div class="adm-head"><h1>Mémoire IA</h1><input class="input" type="search" data-q placeholder="Marque, produit, site" value="${mQuery}"></div>
-    <p class="hint" style="margin:-8px 0 14px">Associations marque → produit apprises quand les agents valident ou corrigent un scan. Corrigez ou supprimez les erreurs ; transformez les marques fréquentes en fiches.</p>
-    <div class="panel tbl-wrap">${items.length ? html`<table class="tbl"><thead><tr><th>Marque lue</th><th>Produit associé</th><th>Bac</th><th>Site</th><th>Vu</th><th>Par</th></tr></thead><tbody>
-      ${items.map((it, i) => html`<tr class="click" data-i="${i}"><td><b>${it.brand}</b></td><td>${it.p || "?"}</td><td><span class="flux-tag ${destination({ f: it.f, x: it.c }).tone}">${it.c || "?"}</span></td><td>${it.site}</td><td>${it.n}×</td><td class="sub">${(it.by || []).join(", ")}</td></tr>`)}
+  main.innerHTML = html`<div class="adm-head"><h1>Mémoire des équipes</h1><input class="input" type="search" data-q placeholder="Marque, produit, site" value="${mQuery}"></div>
+    <p class="hint" style="margin:-8px 0 14px">Associations marque → produit apprises quand les agents valident ou corrigent une photo. Ouvrez une ligne pour corriger, supprimer, ou créer une fiche du site.</p>
+    <div class="panel tbl-wrap">${items.length ? html`<table class="tbl"><thead><tr><th>Marque lue</th><th>Produit associé</th><th>Bac</th><th>Site</th><th>Vu</th><th>Par</th><th></th></tr></thead><tbody>
+      ${items.map((it, i) => html`<tr class="click" data-i="${i}"><td><b>${it.brand}</b></td><td>${it.p || "?"}</td><td><span class="flux-tag ${destination({ f: it.f, x: it.c }).tone}">${it.c || "?"}</span></td><td>${it.site}</td><td>${it.n}×</td><td class="sub">${(it.by || []).join(", ")}</td><td><button class="btn btn-ghost btn-sm">Modifier</button></td></tr>`)}
     </tbody></table>` : html`<div class="empty-state">${icon("brain")}<b>Aucune marque apprise</b></div>`}</div>`.toString();
   const qi = main.querySelector("[data-q]");
   qi.addEventListener("input", debounce(() => { mQuery = qi.value; memoryView(main, adm).then(() => { const v = main.querySelector("[data-q]"); v.focus(); v.setSelectionRange(v.value.length, v.value.length); }); }, 200));
