@@ -63,7 +63,7 @@ function renderPlans() {
     const p = PLANS[k];
     const price = formatPrice(p, { yearly });
     const unit = p.price ? (yearly ? "HT / an" : "HT / mois") : "";
-    const note = p.price ? (yearly ? `soit ${(p.price * 10 / 12).toFixed(2).replace(".", ",")} € par mois` : k === "multisite" ? "pour l'ensemble des sites" : "par déchèterie") : "à partir de 6 sites";
+    const note = p.price ? (yearly ? `par déchèterie, soit ${(p.price * 10 / 12).toFixed(2).replace(".", ",")} € par mois` : "par déchèterie") : "à partir de 3 déchèteries";
     return html`<article class="plan ${p.featured ? "featured" : ""}">
       ${p.featured ? html`<span class="flag">Le plus choisi</span>` : ""}
       <h3>${p.label}</h3>
@@ -71,7 +71,7 @@ function renderPlans() {
       <div class="price"><b>${price}</b><span>${unit}</span></div>
       <p class="price-note">${note}</p>
       <ul>${p.features.map(f => html`<li>${icon("check")}${f}</li>`)}</ul>
-      <a class="btn ${p.featured ? "btn-primary" : "btn-ghost"} btn-block" href="#demande" data-pick="${k}">${p.price == null ? "Demander un devis" : "Demander cet accès"}</a>
+      <a class="btn ${p.featured ? "btn-primary" : "btn-ghost"} btn-block" href="#demande" data-pick="${k}">${p.price == null ? "Demander un devis" : "Demander un accès"}</a>
     </article>`.toString();
   }).join("");
 }
@@ -86,18 +86,17 @@ document.querySelectorAll("[data-billing]").forEach(b => b.addEventListener("cli
 // ---------- demande ----------
 const form = $("[data-request]");
 const select = $("[data-plan-select]");
-select.innerHTML = `<option value="">Je ne sais pas encore</option>` + PUBLIC.map(k => `<option value="${k}">${esc(PLANS[k].label)}${PLANS[k].price ? ` (${PLANS[k].price} € HT / mois)` : " (sur devis)"}</option>`).join("");
+select.innerHTML = `<option value="essai">Un mois d'essai gratuit sur une déchèterie</option>` + PUBLIC.map(k => `<option value="${k}">${esc(PLANS[k].label)}${PLANS[k].price ? ` (${PLANS[k].price} € HT par mois et par site)` : " (devis, dès 3 sites)"}</option>`).join("") + `<option value="">Je ne sais pas encore</option>`;
 
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-pick]");
   if (!b) return;
   select.value = b.dataset.pick;
-  if (b.dataset.pick === "multisite") form.sites.value = Math.max(2, +form.sites.value || 2);
-  if (b.dataset.pick === "enterprise") form.sites.value = Math.max(6, +form.sites.value || 6);
+  if (b.dataset.pick === "enterprise") form.sites.value = Math.max(3, +form.sites.value || 3);
 });
 
 const params = new URLSearchParams(location.search);
-if (params.get("plan") && PLANS[params.get("plan")]) select.value = params.get("plan");
+if (params.get("plan") && (PLANS[params.get("plan")] || params.get("plan") === "essai")) select.value = params.get("plan");
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
@@ -116,7 +115,8 @@ form.addEventListener("submit", async e => {
   btn.disabled = true;
   btn.textContent = "Envoi…";
   try {
-    await post("request-access", Object.assign(data, { source: "page-offres" }));
+    const trial = data.plan === "essai";
+    await post("request-access", Object.assign(data, { plan: trial ? "pro" : data.plan, trial, source: "page-offres" }));
     form.innerHTML = html`<div class="done">${icon("check")}<h3>Demande envoyée</h3>
       <p>Merci ${data.name.split(" ")[0]}. Je reviens vers vous sous 48 h ouvrées, par email ou par téléphone, pour préparer l'accès.</p>
       <a class="btn btn-ghost" href="./">Essayer la recherche en attendant</a></div>`.toString();

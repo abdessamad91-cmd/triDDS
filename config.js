@@ -1,4 +1,4 @@
 window.APP_CONFIG = {
   API_BASE: "https://wild-morning-f974.abdessamad91.workers.dev/api",
-  VERSION: "2.0.2"
+  VERSION: "2.1.0"
 };

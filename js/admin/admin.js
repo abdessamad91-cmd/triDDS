@@ -123,6 +123,8 @@ function dashboard(main) {
   const nearQuota = sites.filter(s => s.active && s.monthlyLimit > 0 && s.monthlyUsed / s.monthlyLimit >= 0.8);
   const fresh = requests.filter(r => r.status === "nouvelle");
   const idle = sites.filter(s => s.active && s.lastSeen && Date.now() - new Date(s.lastSeen).getTime() > 21 * 864e5);
+  const soon = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  const trials = sites.filter(s => s.active && s.billing === "essai" && (s.trialExpired || (s.paidUntil && s.paidUntil <= soon)));
   main.innerHTML = html`<div class="adm-head"><h1>Tableau de bord</h1><button class="btn btn-primary" data-new>${icon("plus")}Créer un accès</button></div>
     <div class="kpis">
       <div class="kpi ${fresh.length ? "alert" : ""}"><span>Demandes à traiter</span><b>${fresh.length}</b><small>${requests.length} au total</small></div>
@@ -133,14 +135,15 @@ function dashboard(main) {
     </div>
     <div class="cols">
       <section class="panel"><h2>Demandes récentes<button class="btn btn-ghost btn-sm" data-goto="demandes">Tout voir</button></h2>
-        ${fresh.length ? html`<div class="tbl-wrap"><table class="tbl"><tbody>${fresh.slice(0, 6).map(r => html`<tr class="click" data-goto="demandes"><td><b>${r.organisation}</b><span class="sub">${r.name}, ${r.sites} site${r.sites > 1 ? "s" : ""}</span></td><td>${r.plan ? planLabel(r.plan) : "—"}</td><td class="sub">${relTime(r.createdAt)}</td></tr>`)}</tbody></table></div>`
+        ${fresh.length ? html`<div class="tbl-wrap"><table class="tbl"><tbody>${fresh.slice(0, 6).map(r => html`<tr class="click" data-goto="demandes"><td><b>${r.organisation}</b><span class="sub">${r.name}, ${r.sites} site${r.sites > 1 ? "s" : ""}</span></td><td>${r.trial ? "Essai" : r.plan ? planLabel(r.plan) : "—"}</td><td class="sub">${relTime(r.createdAt)}</td></tr>`)}</tbody></table></div>`
           : html`<p class="hint">${adm.v2 ? "Aucune demande en attente." : "Disponible avec le Worker v2."}</p>`}
       </section>
       <section class="panel"><h2>À surveiller</h2>
-        ${nearQuota.length || idle.length ? html`<div class="tbl-wrap"><table class="tbl"><tbody>
+        ${nearQuota.length || idle.length || trials.length ? html`<div class="tbl-wrap"><table class="tbl"><tbody>
+          ${trials.map(s => html`<tr class="click" data-site="${s.code}"><td><b>${s.site}</b><span class="sub">${s.client}</span></td><td><span class="pill ${s.trialExpired ? "bad" : "warn"}">${s.trialExpired ? "Essai terminé" : "Essai jusqu'au " + s.paidUntil.split("-").reverse().join("/")}</span></td><td class="sub">${s.trialExpired ? "relancer ou suspendre" : "proposer la suite"}</td></tr>`)}
           ${nearQuota.map(s => html`<tr class="click" data-site="${s.code}"><td><b>${s.site}</b><span class="sub">${s.client}</span></td><td><span class="pill warn">Quota ${s.monthlyUsed}/${s.monthlyLimit}</span></td><td class="sub">proposer l'offre supérieure</td></tr>`)}
           ${idle.map(s => html`<tr class="click" data-site="${s.code}"><td><b>${s.site}</b><span class="sub">${s.client}</span></td><td><span class="pill">Inactif</span></td><td class="sub">dernière connexion ${relTime(s.lastSeen)}</td></tr>`)}
-        </tbody></table></div>` : html`<p class="hint">Rien à signaler : aucun site proche de son quota ni inactif depuis 3 semaines.</p>`}
+        </tbody></table></div>` : html`<p class="hint">Rien à signaler : aucun essai en fin de course, aucun site proche de son quota ni inactif depuis 3 semaines.</p>`}
       </section>
     </div>
     <section class="panel"><h2>Agents connectés</h2>
@@ -170,7 +173,7 @@ function requests(main) {
   main.innerHTML = html`<div class="adm-head"><h1>Demandes d'accès</h1></div>
     <div class="toolbar"><div class="seg">${["ouvertes", "convertie", "refusée", "toutes"].map(f => html`<button data-f="${f}" aria-pressed="${f === reqFilter}">${f === "ouvertes" ? "À traiter" : f === "convertie" ? "Converties" : f === "refusée" ? "Refusées" : "Toutes"}</button>`)}</div></div>
     ${list.length ? list.map(r => html`<article class="req" data-id="${r.id}">
-      <div class="req-head"><b>${r.organisation}</b><span class="pill ${STATUS[r.status] || ""}">${r.status}</span>${r.plan ? html`<span class="pill">${planLabel(r.plan)}</span>` : ""}<span class="when">${relTime(r.createdAt)}</span></div>
+      <div class="req-head"><b>${r.organisation}</b><span class="pill ${STATUS[r.status] || ""}">${r.status}</span>${r.trial ? html`<span class="pill ok">Essai 1 mois</span>` : r.plan ? html`<span class="pill">${planLabel(r.plan)}</span>` : ""}<span class="when">${relTime(r.createdAt)}</span></div>
       <dl><dt>Contact</dt><dd>${r.name}, <a href="mailto:${r.email}">${r.email}</a>${r.phone ? html`, <a href="tel:${r.phone}">${r.phone}</a>` : ""}</dd>
         <dt>Déchèteries</dt><dd>${r.sites}${r.siteName ? ", dont " + r.siteName : ""}</dd>
         ${r.code ? html`<dt>Accès créé</dt><dd class="mono">${r.code}</dd>` : ""}</dl>

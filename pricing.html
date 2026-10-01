@@ -12,10 +12,10 @@
 <link rel="icon" href="./favicon.ico">
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="preload" href="./fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="./css/fonts.css?v=2.0.2">
-<link rel="stylesheet" href="./css/base.css?v=2.0.2">
-<link rel="stylesheet" href="./css/app.css?v=2.0.2">
-<link rel="stylesheet" href="./css/site.css?v=2.0.2">
+<link rel="stylesheet" href="./css/fonts.css?v=2.1.0">
+<link rel="stylesheet" href="./css/base.css?v=2.1.0">
+<link rel="stylesheet" href="./css/app.css?v=2.1.0">
+<link rel="stylesheet" href="./css/site.css?v=2.1.0">
 </head>
 <body class="site">
 
@@ -32,7 +32,7 @@
     <h1>Le bon bac, en deux secondes.</h1>
     <p class="lead">Vos agents tapent le nom d'un produit ou le prennent en photo, seul ou avec d'autres. TriDDS affiche s'il va en EcoDDS, en hors EcoDDS ou s'il doit être refusé, avec le seuil à vérifier et les consignes de sécurité.</p>
     <div class="hero-cta">
-      <a class="btn btn-eco btn-lg" href="#demande">Demander un accès</a>
+      <a class="btn btn-eco btn-lg" href="#demande" data-pick="essai">Essayer un mois gratuitement</a>
       <a class="btn btn-ghost btn-lg" href="#offres">Voir les offres</a>
     </div>
     <p class="hero-proof" data-count>Plus de 480 produits classés selon le référentiel EcoDDS.</p>
@@ -62,13 +62,17 @@
 
 <section class="band" id="offres"><div class="site-w">
   <h2>Un prix par déchèterie, sans engagement.</h2>
-  <p class="sub">La recherche est illimitée dans toutes les offres. Le scan photo est compté par mois et repart à zéro le 1er.</p>
+  <p class="sub">Tout est inclus, pour tous les agents du site. Seules les photos analysées sont comptées : 200 par mois, le compteur repart le 1er.</p>
   <div class="billing" role="group" aria-label="Période de facturation">
     <button data-billing="month" aria-pressed="true">Mensuel</button>
     <button data-billing="year" aria-pressed="false">Annuel, 2 mois offerts</button>
   </div>
   <div class="plans" data-plans></div>
   <p class="plans-note">Prix hors taxes. Facture mensuelle ou annuelle, paiement par virement ou mandat administratif. Résiliable à tout moment, l'accès reste ouvert jusqu'à la fin de la période payée.</p>
+  <div class="trial-band">
+    <div><b>Un mois d'essai gratuit sur une déchèterie</b><p>Accès complet, sans carte bancaire ni engagement. À la fin du mois, vous décidez.</p></div>
+    <a class="btn btn-eco btn-lg" href="#demande" data-pick="essai">Demander l'essai</a>
+  </div>
 </div></section>
 
 <section class="band paper" id="demande"><div class="site-w">
@@ -79,8 +83,8 @@
       <ol class="timeline">
         <li><b>Vous envoyez la demande</b><span>Quelques informations sur votre structure et vos déchèteries.</span></li>
         <li><b>On fait le point sous 48 h</b><span>Par téléphone ou par email : nombre de sites, d'agents, volume de scans.</span></li>
-        <li><b>Vous recevez le code du site</b><span>Avec les profils de vos agents déjà créés. Un essai de scans photo peut être ouvert avant de vous engager.</span></li>
-        <li><b>La facture suit</b><span>Au mois ou à l'année, sans engagement de durée.</span></li>
+        <li><b>Vous recevez le code du site</b><span>Avec les profils de vos agents déjà créés. Le mois d'essai démarre à ce moment-là.</span></li>
+        <li><b>La facture suit, si vous continuez</b><span>Au mois ou à l'année, sans engagement de durée.</span></li>
       </ol>
     </div>
 
@@ -98,7 +102,7 @@
         <label class="field"><span>Déchèterie principale</span><input class="input" name="siteName" placeholder="Nom ou commune"></label>
         <label class="field"><span>Nombre de déchèteries</span><input class="input" type="number" name="sites" min="1" max="500" value="1" inputmode="numeric"></label>
       </div>
-      <label class="field"><span>Offre envisagée</span><select class="select" name="plan" data-plan-select></select></label>
+      <label class="field"><span>Ce que vous souhaitez</span><select class="select" name="plan" data-plan-select></select></label>
       <label class="field"><span>Message (facultatif)</span><textarea class="textarea" name="message" placeholder="Nombre d'agents, besoins particuliers, date de démarrage souhaitée…"></textarea></label>
       <label class="hp" aria-hidden="true">Site web<input name="website" tabindex="-1" autocomplete="off"></label>
       <div data-msg></div>
@@ -111,6 +115,7 @@
 <section class="band"><div class="site-w">
   <h2>Questions fréquentes</h2>
   <div class="faq">
+    <details><summary>Comment se passe le mois d'essai ?</summary><p>Vous recevez un accès complet pour une déchèterie, avec vos agents déjà créés. Au bout d'un mois, soit vous continuez et la première facture part, soit l'accès se ferme. Rien n'est prélevé automatiquement.</p></details>
     <details><summary>Qu'est-ce qu'un scan photo ?</summary><p>Une photo analysée par l'IA pour lire les étiquettes et classer les produits. Une photo compte pour un scan, même si plusieurs produits y figurent. La recherche par nom n'est jamais décomptée.</p></details>
     <details><summary>Que se passe-t-il si le quota est atteint ?</summary><p>La recherche continue de fonctionner normalement. Les scans reprennent le 1er du mois suivant, ou plus tôt si vous passez à l'offre supérieure.</p></details>
     <details><summary>Faut-il installer une application ?</summary><p>Non. TriDDS s'ouvre dans le navigateur du téléphone et peut être ajouté à l'écran d'accueil. La recherche fonctionne même sans réseau.</p></details>
@@ -127,8 +132,8 @@
   <a href="#demande">Demander un accès</a>
 </div></footer>
 
-<script src="./config.js?v=2.0.2"></script>
-<script src="./data.js?v=2.0.2" defer></script>
+<script src="./config.js?v=2.1.0"></script>
+<script src="./data.js?v=2.1.0" defer></script>
 <script type="module" src="./js/site/offres.js"></script>
 </body>
 </html>

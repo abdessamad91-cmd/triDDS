@@ -172,11 +172,14 @@ function ensureUsageState(site) {
   if (site.usageMonth !== currentMonth()) { site.usageMonth = currentMonth(); site.monthlyUsed = 0; }
   return site;
 }
+// Essai gratuit terminé (facturation « essai » et date dépassée) : l'analyse photo s'arrête, la recherche reste.
+const trialExpired = site => site.billing === "essai" && !!site.paidUntil && site.paidUntil < nowIso().slice(0, 10);
+
 function usageView(site) {
   const trialRemaining = Math.max(0, (site.trialTotal || 0) - (site.trialUsed || 0));
-  const monthlyLimit = site.monthlyLimit || 0;
+  const monthlyLimit = trialExpired(site) ? 0 : (site.monthlyLimit || 0);
   const monthlyRemaining = monthlyLimit > 0 ? Math.max(0, monthlyLimit - (site.monthlyUsed || 0)) : 0;
-  return { trialTotal: site.trialTotal || 0, trialUsed: site.trialUsed || 0, trialRemaining, monthlyLimit, monthlyUsed: site.monthlyUsed || 0, monthlyRemaining, aiEnabled: monthlyRemaining > 0 || trialRemaining > 0 };
+  return { trialTotal: site.trialTotal || 0, trialUsed: site.trialUsed || 0, trialRemaining, monthlyLimit, monthlyUsed: site.monthlyUsed || 0, monthlyRemaining, aiEnabled: monthlyRemaining > 0 || (trialRemaining > 0 && !trialExpired(site)), trialExpired: trialExpired(site) };
 }
 function buildAccessPayload(site, code, agentName) {
   const agent = agentName ? (site.agents || []).find(a => a.name === agentName) : null;
@@ -187,7 +190,7 @@ function buildAccessPayload(site, code, agentName) {
     site: site.site,
     clientName: site.clientName || "",
     plan: site.plan,
-    planName: planLabel(site.plan, site.trialTotal),
+    planName: site.billing === "essai" ? (trialExpired(site) ? "Essai terminé" : "Essai gratuit") : planLabel(site.plan, site.trialTotal),
     code,
     agents: (site.agents || []).map(a => a.name),
     memoryEnabled: hasPro(site),
@@ -265,6 +268,7 @@ async function handleRequestAccess(request, env) {
     siteName: clip(body.siteName, 120),
     sites: Math.max(1, Math.min(500, parseInt(body.sites, 10) || 1)),
     plan: PLANS[body.plan] ? body.plan : "",
+    trial: !!body.trial,
     message: clip(body.message, 1500),
     source: clip(body.source, 40) || "site"
   };
@@ -286,13 +290,13 @@ async function handleRequestAccess(request, env) {
 
   const notify = env.NOTIFY_EMAIL;
   if (notify) {
-    const rows = [["Nom", req.name], ["Email", req.email], ["Téléphone", req.phone], ["Structure", req.organisation], ["Site", req.siteName], ["Nombre de sites", req.sites], ["Offre visée", req.plan ? PLANS[req.plan].label : "—"], ["Message", req.message]]
+    const rows = [["Nom", req.name], ["Email", req.email], ["Téléphone", req.phone], ["Structure", req.organisation], ["Site", req.siteName], ["Nombre de sites", req.sites], ["Demande", req.trial ? "Essai gratuit d'un mois" : req.plan ? PLANS[req.plan].label : "—"], ["Message", req.message]]
       .map(([k, v]) => `<tr><td style="padding:6px 10px 6px 0;color:#6b736e;vertical-align:top">${k}</td><td style="padding:6px 0;font-weight:600">${escHtml(v || "—")}</td></tr>`).join("");
     const base = (env.SITE_BASE_URL || "https://tridds.com").replace(/\/+$/, "");
     await sendEmail(env, {
       to: notify,
       replyTo: req.email,
-      subject: "Demande d'accès TriDDS — " + req.organisation,
+      subject: (req.trial ? "Demande d'essai TriDDS — " : "Demande d'accès TriDDS — ") + req.organisation,
       html: emailShell("Nouvelle demande d'accès", `<table style="font-size:14px;border-collapse:collapse">${rows}</table><p style="margin-top:18px"><a href="${base}/admin.html#demandes" style="color:#2f7d32;font-weight:700">Traiter la demande dans l'admin</a></p>`),
       text: `Nouvelle demande d'accès\n${req.name} — ${req.email} — ${req.phone}\n${req.organisation} / ${req.siteName} (${req.sites} site(s))\nOffre : ${req.plan}\n\n${req.message}`
     }).catch(() => null);
@@ -423,7 +427,7 @@ function siteSummary(code, raw) {
     site: data.site,
     responsable: ((data.agents || []).find(a => normalizeRole(a.role) === "responsable") || {}).name || "",
     plan: data.plan,
-    planName: planLabel(data.plan, data.trialTotal),
+    planName: data.billing === "essai" ? (trialExpired(data) ? "Essai terminé" : "Essai gratuit") : planLabel(data.plan, data.trialTotal),
     active: data.active !== false,
     created: data.created,
     agents: (data.agents || []).length,
@@ -466,7 +470,7 @@ async function handleAdmin(request, env) {
       s.agentsList.forEach(a => { if (a.activeSession) sessions.push({ code: s.code, site: s.site, agent: a.name, deviceName: a.activeSession.deviceName, lastSeenAt: a.activeSession.lastSeenAt, startedAt: a.activeSession.startedAt }); });
     }
     const requests = (await readJsonKV(env.AUTH_STORE, "_requests") || { items: [] }).items;
-    const paying = sites.filter(s => s.active && planOf(s.plan).price > 0);
+    const paying = sites.filter(s => s.active && planOf(s.plan).price > 0 && !["essai", "offert"].includes(s.billing));
     const stats = {
       totalSites: sites.length,
       activeSites: sites.filter(s => s.active).length,
@@ -887,9 +891,11 @@ async function handleAnalyze(request, env) {
   } else {
     const u = usageView(site);
     if (!u.aiEnabled) {
-      const msg = u.monthlyLimit > 0
-        ? "Quota de photos du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
-        : "L'analyse photo n'est pas incluse dans cet accès. Contactez TriDDS pour l'activer.";
+      const msg = u.trialExpired
+        ? "Votre mois d'essai est terminé. La recherche reste disponible ; contactez TriDDS pour continuer avec l'analyse photo."
+        : u.monthlyLimit > 0
+          ? "Quota de photos du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
+          : "L'analyse photo n'est pas incluse dans cet accès. Contactez TriDDS pour l'activer.";
       return json({ error: msg, usage: buildAccessPayload(site, code, agent.name) }, 403);
     }
     if (u.monthlyRemaining > 0) { site.monthlyUsed = (site.monthlyUsed || 0) + 1; charged = "monthly"; }

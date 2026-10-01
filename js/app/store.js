@@ -29,7 +29,7 @@ export const lastLogin = () => load(K.last, null);
 
 export function applyAccess(d) {
   if (!d) return;
-  const fields = ["site", "clientName", "plan", "planName", "agentRole", "memoryEnabled", "aiEnabled", "trialTotal", "trialUsed", "trialRemaining", "monthlyLimit", "monthlyUsed", "monthlyRemaining", "maxAgents"];
+  const fields = ["site", "clientName", "plan", "planName", "agentRole", "memoryEnabled", "aiEnabled", "trialTotal", "trialUsed", "trialRemaining", "monthlyLimit", "monthlyUsed", "monthlyRemaining", "maxAgents", "trialExpired"];
   fields.forEach(f => { if (d[f] !== undefined && d[f] !== null) sess[f] = d[f]; });
   if (d.maxAgents === null) sess.maxAgents = null;
   // Une réponse sans profil (ancien Worker, analyse) ne doit pas retirer les droits du responsable.

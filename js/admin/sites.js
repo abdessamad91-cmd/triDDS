@@ -1,7 +1,7 @@
 // Sites et accès : liste, création (seul moyen d'ouvrir un accès), fiche détaillée.
 
 import { html, raw, icon, esc, toast, relTime, confirmDialog } from "../shared/ui.js";
-import { PLANS, PLAN_ORDER, planLabel } from "../shared/plans.js";
+import { PLANS, PLAN_ORDER, planLabel, TRIAL_DAYS } from "../shared/plans.js";
 import { openDrawer, copy, appUrl } from "./drawer.js";
 
 let filter = "actifs";
@@ -28,7 +28,7 @@ export function sitesView(main, adm) {
       ${list.map(s => html`<tr class="click" data-code="${s.code}">
         <td><b>${s.site}</b><span class="sub">${s.client && s.client !== s.site ? s.client : s.principal || ""}</span></td>
         <td class="mono">${s.code}</td>
-        <td><span class="pill ${s.active ? (PLANS[s.plan] && PLANS[s.plan].price ? "ok" : "") : "bad"}">${s.active ? planLabel(s.plan, s.trialTotal) : "Suspendu"}</span></td>
+        <td><span class="pill ${!s.active ? "bad" : s.trialExpired ? "bad" : s.billing === "essai" ? "warn" : PLANS[s.plan] && PLANS[s.plan].price ? "ok" : ""}">${s.active ? s.planName || planLabel(s.plan, s.trialTotal) : "Suspendu"}</span></td>
         <td>${usageCell(s)}</td>
         <td><span style="display:inline-flex;align-items:center;gap:6px">${s.agents}${s.maxAgents ? " / " + s.maxAgents : ""}${s.teamLocked ? html`<span title="Profils gérés par TriDDS" aria-label="Profils gérés par TriDDS">${icon("lock")}</span>` : ""}</span></td>
         <td class="sub">${s.lastSeen ? relTime(s.lastSeen) : "jamais"}</td></tr>`)}
@@ -42,8 +42,10 @@ export function sitesView(main, adm) {
 }
 
 function planOptions(selected) {
-  return PLAN_ORDER.map(k => html`<option value="${k}" ${raw(k === selected ? "selected" : "")}>${PLANS[k].label}${PLANS[k].price ? ` (${PLANS[k].price} €)` : PLANS[k].price === 0 ? " (gratuit, essai possible)" : " (devis)"}</option>`);
+  // Les anciennes offres n'apparaissent que si le site est encore dessus.
+  return PLAN_ORDER.filter(k => PLANS[k].public || k === selected || k === "free").map(k => html`<option value="${k}" ${raw(k === selected ? "selected" : "")}>${PLANS[k].label}${PLANS[k].price ? ` (${PLANS[k].price} € par site)` : PLANS[k].price === 0 ? " (recherche seule)" : " (devis)"}</option>`);
 }
+const plusDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 
 export function welcomeText(site, code, agents = [], responsable = "") {
   return `Bonjour${responsable ? " " + responsable : ""},
@@ -61,7 +63,8 @@ Ce code donne accès au site : merci de ne le transmettre qu'à votre équipe.`;
 // ---------- création ----------
 export function openCreate(adm, req = null) {
   const r = req || {};
-  const plan = r.plan && PLANS[r.plan] ? r.plan : "free";
+  const plan = r.plan && PLANS[r.plan] && PLANS[r.plan].public ? r.plan : "pro";
+  const trial = req ? !!r.trial : true;
   openDrawer({
     title: req ? "Créer l'accès demandé" : "Créer un accès",
     sub: req ? `${r.organisation}, demande du ${new Date(r.createdAt).toLocaleDateString("fr-FR")}` : "Seule façon d'ouvrir TriDDS à un site",
@@ -75,16 +78,15 @@ export function openCreate(adm, req = null) {
         <label class="field"><span>Email du responsable</span><input class="input" type="email" name="principalEmail" value="${r.email || ""}"></label>
       </div>
       <label class="field"><span>Agents (un par ligne)</span><textarea class="textarea" name="agents" placeholder="Prénom Nom"></textarea><span class="hint">Les noms affichés à la connexion. Le responsable est ajouté automatiquement.</span></label>
-      <div class="grid2">
-        <label class="field"><span>Offre</span><select class="select" name="plan">${planOptions(plan)}</select></label>
-        <label class="field"><span>Scans d'essai offerts</span><input class="input" type="number" name="trialTotal" min="0" value="${plan === "free" ? 20 : 0}"><span class="hint">Utilisés quand l'offre n'inclut pas (ou plus) de scans.</span></label>
-      </div>
+      <label class="check"><input type="checkbox" name="trial" ${raw(trial ? "checked" : "")}><span><b>Mois d'essai gratuit</b><br><span class="hint">Accès complet jusqu'au ${plusDays(TRIAL_DAYS).split("-").reverse().join("/")}. Ensuite, l'analyse photo s'arrête jusqu'à ce que vous passiez le site en facturation.</span></span></label>
+      <label class="field"><span>Offre</span><select class="select" name="plan">${planOptions(plan)}</select></label>
       <label class="check"><input type="checkbox" name="teamLocked" checked><span><b>Profils gérés par TriDDS</b><br><span class="hint">Le responsable du site ne peut ni ajouter ni retirer d'agents depuis l'appli. Décoché : il le peut, dans la limite de l'offre.</span></span></label>
       <details><summary class="hint" style="cursor:pointer">Options avancées</summary>
         <div style="display:grid;gap:12px;margin-top:12px">
           <div class="grid2">
             <label class="field"><span>Code personnalisé (facultatif)</span><input class="input mono" name="code" placeholder="généré automatiquement" style="text-transform:uppercase"></label>
-            <label class="field"><span>Facturation</span><select class="select" name="billing"><option value="">À définir</option><option value="mensuelle">Mensuelle</option><option value="annuelle">Annuelle</option><option value="offert">Offert</option></select></label>
+            <label class="field"><span>Facturation (si pas d'essai)</span><select class="select" name="billing"><option value="">À définir</option><option value="mensuelle">Mensuelle</option><option value="annuelle">Annuelle</option><option value="offert">Offert</option></select></label>
+            <label class="field"><span>Scans d'essai hors quota</span><input class="input" type="number" name="trialTotal" min="0" value="0"><span class="hint">Pour un site Découverte, sinon laisser 0.</span></label>
           </div>
           <div class="grid2">
             <label class="field"><span>Quota de scans mensuel (si différent de l'offre)</span><input class="input" type="number" name="scansOverride" min="0"></label>
@@ -117,7 +119,8 @@ export function openCreate(adm, req = null) {
           const d = await adm.call("create", {
             client: fd.client, site: fd.site, responsable: fd.responsable, principal: fd.responsable, principalEmail: fd.principalEmail,
             agents, plan: fd.plan, trialTotal: fd.trialTotal, teamLocked: !!f.teamLocked.checked, code: fd.code,
-            billing: fd.billing, scansOverride: fd.scansOverride, agentsOverride: fd.agentsOverride, notes: fd.notes,
+            billing: f.trial.checked ? "essai" : fd.billing, paidUntil: f.trial.checked ? plusDays(TRIAL_DAYS) : "",
+            scansOverride: fd.scansOverride, agentsOverride: fd.agentsOverride, notes: fd.notes,
             sendEmail: !!f.sendEmail.checked, requestId: r.id || ""
           });
           if (!adm.v2 && agents.length) {
@@ -163,6 +166,7 @@ function siteBody(s) {
   const lim = s.monthlyLimit || 0;
   return html`<div class="codebox"><b>${s.code}</b><button class="btn btn-ghost btn-sm" data-copy-code>${icon("copy")}Code</button><button class="btn btn-ghost btn-sm" data-copy-msg>${icon("copy")}Message</button></div>
     ${!s.active ? html`<div class="note int">Accès suspendu : plus personne ne peut se connecter.</div>` : ""}
+    ${s.billing === "essai" ? html`<div class="note ${s.trialExpired ? "int" : "eco"}">${s.trialExpired ? "Essai terminé : l'analyse photo est coupée. Passez la facturation en « mensuelle » ou « annuelle » pour rouvrir, ou suspendez le site." : "Essai gratuit en cours jusqu'au " + (s.paidUntil || "?").split("-").reverse().join("/") + "."}</div>` : ""}
     <div class="kpis" style="margin:0">
       <div class="kpi"><span>Photos analysées ce mois</span><b>${s.monthlyUsed ?? "?"}${lim ? " / " + lim : ""}</b><small>${lim ? "utilisées sur le quota" : "pas de quota mensuel"}</small></div>
       ${s.trialTotal ? html`<div class="kpi"><span>Scans d'essai</span><b>${s.trialUsed ?? 0} / ${s.trialTotal}</b><small>utilisés</small></div>` : ""}
@@ -178,8 +182,8 @@ function siteBody(s) {
         <label class="field"><span>Scans d'essai</span><input class="input" type="number" min="0" name="trialTotal" value="${s.trialTotal ?? 0}"></label>
         <label class="field"><span>Quota mensuel spécifique</span><input class="input" type="number" min="0" name="scansOverride" value="${s.scansOverride ?? ""}" placeholder="selon l'offre"></label>
         <label class="field"><span>Agents max spécifique</span><input class="input" type="number" min="1" name="agentsOverride" value="${s.agentsOverride ?? ""}" placeholder="selon l'offre"></label>
-        <label class="field"><span>Facturation</span><select class="select" name="billing">${["", "mensuelle", "annuelle", "offert"].map(v => html`<option value="${v}" ${raw(s.billing === v ? "selected" : "")}>${v || "À définir"}</option>`)}</select></label>
-        <label class="field"><span>Payé jusqu'au</span><input class="input" type="date" name="paidUntil" value="${s.paidUntil || ""}" lang="fr-FR"></label>
+        <label class="field"><span>Facturation</span><select class="select" name="billing">${["", "essai", "mensuelle", "annuelle", "offert"].map(v => html`<option value="${v}" ${raw(s.billing === v ? "selected" : "")}>${v === "essai" ? "Essai gratuit" : v || "À définir"}</option>`)}</select></label>
+        <label class="field"><span>${s.billing === "essai" ? "Essai jusqu'au" : "Payé jusqu'au"}</span><input class="input" type="date" name="paidUntil" value="${s.paidUntil || ""}" lang="fr-FR"></label>
       </div>
       <label class="check"><input type="checkbox" name="teamLocked" ${raw(s.teamLocked ? "checked" : "")}><span><b>Profils gérés par TriDDS</b><br><span class="hint">Décoché : le responsable du site ajoute ou retire ses agents dans la limite de l'offre.</span></span></label>
       <label class="field"><span>Notes internes</span><textarea class="textarea" name="notes">${s.notes}</textarea></label>

@@ -11,10 +11,11 @@ qui n'était jusqu'ici que dans le tableau de bord Cloudflare.
 - **Demandes d'accès** : `POST /api/request-access` enregistre la demande (clé KV `_requests`),
   et vous envoie un email (`NOTIFY_EMAIL`, réponse directe au prospect). Aucun email n'est envoyé à l'adresse
   saisie par le visiteur (pas de relais de spam). Limite de 5 demandes par heure et par adresse IP, champ piège anti-robot.
-- **Offres** (`src/plans.js`) : Découverte (0 scan, essai possible), Essentiel 19 € (50 scans, 3 agents),
-  Pro 29 € (200 scans, 10 agents), Réseau 69 € (5 sites, 150 scans par site, agents illimités),
-  Groupe sur devis (1000 scans). Les clés techniques des sites existants (`free`, `pro`, `multisite`,
-  `enterprise`) sont conservées.
+- **Offres** (`src/plans.js`) : deux offres à la vente, « Déchèterie » 29 € HT par site et par mois
+  (clé `pro`, 200 photos, agents illimités) et « Collectivité ou réseau » sur devis dès 3 sites (clé `enterprise`,
+  dégressif 24 € dès 3 sites, 19 € dès 10). Plus un **mois d'essai gratuit** : site en facturation `essai` avec une
+  date de fin ; passée cette date, l'analyse photo s'arrête, la recherche reste. Les anciennes clés (`free`,
+  `essentiel`, `multisite`) restent reconnues pour les sites existants.
 - **Contrôle des équipes** : un site peut être « verrouillé » (`teamLocked`, activé par défaut à la création) :
   le responsable ne peut alors ni ajouter ni retirer d'agent. Sinon il le peut dans la limite de l'offre.
   L'auto-inscription d'un agent avec le seul code du site (`register-agent`) est supprimée.

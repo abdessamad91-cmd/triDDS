@@ -21,7 +21,7 @@ const ok = (cond, msg) => { assert.ok(cond, msg); n++; console.log("  ✓ " + ms
 
 console.log("Site existant (format v1)");
 let r = await call("auth", { action: "login", code: "ludr-2026-abc" });
-ok(r.status === 200 && r.data.planName === "Pro" && r.data.monthlyLimit === 200, "connexion par code, offre Pro reconnue");
+ok(r.status === 200 && r.data.planName === "Déchèterie" && r.data.monthlyLimit === 200, "connexion par code, offre Déchèterie (pro) reconnue");
 ok(r.data.agents.length === 3, "liste des profils");
 r = await call("auth", { action: "register-agent", code: "LUDR-2026-ABC", agent: "Intrus" });
 ok(r.status === 400, "plus d'auto-inscription d'un agent avec le seul code");
@@ -100,7 +100,7 @@ ok(r.status === 401, "clé admin incorrecte refusée");
 r = await admin("dashboard");
 ok(r.status === 200 && r.data.requests.length >= 2 && r.data.stats.openRequests >= 2, "tableau de bord avec demandes");
 const legacySite = r.data.sites.find(s => s.code === "LUDR-2026-ABC");
-ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === 10, "usage et limite d'agents par site");
+ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === null, "usage par site, agents illimités en offre Déchèterie");
 ok(legacySite.teamLocked === true && legacySite.trialTotal === legacySite.trialUsed, "site v1 : équipe verrouillée, pas de scans d'essai en plus sur une offre payante");
 sent.length = 0;
 r = await admin("create", { site: "Déchèterie de Château-Salins", client: "SIVOM du Saulnois", responsable: "Claire Martin", principalEmail: "c.martin@sivom.fr", agents: ["Luc", "Ana", "luc"], plan: "essentiel", requestId: "REQ-TEST0001", sendEmail: true });
@@ -125,7 +125,7 @@ ok(r.status === 200, "limite relevée par l'admin, ajout possible");
 r = await call("site-admin", Object.assign({ action: "catalog-save", item: { n: "x", x: "y" } }, R));
 ok(r.status === 403, "fiches du site réservées à l'offre Pro");
 r = await admin("update", { code: C, plan: "pro", scansOverride: 300 });
-ok(r.data.site.monthlyLimit === 300 && r.data.site.planName === "Pro", "changement d'offre et quota spécifique");
+ok(r.data.site.monthlyLimit === 300 && r.data.site.planName === "Déchèterie", "changement d'offre et quota spécifique");
 r = await call("auth", { action: "heartbeat", code: C, agent: "Claire Martin", sessionId: R.sessionId });
 ok(r.status === 401, "changement d'offre : sessions fermées");
 r = await admin("regenerate-code", { code: C });
@@ -142,10 +142,21 @@ r = await call("auth", { action: "login", code: C2 });
 ok(r.status === 403, "accès suspendu");
 
 r = await admin("update", { code: "TRI-RESEAU01", scansOverride: "" });
-ok(r.data.site.monthlyLimit === 150, "site v1 : l'admin peut revenir au quota standard (pas écrasé par la migration)");
+ok(r.data.site.monthlyLimit === 150, "site v1 Réseau : l'admin peut revenir au quota standard (pas écrasé par la migration)");
 r = await admin("update", { code: "TRY-OLDTRIAL", plan: "essentiel" });
 r = await call("auth", { action: "login", code: "TRY-OLDTRIAL" });
 ok(r.data.memoryEnabled === false, "site v1 passé en Essentiel : règles de la nouvelle offre");
+
+console.log("Essai gratuit d'un mois");
+r = await admin("create", { site: "Déchèterie de Pompey", responsable: "Nadia", plan: "pro", billing: "essai", paidUntil: "2020-01-31" });
+r = await call("auth", { action: "login", code: r.data.code });
+ok(r.data.planName === "Essai terminé" && r.data.aiEnabled === false && r.data.monthlyLimit === 0, "essai dépassé : plus d'analyse photo, recherche conservée");
+r = await admin("create", { site: "Déchèterie de Frouard", responsable: "Omar", plan: "pro", billing: "essai", paidUntil: "2099-01-31" });
+r = await call("auth", { action: "login", code: r.data.code });
+ok(r.data.planName === "Essai gratuit" && r.data.aiEnabled === true && r.data.monthlyLimit === 200, "essai en cours : accès complet");
+r = await call("request-access", { name: "Léa", email: "lea@mairie.fr", organisation: "Mairie", plan: "pro", trial: true }, { ip: "3.3.3.3" });
+r = await admin("requests-list");
+ok(r.data.items[0].trial === true, "demande d'essai enregistrée comme telle");
 
 console.log("Photos publiques");
 r = await call("public-images", null, { method: "GET" });

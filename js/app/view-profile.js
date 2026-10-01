@@ -24,8 +24,9 @@ export const profileView = {
             <dt>Agent</dt><dd>${sess.agent}${resp ? " (responsable)" : ""}</dd>
             <dt>Site</dt><dd>${sess.site}</dd>
             ${sess.clientName && sess.clientName !== sess.site ? html`<dt>Structure</dt><dd>${sess.clientName}</dd>` : ""}
-            <dt>Offre</dt><dd>${offer}</dd>
+            <dt>Accès</dt><dd>${offer}</dd>
           </dl>
+          ${sess.trialExpired ? html`<p class="note hors" style="margin-top:12px">Votre mois d'essai est terminé. La recherche reste disponible ; pour continuer avec l'analyse photo, contactez TriDDS.</p>` : ""}
           ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans analyse photo ni journal partagé.</p>`
             : q.total ? html`<div class="meter ${pct <= 10 ? "low" : ""}"><div style="display:flex;justify-content:space-between"><b>Photos analysées</b><b>${q.left} restantes sur ${q.total}</b></div>
                 <div class="bar"><i style="width:${pct}%"></i></div><p>${q.kind === "mois" ? "Le compteur repart le 1er du mois." : "Essai offert par TriDDS."}</p></div>`
@@ -33,7 +34,7 @@ export const profileView = {
         </section>
 
         ${resp && !isDemo() ? html`<nav class="menu" aria-label="Outils du responsable">
-          <button class="menu-item" data-go="team">${icon("team")}<div><b>Mon équipe</b><span>${sess.teamLocked ? "Profils gérés par TriDDS" : "Ajouter ou retirer un agent"}</span></div>${icon("chevron")}</button>
+          ${!sess.teamLocked ? html`<button class="menu-item" data-go="team">${icon("team")}<div><b>Mon équipe</b><span>Ajouter ou retirer un agent</span></div>${icon("chevron")}</button>` : ""}
           <button class="menu-item" data-go="catalog">${icon("box")}<div><b>Produits du site</b><span>${sess.canManageCatalog ? "Fiches propres à votre déchèterie" : "Inclus à partir de l'offre Pro"}</span></div>${icon("chevron")}</button>
           <button class="menu-item" data-go="memory">${icon("brain")}<div><b>Mémoire de l'équipe</b><span>${memoryCount()} marque${memoryCount() > 1 ? "s" : ""} reconnue${memoryCount() > 1 ? "s" : ""} par les photos</span></div>${icon("chevron")}</button>
         </nav>` : ""}

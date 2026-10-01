@@ -62,9 +62,7 @@ body.site { background: var(--concrete); }
 .billing { display: inline-flex; margin-top: 24px; padding: 4px; border-radius: 999px; background: var(--paper); border: 1.5px solid var(--line); }
 .billing button { min-height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--ink-2); }
 .billing button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-.plans { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; align-items: stretch; }
-@media (max-width: 1000px) { .plans { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .plans { grid-template-columns: 1fr; } }
+.plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 22px; align-items: stretch; max-width: 820px; }
 .plan { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px 20px; background: var(--paper); border: 2px solid var(--line-2); border-radius: var(--r-l); }
 .plan.featured { border-color: var(--ink); }
 .plan .flag { position: absolute; top: -13px; left: 18px; padding: 3px 10px; border-radius: 6px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; }
@@ -78,6 +76,11 @@ body.site { background: var(--concrete); }
 .plan li { display: flex; gap: 8px; align-items: flex-start; line-height: 1.35; }
 .plan li svg { width: 18px; height: 18px; color: var(--eco); flex-shrink: 0; margin-top: 2px; }
 .plans-note { margin-top: 18px; font-size: 15px; color: var(--muted); }
+
+.trial-band { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 22px; border-radius: var(--r-l); background: var(--ink); color: #fff; }
+.trial-band b { font-family: var(--font-sign); font-size: 26px; display: block; }
+.trial-band p { color: rgba(255, 255, 255, .75); margin-top: 4px; font-size: 16px; }
+@media (max-width: 760px) { .plans { grid-template-columns: 1fr; } .trial-band .btn { width: 100%; } }
 
 /* ---------- ouverture d'accès ---------- */
 .open-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 40px; align-items: start; margin-top: 8px; }
