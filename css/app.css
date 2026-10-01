@@ -215,7 +215,14 @@ body.app { background: var(--concrete); min-height: 100dvh; overscroll-behavior-
 .person div { flex: 1; min-width: 0; }
 .person b { display: block; }
 .person span { font-size: 14px; color: var(--muted); }
+.person-actions { display: flex; gap: 14px; margin-top: 4px; }
+.person-actions .btn-quiet { min-height: 32px; padding: 0; }
+.pill-mini { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 6px; background: var(--ink); color: #fff; vertical-align: middle; }
 .dot-on { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--eco); margin-right: 6px; }
+
+.codebox { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r); background: var(--paper-2); border: 1.5px dashed var(--line); }
+.codebox b { font-family: var(--font-sign); font-size: 28px; letter-spacing: .06em; margin-right: auto; overflow-wrap: anywhere; }
+.section-h { font-size: 15px; font-weight: 700; color: var(--ink-2); }
 
 /* ---------- connexion ---------- */
 .login { min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; background: var(--ink); color: #fff; }

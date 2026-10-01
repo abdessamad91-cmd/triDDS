@@ -149,7 +149,6 @@ function migrateLegacy(site) {
   if (site.schema >= 2) return site;
   site.schema = 2;
   site.legacyFeatures = true;
-  if (site.teamLocked === undefined) site.teamLocked = true;
   if (site.scansOverride == null) {
     if (site.plan === "multisite") site.scansOverride = 750;
     if (site.plan === "enterprise") site.scansOverride = 999999;
@@ -157,7 +156,7 @@ function migrateLegacy(site) {
   if (site.plan && site.plan !== "free") site.trialTotal = Math.min(site.trialTotal || 0, site.trialUsed || 0);
   return site;
 }
-const isTeamLocked = site => site.teamLocked !== false;
+const isTeamLocked = site => site.teamLocked === true;
 const hasPro = site => !!site.legacyFeatures || !["free", "essentiel"].includes(site.plan);
 
 function ensureUsageState(site) {
@@ -444,6 +443,32 @@ function siteSummary(code, raw) {
   }, usageView(data));
 }
 
+// Change le code d'un site (code diffusé hors de l'équipe, ou choix du responsable) :
+// sessions fermées, mémoire, catalogue et images déplacés sous le nouveau code.
+async function changeSiteCode(env, code, data, wanted) {
+  let next = wanted || "";
+  if (next) {
+    if (!/^[A-Z0-9-]{6,24}$/.test(next)) return { error: "Le code doit faire de 6 à 24 caractères : lettres, chiffres et tirets." };
+    if (next === code) return { error: "C'est déjà le code actuel." };
+    if (next.startsWith("_") || await readJsonKV(env.AUTH_STORE, next)) return { error: "Ce code est déjà utilisé, choisissez-en un autre." };
+  } else {
+    for (let i = 0; i < 10 && !next; i++) { const c = generateAccessCode(data.site); if (!(await readJsonKV(env.AUTH_STORE, c))) next = c; }
+    if (!next) return { error: "Impossible de générer un code" };
+  }
+  invalidateAllSessions(data);
+  data.codeChangedAt = nowIso();
+  await writeJsonKV(env.AUTH_STORE, next, data);
+  for (const prefix of ["mem-", "catalog-", "images-"]) {
+    const v = await env.MEMORY_STORE.get(prefix + code);
+    if (v) { await env.MEMORY_STORE.put(prefix + next, v); await env.MEMORY_STORE.delete(prefix + code); }
+  }
+  await env.AUTH_STORE.delete(code);
+  const index = await readIndex(env);
+  index.codes = index.codes.map(c => (c === code ? next : c));
+  await writeJsonKV(env.AUTH_STORE, "_index", index);
+  return { code: next };
+}
+
 async function collectSites(env) {
   const index = await readIndex(env);
   const out = [];
@@ -538,7 +563,7 @@ async function handleAdmin(request, env) {
       trialUsed: 0,
       monthlyUsed: 0,
       usageMonth: currentMonth(),
-      teamLocked: body.teamLocked !== false,
+      teamLocked: body.teamLocked === true,
       agentsOverride: body.agentsOverride === "" || body.agentsOverride == null ? null : Number(body.agentsOverride),
       scansOverride: body.scansOverride === "" || body.scansOverride == null ? null : Number(body.scansOverride),
       requestId: clip(body.requestId, 20),
@@ -600,23 +625,11 @@ async function handleAdmin(request, env) {
   }
 
   if (action === "regenerate-code") {
-    // Change le code d'un site (code diffusé hors de l'équipe) : sessions fermées, mémoire, catalogue et images déplacés.
     const code = normalizeCode(body.code);
     const data = await readJsonKV(env.AUTH_STORE, code);
     if (!data) return json({ error: "Code introuvable" }, 404);
-    let next = "";
-    for (let i = 0; i < 10 && !next; i++) { const c = generateAccessCode(data.site); if (!(await readJsonKV(env.AUTH_STORE, c))) next = c; }
-    invalidateAllSessions(data);
-    await writeJsonKV(env.AUTH_STORE, next, data);
-    for (const prefix of ["mem-", "catalog-", "images-"]) {
-      const v = await env.MEMORY_STORE.get(prefix + code);
-      if (v) { await env.MEMORY_STORE.put(prefix + next, v); await env.MEMORY_STORE.delete(prefix + code); }
-    }
-    await env.AUTH_STORE.delete(code);
-    const index = await readIndex(env);
-    index.codes = index.codes.map(c => (c === code ? next : c));
-    await writeJsonKV(env.AUTH_STORE, "_index", index);
-    return json({ ok: true, code: next });
+    const r = await changeSiteCode(env, code, data, normalizeCode(body.newCode));
+    return r.error ? json({ error: r.error }, 400) : json({ ok: true, code: r.code });
   }
 
   if (action === "delete") {
@@ -786,6 +799,24 @@ async function handleSiteAdmin(request, env) {
   if (action === "status") return json(payload);
   if (!isResp) return json({ error: "Réservé au responsable du site" }, 403);
 
+  if (action === "access") {
+    return json({ ok: true, code, recoveryEmail: site.principalEmail || site.adminEmail || "", teamLocked: isTeamLocked(site), codeChangedAt: site.codeChangedAt || null });
+  }
+  if (action === "set-recovery-email") {
+    const email = normalizeEmail(body.email);
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Email invalide" }, 400);
+    site.principalEmail = email;
+    await writeJsonKV(env.AUTH_STORE, code, site);
+    return json({ ok: true, recoveryEmail: email });
+  }
+  if (action === "change-code") {
+    const r = await changeSiteCode(env, code, site, normalizeCode(body.newCode));
+    if (r.error) return json({ error: r.error }, 400);
+    const to = site.principalEmail || site.adminEmail;
+    let email = { sent: false };
+    if (to) email = await sendAccessEmail(env, { code: r.code, site: site.site, adminName: site.principalName, adminEmail: to, planName: planLabel(site.plan, site.trialTotal), agents: (site.agents || []).map(a => a.name) }).catch(() => ({ sent: false }));
+    return json({ ok: true, code: r.code, emailSent: !!email.sent });
+  }
   if (action === "team") {
     return json({ ok: true, teamLocked: isTeamLocked(site), maxAgents: maxAgentsFor(site), team: site.agents.map(a => ({ name: a.name, role: normalizeRole(a.role), lastSeen: a.lastSeen || null, activeSession: sessionView(a) })) });
   }
@@ -805,7 +836,9 @@ async function handleSiteAdmin(request, env) {
         if (normalizeRole(target.role) === "responsable") return json({ error: "Le responsable ne peut pas être retiré ici." }, 400);
         site.agents = site.agents.filter(a => a.name !== name);
       } else {
-        return json({ error: "Le changement de responsable se fait avec TriDDS." }, 403);
+        // Transfert du rôle de responsable à un autre agent (un seul responsable par site).
+        if (normalizeRole(body.role) !== "responsable") return json({ error: "Rôle inconnu" }, 400);
+        site.agents.forEach(a => { a.role = a.name === name ? "responsable" : "agent"; });
       }
     }
     normalizeRoles(site);

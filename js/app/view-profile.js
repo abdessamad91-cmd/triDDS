@@ -4,7 +4,7 @@ import { html, raw, icon, toast, confirmDialog, openSheet, relTime, esc } from "
 import { post } from "../shared/api.js";
 import { planLabel } from "../shared/plans.js";
 import { loadBase, destination } from "../shared/catalog.js";
-import { sess, quota, isDemo, cache } from "./store.js";
+import { sess, quota, isDemo, cache, clearSess } from "./store.js";
 import { memory, forget, syncMemory, memoryCount } from "./memory.js";
 import { topbar, productRow } from "./common.js";
 
@@ -34,7 +34,8 @@ export const profileView = {
         </section>
 
         ${resp && !isDemo() ? html`<nav class="menu" aria-label="Outils du responsable">
-          ${!sess.teamLocked ? html`<button class="menu-item" data-go="team">${icon("team")}<div><b>Mon équipe</b><span>Ajouter ou retirer un agent</span></div>${icon("chevron")}</button>` : ""}
+          <button class="menu-item" data-go="access">${icon("lock")}<div><b>Accès du site</b><span>Code du site, email de récupération</span></div>${icon("chevron")}</button>
+          ${!sess.teamLocked ? html`<button class="menu-item" data-go="team">${icon("team")}<div><b>Mon équipe</b><span>Ajouter ou retirer un agent, désigner le responsable</span></div>${icon("chevron")}</button>` : ""}
           <button class="menu-item" data-go="catalog">${icon("box")}<div><b>Produits du site</b><span>${sess.canManageCatalog ? "Fiches propres à votre déchèterie" : "Inclus à partir de l'offre Pro"}</span></div>${icon("chevron")}</button>
           <button class="menu-item" data-go="memory">${icon("brain")}<div><b>Mémoire de l'équipe</b><span>${memoryCount()} marque${memoryCount() > 1 ? "s" : ""} reconnue${memoryCount() > 1 ? "s" : ""} par les photos</span></div>${icon("chevron")}</button>
         </nav>` : ""}
@@ -50,7 +51,7 @@ export const profileView = {
   mount(el, app) {
     el.addEventListener("click", async e => {
       const g = e.target.closest("[data-go]");
-      if (g) { team = null; items = null; return app.go(g.dataset.go); }
+      if (g) { team = null; items = null; access = null; return app.go(g.dataset.go); }
       if (e.target.closest("[data-logout]")) {
         if (isDemo() || await confirmDialog({ title: "Se déconnecter ?", message: "Votre profil est libéré pour un autre appareil. Vous pourrez le reprendre en un geste depuis l'écran de connexion.", ok: "Se déconnecter" })) app.logout();
       }
@@ -75,7 +76,7 @@ export const teamView = {
     const max = sess.maxAgents;
     return html`${topbar({ title: "Mon équipe", back: true })}
       <div class="profile wrap">
-        ${locked ? html`<div class="note">Les profils de ce site sont créés par TriDDS. Pour ajouter ou retirer un agent, écrivez-nous : c'est fait dans la journée.</div>` : ""}
+        ${locked ? html`<div class="note">Les profils de ce site sont gérés par TriDDS. Pour ajouter ou retirer un agent, écrivez-nous : c'est fait dans la journée.</div>` : html`<p class="hint">Chaque agent choisit son nom à la connexion, avec le code du site. Un profil ne peut être ouvert que sur un téléphone à la fois.</p>`}
         <section class="card" data-team>${team ? teamList(team) : html`<div class="empty-state"><span class="spinner"></span></div>`}</section>
         ${!locked ? html`<form class="card" data-add style="display:grid;gap:12px">
           <label class="field"><span>Ajouter un agent${max ? ` (${team ? team.length : "…"} sur ${max} inclus)` : ""}</span><input class="input" name="name" placeholder="Prénom Nom" autocomplete="off" required></label>
@@ -95,6 +96,13 @@ export const teamView = {
       if (app.screen === "team") app.refresh();
     }
     el.addEventListener("click", async e => {
+      const pr = e.target.closest("[data-promote]");
+      if (pr) {
+        const name = pr.dataset.promote;
+        if (!(await confirmDialog({ title: `Désigner ${name} responsable ?`, message: "Vous redeviendrez agent : la gestion de l'équipe et des accès passera à " + name + ".", ok: "Désigner" }))) return;
+        try { await siteCall("set-user-role", { name, role: "responsable" }); toast(name + " est responsable"); sess.agentRole = "agent"; sess.canManageUsers = false; sess.canManageCatalog = false; app.go("profile", { replace: true }); } catch (err) { app.handleError(err); }
+        return;
+      }
       const rm = e.target.closest("[data-remove]");
       if (!rm) return;
       const name = rm.dataset.remove;
@@ -114,10 +122,73 @@ export const teamView = {
 function teamList(list) {
   if (!list.length) return html`<p class="hint">Aucun profil.</p>`;
   return html`${list.map(a => html`<div class="person"><span class="av">${a.name.split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase()}</span>
-    <div><b>${a.name}</b><span>${a.activeSession ? html`<span class="dot-on"></span>Connecté sur ${a.activeSession.deviceName}` : a.lastSeen ? "Vu " + relTime(a.lastSeen) : "Jamais connecté"}${a.role === "responsable" ? ", responsable" : ""}</span></div>
-    ${!sess.teamLocked && a.role !== "responsable" ? html`<button class="btn btn-danger btn-sm" data-remove="${a.name}">Retirer</button>` : ""}
+    <div><b>${a.name}${a.role === "responsable" ? html` <span class="pill-mini">responsable</span>` : ""}</b><span>${a.activeSession ? html`<span class="dot-on"></span>Connecté sur ${a.activeSession.deviceName}` : a.lastSeen ? "Vu " + relTime(a.lastSeen) : "Jamais connecté"}</span>
+      ${!sess.teamLocked && a.role !== "responsable" ? html`<div class="person-actions"><button class="btn btn-quiet btn-sm" data-promote="${a.name}">Désigner responsable</button><button class="btn btn-quiet btn-sm" style="color:var(--int-text)" data-remove="${a.name}">Retirer</button></div>` : ""}
+    </div>
   </div>`)}`;
 }
+
+// ---------- accès du site ----------
+let access = null;
+export const accessView = {
+  tab: "profile",
+  render() {
+    return html`${topbar({ title: "Accès du site", back: true })}
+      <div class="profile wrap">
+        ${access ? html`
+        <section class="card" style="display:grid;gap:12px">
+          <div class="section-h">Code du site</div>
+          <div class="codebox"><b>${access.code}</b><button class="btn btn-ghost btn-sm" data-copy>${icon("copy")}Copier</button></div>
+          <p class="hint">C'est le mot de passe du site : il est commun à toute l'équipe. Si vous l'avez transmis à quelqu'un qui ne devrait plus y avoir accès, changez-le. Tout le monde devra se reconnecter avec le nouveau code.</p>
+          <button class="btn btn-ghost" data-change>${icon("refresh")}Changer le code du site</button>
+        </section>
+        <form class="card" data-email style="display:grid;gap:12px">
+          <div class="section-h">Email de récupération</div>
+          <p class="hint">Reçoit le code en cas d'oubli (bouton « Code oublié » à la connexion) et à chaque changement de code.</p>
+          <label class="field"><span>Email du responsable</span><input class="input" type="email" name="email" value="${access.recoveryEmail}" required autocomplete="email"></label>
+          <button class="btn btn-primary" type="submit">Enregistrer</button>
+        </form>` : html`<div class="empty-state"><span class="spinner"></span></div>`}
+      </div>`.toString();
+  },
+  mount(el, app) {
+    if (!access) {
+      siteCall("access").then(d => { access = d; if (app.screen === "access") app.refresh(); }).catch(e => { app.handleError(e); app.back(); });
+      return;
+    }
+    el.querySelector("[data-copy]").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(access.code); toast("Code copié"); } catch (e) { toast(access.code, { ms: 6000 }); }
+    });
+    el.querySelector("[data-email]").addEventListener("submit", async e => {
+      e.preventDefault();
+      try { const d = await siteCall("set-recovery-email", { email: e.target.email.value.trim() }); access.recoveryEmail = d.recoveryEmail; toast("Email enregistré"); } catch (err) { app.handleError(err); }
+    });
+    el.querySelector("[data-change]").addEventListener("click", () => {
+      openSheet({
+        title: "Changer le code du site",
+        body: html`<p>Tous les agents seront déconnectés et devront saisir le nouveau code. Il sera aussi envoyé à ${access.recoveryEmail || "l'email de récupération"}.</p>
+          <label class="field"><span>Nouveau code (ou laissez vide pour en générer un)</span><input class="input code-input" data-new placeholder="Ex. : NANC-2026" autocapitalize="characters" autocomplete="off"></label>
+          <p class="hint">6 à 24 caractères : lettres, chiffres et tirets.</p>`.toString(),
+        foot: `<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-int" data-go>Changer le code</button>`,
+        onMount(sheet, close) {
+          const input = sheet.querySelector("[data-new]");
+          input.addEventListener("input", () => { input.value = input.value.toUpperCase().replace(/\s/g, ""); });
+          sheet.querySelector("[data-go]").addEventListener("click", async () => {
+            const btn = sheet.querySelector("[data-go]");
+            btn.disabled = true; btn.textContent = "Changement…";
+            try {
+              const d = await siteCall("change-code", { newCode: input.value.trim() });
+              close();
+              clearSess();
+              try { localStorage.setItem("tridds_last", JSON.stringify({ code: d.code, site: sess.site || "", agent: "" })); } catch (err) { /* ignore */ }
+              toast("Nouveau code : " + d.code + (d.emailSent ? " (envoyé par email)" : ""), { ms: 8000 });
+              app.go("login", { replace: true });
+            } catch (err) { btn.disabled = false; btn.textContent = "Changer le code"; app.handleError(err); }
+          });
+        }
+      });
+    });
+  }
+};
 
 // ---------- produits du site ----------
 let items = null;

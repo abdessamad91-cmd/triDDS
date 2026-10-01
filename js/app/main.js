@@ -28,6 +28,7 @@ const VIEWS = {
   guide: guide.guideView,
   profile: profile.profileView,
   team: profile.teamView,
+  access: profile.accessView,
   catalog: profile.catalogView,
   memory: profile.memoryView
 };

@@ -16,9 +16,10 @@ qui n'était jusqu'ici que dans le tableau de bord Cloudflare.
   dégressif 24 € dès 3 sites, 19 € dès 10). Plus un **mois d'essai gratuit** : site en facturation `essai` avec une
   date de fin ; passée cette date, l'analyse photo s'arrête, la recherche reste. Les anciennes clés (`free`,
   `essentiel`, `multisite`) restent reconnues pour les sites existants.
-- **Contrôle des équipes** : un site peut être « verrouillé » (`teamLocked`, activé par défaut à la création) :
-  le responsable ne peut alors ni ajouter ni retirer d'agent. Sinon il le peut dans la limite de l'offre.
-  L'auto-inscription d'un agent avec le seul code du site (`register-agent`) est supprimée.
+- **Responsable autonome** : le responsable du site gère son équipe (ajout, retrait, transfert du rôle),
+  change le code du site et l'email de récupération depuis l'appli (Profil › Accès du site). L'admin peut
+  « verrouiller » un site (`teamLocked`) pour reprendre la main. L'auto-inscription d'un agent avec le seul
+  code du site (`register-agent`) est supprimée.
 - **Réglages par site** : quota mensuel spécifique, nombre d'agents max, scans d'essai, facturation,
   date « payé jusqu'au », notes. Changement de code d'un site (mémoire, fiches et photos suivent).
 - **Sécurité** : l'analyse IA, l'écriture dans la mémoire et l'ajout de photos exigent une session agent valide
@@ -82,8 +83,8 @@ Retour arrière : *Deployments* › version précédente › *Rollback*.
 
 - Sites existants en offre `multisite` ou `enterprise` : leur quota d'origine (750 ou illimité) est conservé
   sous forme de « quota mensuel spécifique », modifiable dans leur fiche.
-- Équipes existantes : verrouillées par défaut. Décochez « Je gère les profils moi-même » dans la fiche d'un site
-  pour rendre la main à son responsable.
+- Équipes existantes : le responsable gère son équipe. Cochez « Profils gérés par TriDDS » dans la fiche d'un site
+  pour reprendre la main.
 - Abonnements Stripe en cours : ils continuent d'être prélevés au tarif de l'époque.
   À ajuster ou résilier depuis le tableau de bord Stripe ; les secrets `STRIPE_*` ne servent plus.
 - Les anciens accès d'essai (`TRY-…`) restent valides avec leurs scans restants.
