@@ -38,6 +38,7 @@ export const homeView = {
       <div class="searchbox"><div class="search-row wrap">
         <label class="search-field"><span class="sr-only">Rechercher un produit</span>${icon("search")}
           <input type="search" data-q placeholder="Produit ou marque" value="${app.state.query}" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+          <button class="mini clear" data-clear-q aria-label="Effacer la recherche" ${app.state.query ? "" : "hidden"}>${icon("close")}</button>
           <button class="mini" data-voice aria-label="Maintenir pour dicter">${icon("mic")}</button>
         </label>
         <button class="scan-btn" data-scan aria-label="Prendre en photo">${icon("camera")}</button>
@@ -48,7 +49,9 @@ export const homeView = {
   mount(el, app) {
     const input = el.querySelector("[data-q]");
     const list = el.querySelector("[data-list]");
-    const redraw = () => { list.innerHTML = listHtml(app).toString(); };
+    const clearBtn = el.querySelector("[data-clear-q]");
+    const redraw = () => { clearBtn.hidden = !input.value; list.innerHTML = listHtml(app).toString(); };
+    clearBtn.addEventListener("click", () => { input.value = ""; app.state.query = ""; redraw(); input.focus(); });
     input.addEventListener("input", debounce(() => { app.state.query = input.value; redraw(); }, 90));
     input.addEventListener("keydown", e => {
       if (e.key !== "Enter") return;
@@ -95,9 +98,15 @@ export function startScan(app) {
 }
 
 // Dictée « appuyer pour parler » : on maintient le bouton enfoncé le temps de parler, on relâche pour chercher.
-// Un appui bref (moins de 0,4 s) laisse l'écoute ouverte jusqu'à la fin de la phrase.
-let rec = null;
+// Un appui bref (moins de 0,4 s) laisse la phrase se terminer seule.
+//
+// Chrome Android est capricieux : il ne signale pas toujours la fin de l'écoute, libère lentement le micro
+// entre deux écoutes (la suivante se termine alors aussitôt, sans erreur), et refuse un start() trop tôt.
+// On réutilise donc un seul moteur, on borne chaque étape par un délai de garde, et on relance
+// automatiquement une écoute qui s'est terminée sans rien entendre juste après son démarrage.
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let engine = null;   // moteur unique, réutilisé d'un appui à l'autre
+let session = null;  // écoute en cours
 const MSGS = {
   "not-allowed": "Autorisez le micro pour dicter (réglages du navigateur).",
   "service-not-allowed": "Autorisez le micro pour dicter (réglages du navigateur).",
@@ -105,11 +114,18 @@ const MSGS = {
   network: "La dictée a besoin du réseau.",
   "no-speech": "Rien entendu. Maintenez le bouton et parlez près du téléphone."
 };
-if (SR) document.addEventListener("visibilitychange", () => { if (document.hidden && rec && rec.requestStop) rec.requestStop(); });
+if (SR) document.addEventListener("visibilitychange", () => { if (document.hidden && session) session.requestStop(); });
 
-// Sur Android, Chrome ne déclenche pas toujours « onend » après stop(), et refuse un start()
-// lancé juste après l'abandon de l'écoute précédente : on sécurise chaque étape par un délai
-// de garde, et on repart systématiquement d'une nouvelle écoute à chaque appui.
+function getEngine() {
+  if (engine) return engine;
+  engine = new SR();
+  engine.lang = "fr-FR";
+  engine.continuous = false; // une phrase par appui : le mode continu est instable sur Android
+  engine.interimResults = true;
+  engine.maxAlternatives = 1;
+  return engine;
+}
+
 function bindVoice(btn, input, app, redraw) {
   if (!SR) {
     btn.addEventListener("click", () => toast("La dictée n'est pas disponible sur ce navigateur. Sur iPhone, utilisez le micro du clavier.", { ms: 4500 }));
@@ -120,89 +136,100 @@ function bindVoice(btn, input, app, redraw) {
     btn.classList.toggle("listening", on);
     btn.setAttribute("aria-label", on ? "Écoute en cours" : "Maintenir pour dicter");
   };
-  const begin = () => {
-    if (navigator.onLine === false) return toast("La dictée a besoin du réseau.", { error: true });
-    const r = new SR();
-    rec = r;
-    r.lang = "fr-FR";
-    r.continuous = false; // le mode continu est instable sur Android : une phrase par appui
-    r.interimResults = true;
-    r.maxAlternatives = 1;
-    let finalText = "";
-    let heard = false;
-    let finished = false;
-    let stopGuard = null;
-    const guard = setTimeout(() => r.requestStop(), 12000);
-    const apply = text => { input.value = text; app.state.query = text; redraw(); };
+  const apply = text => { input.value = text; app.state.query = text; redraw(); };
+
+  const open = attempt => {
+    if (navigator.onLine === false) { setListening(false); return toast("La dictée a besoin du réseau.", { error: true }); }
+    const r = getEngine();
+    const s = { finalText: "", heard: false, finished: false, stopAsked: false, startedAt: Date.now(), attempt, timers: [] };
+    session = s;
+    const later = (fn, ms) => s.timers.push(setTimeout(fn, ms));
     const finish = () => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(guard);
-      clearTimeout(stopGuard);
-      if (rec === r) rec = null;
+      if (s.finished) return;
+      s.finished = true;
+      s.timers.forEach(clearTimeout);
+      if (session === s) session = null;
       setListening(false);
-      if (!heard) return;
-      const q = (finalText || input.value).trim();
+      if (!s.heard) return;
+      const q = (s.finalText || input.value).trim();
       if (!q) return;
       apply(q);
       const res = search(q, 12);
       if (res.length && isClearHit(res)) openProduct(app, res[0]);
     };
-    // Demande l'arrêt ; si le navigateur ne confirme pas la fin, on conclut nous-mêmes.
-    r.requestStop = () => {
-      if (finished) return;
-      try { r.stop(); } catch (e) { /* ignore */ }
-      clearTimeout(stopGuard);
-      stopGuard = setTimeout(() => { finish(); try { r.abort(); } catch (e) { /* ignore */ } }, 1500);
+    // Nouvel essai (micro pas encore libéré) : on repart proprement, au besoin avec un moteur neuf.
+    const retry = () => {
+      s.finished = true;
+      s.timers.forEach(clearTimeout);
+      try { r.abort(); } catch (e) { /* ignore */ }
+      if (attempt >= 1) engine = null;
+      later(() => { if (session === s) open(attempt + 1); }, 450);
     };
-    // Détache cette écoute (remplacée par une nouvelle) sans toucher à l'affichage.
-    r.detach = () => { finished = true; clearTimeout(guard); clearTimeout(stopGuard); r.onresult = null; };
-    setListening(true);
-    input.blur();
+    const fail = msg => { s.heard = false; finish(); toast(msg, { error: true, ms: 4000 }); };
+    s.requestStop = () => {
+      if (s.finished || s.stopAsked) return;
+      s.stopAsked = true;
+      try { r.stop(); } catch (e) { /* ignore */ }
+      // Si le navigateur ne confirme pas la fin, on conclut nous-mêmes.
+      later(() => { finish(); try { r.abort(); } catch (e) { /* ignore */ } }, 1500);
+    };
+    s.detach = () => { s.finished = true; s.timers.forEach(clearTimeout); };
+    later(() => s.requestStop(), 12000);
+
     r.onresult = e => {
+      if (session !== s) return;
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) finalText += (finalText ? " " : "") + t.trim(); else interim += t;
+        if (e.results[i].isFinal) s.finalText += (s.finalText ? " " : "") + t.trim(); else interim += t;
       }
-      heard = true;
-      apply((finalText + " " + interim).trim());
+      s.heard = true;
+      apply((s.finalText + " " + interim).trim());
     };
+    r.onstart = () => { if (session === s) s.started = true; };
     r.onerror = ev => {
-      const wasHeard = heard;
-      if (ev.error === "aborted") { finish(); return; }
-      if (ev.error === "no-speech" && wasHeard) { finish(); return; }
-      heard = false;
-      finish();
-      toast(MSGS[ev.error] || "Dictée interrompue (" + ev.error + ").", { error: ev.error !== "no-speech", ms: 4000 });
+      if (session !== s || s.finished) return;
+      if (ev.error === "aborted") return finish();
+      if (ev.error === "no-speech" && s.heard) return finish();
+      if (ev.error === "no-speech" && !s.stopAsked && Date.now() - s.startedAt < 800 && attempt < 2) return retry();
+      fail(MSGS[ev.error] || "Dictée interrompue (" + ev.error + ").");
     };
-    r.onend = finish;
-    const launch = attempt => {
-      try { r.start(); } catch (e) {
-        // Le navigateur n'a pas encore libéré le micro : on réessaie une fois, puis on abandonne.
-        if (attempt < 2) return setTimeout(() => { if (!finished) launch(attempt + 1); }, 350);
-        heard = false; finish(); toast("Impossible de démarrer la dictée. Réessayez.", { error: true });
+    r.onend = () => {
+      if (session !== s || s.finished) return;
+      // Fin immédiate sans rien entendre ni erreur : le micro n'était pas prêt, on relance.
+      if (!s.heard && !s.stopAsked && Date.now() - s.startedAt < 800) {
+        if (attempt < 2) return retry();
+        return fail("Le micro n'a pas répondu. Réessayez dans une seconde.");
       }
+      finish();
     };
-    launch(0);
+    setListening(true);
+    input.blur();
+    try { r.start(); } catch (e) {
+      if (attempt < 2) return retry();
+      fail("Impossible de démarrer la dictée. Réessayez.");
+    }
   };
+
   const start = () => {
-    const old = rec;
-    rec = null;
-    if (!old) return begin();
+    const old = session;
+    if (!old) return open(0);
     // On attend la fin réelle de l'écoute précédente avant d'en ouvrir une autre.
-    let started = false;
-    const go = () => { if (started) return; started = true; begin(); };
     old.detach();
-    old.onerror = go;
-    old.onend = go;
-    try { old.abort(); } catch (e) { /* ignore */ }
+    session = null;
+    const r = getEngine();
+    let started = false;
+    const go = () => { if (started) return; started = true; setTimeout(() => open(0), 0); };
+    r.onresult = null;
+    r.onerror = null;
+    r.onend = go;
+    try { r.abort(); } catch (e) { /* ignore */ }
     setTimeout(go, 300);
   };
   const release = () => {
-    if (!rec) return;
+    if (!session) return;
     if (Date.now() - pressedAt < 400) return; // appui bref : on laisse la phrase se terminer seule
-    rec.requestStop();
+    session.requestStop();
   };
   btn.addEventListener("pointerdown", e => {
     e.preventDefault();
