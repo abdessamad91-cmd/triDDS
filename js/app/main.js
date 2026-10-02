@@ -17,6 +17,7 @@ import * as scan from "./view-scan.js";
 import * as journal from "./view-journal.js";
 import * as guide from "./view-guide.js";
 import * as profile from "./view-profile.js";
+import { micDiagView } from "./view-diag.js";
 
 const VIEWS = {
   login: login.loginView,
@@ -30,7 +31,8 @@ const VIEWS = {
   team: profile.teamView,
   access: profile.accessView,
   catalog: profile.catalogView,
-  memory: profile.memoryView
+  memory: profile.memoryView,
+  micdiag: micDiagView
 };
 const TABS = [
   { id: "home", label: "Rechercher", icon: "search" },

@@ -271,3 +271,5 @@ body.app { background: var(--concrete); min-height: 100dvh; overscroll-behavior-
 }
 
 .update-bar { position: fixed; left: 12px; right: 12px; bottom: calc(84px + var(--safe-b)); z-index: 350; max-width: 520px; margin: 0 auto; display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px 10px 16px; border-radius: var(--r); background: var(--ink); color: #fff; font-weight: 600; box-shadow: var(--shadow); }
+
+.diag { font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word; margin: 0; color: var(--ink-2); }
