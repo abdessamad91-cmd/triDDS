@@ -34,6 +34,8 @@ body.app { background: var(--concrete); min-height: 100dvh; overscroll-behavior-
 .search-field .mini { width: 44px; height: 44px; margin-right: 6px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); }
 .search-field .mini svg { width: 22px; height: 22px; }
 .search-field .mini { touch-action: none; user-select: none; -webkit-user-select: none; }
+.search-field .mini.clear { width: 36px; margin-right: 0; color: var(--muted); }
+.search-field .mini.clear[hidden] { display: none; }
 .search-field .mini.listening { background: var(--int); color: #fff; animation: pulse 1s ease-in-out infinite; }
 .search-field .mini.listening::after { content: "Parlez…"; position: absolute; right: 64px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 700; color: var(--int); animation: none; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(198, 40, 40, .25); } }
