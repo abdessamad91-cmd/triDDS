@@ -126,9 +126,18 @@ function getEngine() {
   return engine;
 }
 
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
 function bindVoice(btn, input, app, redraw) {
-  if (!SR) {
-    btn.addEventListener("click", () => toast("La dictée n'est pas disponible sur ce navigateur. Sur iPhone, utilisez le micro du clavier.", { ms: 4500 }));
+  if (!SR || IOS) {
+    // Sur iPhone, la reconnaissance vocale du navigateur capte le son mais ne renvoie rien une fois
+    // l'application installée sur l'écran d'accueil. La dictée d'Apple, dans le clavier, est fiable :
+    // le bouton ouvre le clavier et indique où appuyer.
+    btn.setAttribute("aria-label", "Dicter avec le clavier");
+    btn.addEventListener("click", () => {
+      input.focus();
+      toast(SR || IOS ? "Touchez le micro du clavier pour dicter, puis « Rechercher »." : "La dictée n'est pas disponible sur ce navigateur.", { ms: 3500 });
+    });
     return;
   }
   let pressedAt = 0;
