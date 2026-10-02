@@ -42,6 +42,7 @@ export const profileView = {
 
         <nav class="menu">
           <a class="menu-item" href="./pricing.html">${icon("flash")}<div><b>${isDemo() ? "Obtenir un accès" : "Changer d'offre"}</b><span>Voir les offres et nous écrire</span></div>${icon("chevron")}</a>
+          <button class="menu-item" data-go="micdiag">${icon("mic")}<div><b>Diagnostic du micro</b><span>Si la dictée ne répond pas sur ce téléphone</span></div>${icon("chevron")}</button>
           <button class="menu-item" data-install hidden>${icon("download")}<div><b>Installer sur ce téléphone</b><span>Ouvrir TriDDS comme une application</span></div>${icon("chevron")}</button>
           <button class="menu-item" data-logout>${icon("logout")}<div><b>${isDemo() ? "Quitter la démonstration" : "Se déconnecter"}</b><span>${isDemo() ? "Retour à l'écran de connexion" : "Libère votre profil pour un autre téléphone"}</span></div></button>
         </nav>

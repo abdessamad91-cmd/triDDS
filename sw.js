@@ -4,7 +4,7 @@
 // s'active quand l'agent touche « Mettre à jour » (ou au prochain lancement).
 // Changer VERSION à chaque mise en ligne.
 
-const VERSION = "tridds-v2.2.3";
+const VERSION = "tridds-v2.2.4";
 const SHELL = [
   "./", "./index.html", "./config.js", "./data.js", "./manifest.json",
   "./css/fonts.css", "./css/base.css", "./css/app.css",
@@ -13,7 +13,7 @@ const SHELL = [
   "./js/shared/ui.js", "./js/shared/api.js", "./js/shared/catalog.js", "./js/shared/plans.js",
   "./js/app/main.js", "./js/app/session.js", "./js/app/store.js", "./js/app/images.js", "./js/app/memory.js", "./js/app/ai.js", "./js/app/common.js",
   "./js/app/view-login.js", "./js/app/view-home.js", "./js/app/view-result.js", "./js/app/view-scan.js",
-  "./js/app/view-journal.js", "./js/app/view-guide.js", "./js/app/view-profile.js",
+  "./js/app/view-journal.js", "./js/app/view-guide.js", "./js/app/view-profile.js", "./js/app/view-diag.js",
   "./assets/symbol-128.png", "./assets/eco-dds-96.png", "./assets/hors-eco-dds-96.png", "./assets/favicon-32x32.png"
 ];
 const IMG_CACHE = "tridds-images";
