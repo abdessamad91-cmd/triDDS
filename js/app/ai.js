@@ -5,7 +5,7 @@
 import { post } from "../shared/api.js";
 import { searchMany, search, fluxForCategory, NON_ID } from "../shared/catalog.js";
 import { sess } from "./store.js";
-import { memory } from "./memory.js";
+import { memory, syncMemory } from "./memory.js";
 
 
 export function toJpeg(dataUrl, max = 1280, quality = 0.8) {
@@ -80,6 +80,8 @@ async function callModel(b64, model, mode) {
 
 // onStep(texte) informe l'écran d'attente.
 export async function analyzePhoto(dataUrl, onStep = () => {}) {
+  // Mémoire du site à jour avant la reconnaissance (marques validées par les collègues entre-temps).
+  await Promise.race([syncMemory(), new Promise(r => setTimeout(r, 2500))]);
   onStep("Préparation de la photo");
   const jpeg = await toJpeg(dataUrl);
   const b64 = jpeg.split(",")[1];
