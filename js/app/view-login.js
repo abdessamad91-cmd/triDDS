@@ -59,7 +59,7 @@ export const loginView = {
         ${resume}
         ${card}
         <a class="login-discover" href="./pricing.html">
-          <div><b>Vous découvrez TriDDS ?</b><span>Voir les offres, tester la démo, demander un mois d'essai gratuit.</span></div>
+          <div><b>Vous découvrez TriDDS ?</b><span>Voir les offres et demander un mois d'essai gratuit.</span></div>
           ${icon("chevron")}
         </a>
       </div>
