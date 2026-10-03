@@ -260,4 +260,32 @@ ok(r.status === 409 && !("sessionId" in (r.data.activeSession || {})), "profil d
 r = await call("auth", { action: "start-session", code: "LUDR-2026-ABC", agent: "Cyril Guilbert", deviceName: "Tablette", sessionId: "jeton-choisi-par-le-client", force: true }, { ip: "7.7.7.7" });
 ok(r.status === 200 && r.data.sessionId !== "jeton-choisi-par-le-client", "le jeton de session est toujours tiré par le serveur");
 
+console.log("Journal partagé et récapitulatif");
+r = await call("auth", { action: "start-session", code: "LUDR-2026-ABC", agent: "Jura Beldor", deviceName: "Tel", force: true }, { ip: "7.7.7.7" });
+const J = { code: "LUDR-2026-ABC", agent: "Jura Beldor", sessionId: r.data.sessionId };
+const t0 = new Date().toISOString();
+r = await call("journal", Object.assign({ action: "sync", items: [
+  { op: "add", entry: { id: "e1", t: t0, n: "White spirit", f: "E", x: "Autres DDS liquides", src: "scan", v: "auto", review: false, conf: 60, brand: "onyx", tone: "eco", agent: "Quelqu'un d'autre" } },
+  { op: "add", entry: { id: "e2", t: t0, n: "Acide Picrique", f: "H", x: "Ne pas accepter", src: "search", v: "consulted", tone: "int" } },
+  { op: "update", id: "e1", patch: { v: "corrected", to: "Substitut de White Spirit", review: true } }
+] }, J), { ip: "7.7.7.7" });
+ok(r.status === 200 && r.data.synced === 3, "journal : ajouts et correction synchronisés");
+r = await call("journal", Object.assign({ action: "list", days: 7 }, J), { ip: "7.7.7.7" });
+const e1 = r.data.items.find(e => e.id === "e1");
+ok(r.data.items.length === 2 && e1.v === "corrected" && e1.to === "Substitut de White Spirit", "journal : liste du site avec la correction appliquée");
+ok(e1.agent === "Jura Beldor", "journal : l'auteur est la session, pas une valeur libre");
+r = await call("auth", { action: "start-session", code: "LUDR-2026-ABC", agent: "Cyril Guilbert", deviceName: "Tel2", force: true }, { ip: "7.7.7.7" });
+r = await call("journal", { action: "list", code: "LUDR-2026-ABC", agent: "Cyril Guilbert", sessionId: r.data.sessionId }, { ip: "7.7.7.7" });
+ok(r.status === 200 && r.data.items.length === 2, "journal : visible par tous les agents du site");
+r = await call("journal", { action: "list", code: "LUDR-2026-ABC" }, { ip: "7.7.7.7" });
+ok(r.status === 401, "journal : refusé sans session");
+r = await call("journal", Object.assign({ action: "stats", month: t0.slice(0, 7) }, J), { ip: "7.7.7.7" });
+ok(r.data.stats.total === 2 && r.data.stats.scans === 1 && r.data.stats.corrected === 1 && r.data.stats.refused === 1 && r.data.stats.byAgent["Jura Beldor"] === 2, "journal : statistiques du mois");
+sent.length = 0;
+r = await admin("send-recaps", { month: t0.slice(0, 7) });
+const recap = sent.find(m => /récapitulatif/i.test(m.subject));
+ok(r.data.sent >= 1 && recap && recap.to[0] === "yvan@exemple.fr" && /2 produits orientés/.test(recap.text) && /Substitut de White Spirit/.test(recap.html), "récapitulatif mensuel envoyé au responsable avec les chiffres");
+r = await admin("journal", { code: "LUDR-2026-ABC", month: t0.slice(0, 7) });
+ok(r.data.stats.total === 2 && r.data.items.length === 2, "admin : journal et statistiques d'un site");
+
 console.log(`\n${n} vérifications réussies`);

@@ -27,7 +27,7 @@ export const profileView = {
             <dt>Accès</dt><dd>${offer}</dd>
           </dl>
           ${sess.trialExpired ? html`<p class="note hors" style="margin-top:12px">Votre mois d'essai est terminé. La recherche reste disponible ; pour continuer avec l'analyse photo, contactez TriDDS.</p>` : ""}
-          ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans analyse photo ni mémoire d'équipe.</p>`
+          ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans analyse photo, mémoire d'équipe ni journal partagé.</p>`
             : q.total ? html`<div class="meter ${pct <= 10 ? "low" : ""}"><div style="display:flex;justify-content:space-between"><b>Photos analysées</b><b>${q.left} restantes sur ${q.total}</b></div>
                 <div class="bar"><i style="width:${pct}%"></i></div><p>${q.kind === "mois" ? "Le compteur repart le 1er du mois." : "Essai offert par TriDDS."}</p></div>`
             : html`<p class="hint" style="margin-top:12px">L'analyse photo n'est pas incluse dans cet accès. La recherche reste illimitée.</p>`}

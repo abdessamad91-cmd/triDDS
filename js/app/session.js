@@ -4,6 +4,7 @@ import { post } from "../shared/api.js";
 import { loadBase } from "../shared/catalog.js";
 import { sess, isLoggedIn, isDemo, saveSess, cache } from "./store.js";
 import { syncMemory } from "./memory.js";
+import { syncJournal } from "./journal-sync.js";
 
 // Catalogue propre au site (fiches ajoutées par le responsable ou TriDDS).
 export async function loadSiteCatalog() {
@@ -26,5 +27,6 @@ export function afterLogin() {
   saveSess();
   loadSiteCatalog();
   syncMemory();
+  syncJournal();
 }
 

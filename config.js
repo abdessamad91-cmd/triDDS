@@ -1,5 +1,5 @@
 window.APP_CONFIG = {
   API_BASE: "https://wild-morning-f974.abdessamad91.workers.dev/api",
-  VERSION: "2.2.16",
+  VERSION: "2.3.0",
   CONTACT_EMAIL: "contact@qabria.fr"
 };

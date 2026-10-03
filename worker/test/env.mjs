@@ -35,7 +35,13 @@ globalThis.fetch = async (url, init = {}) => {
 };
 
 // Durable Object simulé : stockage en mémoire, exécution sérialisée par objet (comme la plateforme).
-class FakeDOStorage { constructor() { this.m = new Map(); } async get(k) { return this.m.get(k); } async put(k, v) { this.m.set(k, JSON.parse(JSON.stringify(v))); } }
+class FakeDOStorage {
+  constructor() { this.m = new Map(); }
+  async get(k) { return this.m.get(k); }
+  async put(k, v) { this.m.set(k, JSON.parse(JSON.stringify(v))); }
+  async delete(k) { this.m.delete(k); }
+  async list({ prefix = "", start, end } = {}) { return new Map([...this.m.entries()].filter(([k]) => k.startsWith(prefix) && (!start || k >= start) && (!end || k < end)).sort()); }
+}
 export function makeDONamespace(Cls) {
   const objects = new Map();
   return {
