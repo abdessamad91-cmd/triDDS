@@ -44,7 +44,22 @@ node test/dev-server.mjs 8787 # API locale avec des données d'exemple
 
 Après une modification des consignes dans `data.js` : `node scripts/build-prompt.mjs`.
 
-## Déployer sans rien installer (depuis le tableau de bord Cloudflare)
+## Déploiement automatique (GitHub Actions)
+
+Le workflow `.github/workflows/deploy-worker.yml` lance `wrangler deploy` à chaque fusion sur `main`
+qui modifie `worker/src/` ou `wrangler.toml`, puis vérifie que l'API répond. Il peut aussi être lancé
+à la main (onglet *Actions* › *Déployer le Worker* › *Run workflow*).
+
+Deux secrets à créer une fois dans GitHub › *Settings* › *Secrets and variables* › *Actions* :
+
+- `CLOUDFLARE_API_TOKEN` : Cloudflare › *My Profile* › *API Tokens* › *Create Token* › modèle
+  **Edit Cloudflare Workers** (laisser les droits par défaut, limiter au compte si proposé).
+- `CLOUDFLARE_ACCOUNT_ID` : Cloudflare › *Workers & Pages*, « Account ID » dans la colonne de droite.
+
+Les secrets du Worker (`TRIDDS_ADMIN_KEY`, `ANTHROPIC_API_KEY`, `RESEND_*`, `NOTIFY_EMAIL`) et les bindings
+restent dans Cloudflare : `wrangler deploy` ne les touche pas.
+
+## Déployer sans rien installer (depuis le tableau de bord Cloudflare, méthode de secours)
 
 Le fichier `dist/worker.js` contient tout le Worker en un seul morceau (généré par `node scripts/bundle.mjs`,
 testé à l'identique des sources).
