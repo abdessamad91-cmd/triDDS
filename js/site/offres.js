@@ -12,14 +12,45 @@ loadBase([]);
 const n = productCount();
 if (n) $("[data-count]").textContent = `${n} produits classés selon le référentiel EcoDDS, et la mémoire de votre équipe en plus.`;
 
-const SAMPLES = ["White spirit", "pH moins", "bombe de peinture", "Acide fluorhydrique", "huile moteur", "Désherbant"];
-$("[data-chips]").innerHTML = SAMPLES.map(s => `<button type="button" data-sample="${esc(s)}">${esc(s)}</button>`).join("");
+// Une photo de plusieurs produits en vrac : chaque produit ressort avec son bac.
+const PHOTO = { label: "Photo d'une caisse en vrac", products: ["White spirit", "huile moteur", "Acide fluorhydrique"] };
+const SAMPLES = [PHOTO, "White spirit", "pH moins", "bombe de peinture", "Acide fluorhydrique", "Désherbant"];
+const sampleKey = s => typeof s === "string" ? s : "__photo";
+$("[data-chips]").innerHTML = SAMPLES.map(s => typeof s === "string"
+  ? `<button type="button" data-sample="${esc(s)}">${esc(s)}</button>`
+  : `<button type="button" class="chip-photo" data-sample="__photo">${icon("camera")}${esc(s.label)}</button>`).join("");
 
 const input = $("#demo-q");
 const out = $("[data-demo-out]");
 const foot = $("[data-demo-foot]");
 
+// Simulation d'un scan : la photo « s'analyse », puis chaque produit reconnu s'affiche avec son bac.
+let photoRun = 0;
+async function showPhotoDemo() {
+  const run = ++photoRun;
+  input.value = "Photo : " + PHOTO.products.length + " produits en vrac";
+  foot.textContent = "";
+  out.innerHTML = `<div class="demo-photo" aria-label="Photo d'une caisse de produits, analyse en cours">
+    <div class="demo-photo-items"><i style="height:62%"></i><i style="height:44%"></i><i style="height:78%"></i><i style="height:36%"></i></div>
+    <div class="demo-photo-scan"></div>
+    <div class="demo-photo-tag">${icon("camera")}<span>Analyse de la photo…</span></div>
+  </div>`;
+  await new Promise(r => setTimeout(r, 1500));
+  if (run !== photoRun) return;
+  const rows = PHOTO.products.map(q => {
+    const r = search(q, 1)[0];
+    const d = destination(r);
+    return html`<li class="${d.tone}">
+      <span class="dm-k">${d.tone === "int" ? icon("alert") : html`<img src="./assets/${d.tone === "eco" ? "eco-dds-96" : "hors-eco-dds-96"}.png" alt="" width="28" height="28">`}</span>
+      <span class="dm-t"><b>${d.bac}</b><small>${r.n} · ${d.kicker}</small></span>
+    </li>`;
+  });
+  out.innerHTML = html`<div class="demo-multi"><div class="dm-head">${PHOTO.products.length} produits reconnus sur la photo</div><ul>${rows}</ul></div>`.toString();
+  foot.textContent = "Une seule photo, chaque produit avec son bac. L'agent valide ou corrige, et le site s'en souvient.";
+}
+
 function showDemo() {
+  photoRun++;
   const q = input.value.trim();
   if (q.length < 2) {
     out.innerHTML = `<div class="demo-empty">Le bac s'affiche ici, comme sur le téléphone des agents.</div>`;
@@ -51,8 +82,9 @@ $("[data-chips]").addEventListener("click", e => {
   const b = e.target.closest("[data-sample]");
   if (!b) return;
   stopAutoDemo();
-  input.value = b.dataset.sample;
   markChip(b.dataset.sample);
+  if (b.dataset.sample === "__photo") { showPhotoDemo(); return; }
+  input.value = b.dataset.sample;
   showDemo();
 });
 
@@ -71,7 +103,7 @@ function stopAutoDemo() {
 }
 function startAutoDemo() {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce) { input.value = SAMPLES[0]; markChip(SAMPLES[0]); showDemo(); return; }
+  if (reduce) { markChip("__photo"); showPhotoDemo(); return; }
   autoOn = true;
   $(".demo").classList.add("is-auto");
   let i = 0;
@@ -79,16 +111,21 @@ function startAutoDemo() {
   (async () => {
     await wait(900);
     while (autoOn) {
-      const name = SAMPLES[i % SAMPLES.length];
-      markChip(name);
-      input.value = "";
-      for (const ch of name) {
-        if (!autoOn) return;
-        input.value += ch;
-        await wait(55 + Math.random() * 45);
+      const s = SAMPLES[i % SAMPLES.length];
+      markChip(sampleKey(s));
+      if (typeof s !== "string") {
+        showPhotoDemo();
+        await wait(5200);
+      } else {
+        input.value = "";
+        for (const ch of s) {
+          if (!autoOn) return;
+          input.value += ch;
+          await wait(55 + Math.random() * 45);
+        }
+        showDemo();
+        await wait(3000);
       }
-      showDemo();
-      await wait(3200);
       i++;
     }
   })();
