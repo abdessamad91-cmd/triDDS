@@ -4,7 +4,7 @@
 // s'active quand l'agent touche « Mettre à jour » (ou au prochain lancement).
 // Changer VERSION à chaque mise en ligne.
 
-const VERSION = "tridds-v2.3.2";
+const VERSION = "tridds-v2.3.3";
 const SHELL = [
   "./", "./index.html", "./config.js", "./data.js", "./manifest.json",
   "./css/fonts.css", "./css/base.css", "./css/app.css",

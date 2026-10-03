@@ -14,7 +14,7 @@ if (n) $("[data-count]").textContent = `${n} produits classés selon le référe
 
 // Une photo de plusieurs produits en vrac : chaque produit ressort avec son bac.
 const PHOTO = {
-  label: "Photo d'une caisse en vrac",
+  label: "Photo de plusieurs produits",
   src: "./assets/demo-caisse.jpg",
   // Résultat réel de l'analyse de cette photo dans l'appli.
   products: [
@@ -38,7 +38,7 @@ const foot = $("[data-demo-foot]");
 let photoRun = 0;
 async function showPhotoDemo() {
   const run = ++photoRun;
-  input.value = "Photo : " + PHOTO.products.length + " produits en vrac";
+  input.value = "Photo : " + PHOTO.products.length + " produits côte à côte";
   foot.textContent = "";
   out.innerHTML = `<div class="demo-photo" aria-label="Photo d'une caisse de produits, analyse en cours">
     <img src="${PHOTO.src}" alt="Pots de peinture et brou de noix posés sur une caisse rouge, en déchèterie" width="960" height="909">
@@ -56,7 +56,7 @@ async function showPhotoDemo() {
       <span class="dm-t"><b>${d.bac}</b><small>${label} · ${d.kicker}</small></span>
     </li>`;
   });
-  out.innerHTML = html`<div class="demo-multi"><div class="dm-head">${PHOTO.products.length} produits sur la photo, à valider</div><ul>${rows}</ul></div>`.toString();
+  out.innerHTML = html`<div class="demo-multi"><div class="dm-head">${PHOTO.products.length} produits visibles, à valider</div><ul>${rows}</ul></div>`.toString();
   foot.textContent = "Une seule photo, chaque produit avec son bac, même sans étiquette lisible. L'agent touche un produit pour vérifier le seuil et valider.";
 }
 
