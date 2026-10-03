@@ -34,9 +34,27 @@ globalThis.fetch = async (url, init = {}) => {
   return realFetch(url, init);
 };
 
+// Durable Object simulé : stockage en mémoire, exécution sérialisée par objet (comme la plateforme).
+class FakeDOStorage { constructor() { this.m = new Map(); } async get(k) { return this.m.get(k); } async put(k, v) { this.m.set(k, JSON.parse(JSON.stringify(v))); } }
+export function makeDONamespace(Cls) {
+  const objects = new Map();
+  return {
+    idFromName: name => ({ name }),
+    get(id) {
+      if (!objects.has(id.name)) {
+        const inst = new Cls({ storage: new FakeDOStorage() }, {});
+        objects.set(id.name, { inst, queue: Promise.resolve() });
+      }
+      const o = objects.get(id.name);
+      return { fetch: (url, init) => { const run = () => o.inst.fetch(new Request(url, init)); const p = o.queue.then(run, run); o.queue = p.catch(() => {}); return p; } };
+    }
+  };
+}
+
 export async function makeEnv() {
   const AUTH = new KV(), MEM = new KV();
-  const env = { AUTH_STORE: AUTH, MEMORY_STORE: MEM, IMAGES_BUCKET: new R2(), TRIDDS_ADMIN_KEY: "cle-test", ANTHROPIC_API_KEY: "x", RESEND_API_KEY: "x", RESEND_FROM: "TriDDS <bonjour@tridds.com>", NOTIFY_EMAIL: "admin@exemple.fr", SITE_BASE_URL: "https://tridds.com" };
+  const { SiteUsage } = await import("../src/usage.js");
+  const env = { AUTH_STORE: AUTH, MEMORY_STORE: MEM, IMAGES_BUCKET: new R2(), SITE_USAGE: makeDONamespace(SiteUsage), TRIDDS_ADMIN_KEY: "cle-test", ANTHROPIC_API_KEY: "x", RESEND_API_KEY: "x", RESEND_FROM: "TriDDS <bonjour@tridds.com>", NOTIFY_EMAIL: "admin@exemple.fr", SITE_BASE_URL: "https://tridds.com" };
   
   // Données de départ : un site au format v1 (comme en production aujourd'hui) et une demande.
   const legacy = { clientName: "Métropole du Grand Nancy", principalName: "Yvan Aref", principalEmail: "yvan@exemple.fr", site: "Déchèterie de Ludres", plan: "pro", active: true, created: "2026-04-10T08:00:00Z", contact: "", notes: "", trialTotal: 5, trialUsed: 2, monthlyUsed: 168, usageMonth: new Date().toISOString().slice(0, 7), monthlyLimit: 200,

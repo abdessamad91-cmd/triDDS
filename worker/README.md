@@ -44,6 +44,14 @@ node test/dev-server.mjs 8787 # API locale avec des données d'exemple
 
 Les consignes métier de l'IA vivent dans `src/prompt.js` (elles ne sont plus embarquées dans `data.js` côté client).
 
+## Compteurs d'usage atomiques (Durable Object)
+
+`src/usage.js` définit l'objet `SiteUsage` (binding `SITE_USAGE`, déclaré dans `wrangler.toml` avec une
+migration `new_sqlite_classes`) : un objet par code de site, qui facture les photos, les secondes lectures
+et les photos de référence du jour de façon strictement séquentielle. Il s'initialise tout seul à partir
+des compteurs KV du site, puis fait foi ; le site KV n'est plus qu'un miroir d'affichage. Sans binding
+(tests sans DO, ancien déploiement), le Worker retombe sur les compteurs KV.
+
 ## Déploiement automatique (GitHub Actions)
 
 Le workflow `.github/workflows/deploy-worker.yml` lance `wrangler deploy` à chaque fusion sur `main`

@@ -15,6 +15,15 @@ id = "5b0a5bf80a63468d8f490a95afa0f16a"
 binding = "IMAGES_BUCKET"
 bucket_name = "tridds-images"
 
+# Compteurs d'usage atomiques (un objet par site) : voir src/usage.js.
+[[durable_objects.bindings]]
+name = "SITE_USAGE"
+class_name = "SiteUsage"
+
+[[migrations]]
+tag = "v1-site-usage"
+new_sqlite_classes = ["SiteUsage"]
+
 [vars]
 SITE_BASE_URL = "https://tridds.com"
 

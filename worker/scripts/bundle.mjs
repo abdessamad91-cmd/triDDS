@@ -9,11 +9,13 @@ const strip = (file, keepExports = false) => readFileSync(src + file, "utf8")
   .replace(/^export (const|function|async function)/gm, "$1");
 const plans = strip("plans.js");
 const prompt = strip("prompt.js");
-const index = strip("index.js").replace("export default {", "export default {");
+const usage = strip("usage.js"); // garde « export class SiteUsage » : la plateforme en a besoin
+const index = strip("index.js").replace("export { SiteUsage };\n", "");
 const out = `// TriDDS API v2 — fichier assemblé automatiquement (worker/scripts/bundle.mjs). Ne pas modifier à la main :
 // modifier worker/src/*.js puis relancer le script.
 ${plans}
 ${prompt}
+${usage}
 ${index}`;
 mkdirSync(fileURLToPath(new URL("../dist/", import.meta.url)), { recursive: true });
 writeFileSync(fileURLToPath(new URL("../dist/worker.js", import.meta.url)), out);
