@@ -1,7 +1,8 @@
 // État local de l'appli agent : session, historique, journal, préférences.
+import { destination } from "../shared/catalog.js";
 // localStorage peut être indisponible (navigation privée) : tout est protégé.
 
-const K = { sess: "tridds_sess", hist: "tridds_h", jrn: "tridds_jrn", last: "tridds_last", mem: "tridds_mem_local", cat: "tridds_cat_cache", imgs: "tridds_imgs_cache" };
+const K = { sess: "tridds_sess", hist: "tridds_h", jrn: "tridds_jrn", jrnOut: "tridds_jrn_out", jrnRemote: "tridds_jrn_site", last: "tridds_last", mem: "tridds_mem_local", cat: "tridds_cat_cache", imgs: "tridds_imgs_cache" };
 
 export function load(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
@@ -74,7 +75,49 @@ export function clearHistory() { history = history.filter(h => (h.code || "") !=
 export let journal = load(K.jrn, []);
 if (!Array.isArray(journal)) journal = [];
 const saveJournal = () => save(K.jrn, journal.slice(0, 200));
-export const siteJournal = () => journal.filter(e => (e.code || "") === sess.code);
+// Journal du site tel que reçu du serveur (toute l'équipe), par code de site.
+let remote = load(K.jrnRemote, {});
+if (!remote || typeof remote !== "object") remote = {};
+// File d'attente des envois au serveur (hors ligne, puis synchronisée au battement de session).
+let outbox = load(K.jrnOut, []);
+if (!Array.isArray(outbox)) outbox = [];
+const saveOutbox = () => save(K.jrnOut, outbox.slice(-500));
+
+// Format compact envoyé au serveur (une entrée du journal partagé).
+function toRemote(e) {
+  const d = destination({ f: e.correctedFlux || e.flux, x: e.correctedCategory || e.category, overSeuil: e.overSeuil });
+  return { id: e.id, t: new Date(e.timestamp || Date.now()).toISOString(), n: e.name, to: e.correctedTo, f: e.correctedFlux || e.flux, x: e.correctedCategory || e.category, src: e.source === "scan" || e.validationType === "auto" || e.model ? "scan" : "search",
+    v: e.validationType, review: !!e.reviewed, over: !!e.overSeuil, conf: e.confidence ? Math.round(e.confidence) : undefined, brand: e.brand, tone: d ? d.tone : undefined };
+}
+// Format local depuis une entrée reçue du serveur.
+function fromRemote(r) {
+  return { id: r.id, timestamp: Date.parse(r.t) || Date.now(), agent: r.agent, code: sess.code, name: r.n, correctedTo: r.to, flux: r.f, category: r.x, source: r.src, validationType: r.v, reviewed: r.review !== false, overSeuil: !!r.over, confidence: r.conf, brand: r.brand, tone: r.tone, remote: true };
+}
+export function siteJournal() {
+  const mine = journal.filter(e => (e.code || "") === sess.code);
+  const others = (remote[sess.code] || []).map(fromRemote);
+  const seen = new Set(mine.map(e => e.id));
+  // Les entrées locales font foi (elles portent les dernières corrections) ; le reste vient du site.
+  return mine.concat(others.filter(e => !seen.has(e.id))).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+export function setRemoteJournal(items) {
+  remote[sess.code] = (items || []).slice(0, 600);
+  save(K.jrnRemote, remote);
+}
+export function queueJournal(op) {
+  if (isDemo() || !sess.code) return;
+  outbox.push(Object.assign({ code: sess.code }, op));
+  saveOutbox();
+}
+export function takeOutbox() {
+  const mine = outbox.filter(o => o.code === sess.code);
+  return mine.slice(0, 200);
+}
+export function dropOutbox(items) {
+  const ids = new Set(items);
+  outbox = outbox.filter(o => !ids.has(o));
+  saveOutbox();
+}
 export function addJournal(e) {
   e.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   e.timestamp = Date.now();
@@ -84,14 +127,15 @@ export function addJournal(e) {
   journal.unshift(e);
   journal = journal.slice(0, 200);
   saveJournal();
+  queueJournal({ op: "add", entry: toRemote(e) });
   return e;
 }
 export function updateJournal(id, patch) {
   const e = journal.find(x => x.id === id);
-  if (e) { Object.assign(e, patch); saveJournal(); }
+  if (e) { Object.assign(e, patch); saveJournal(); queueJournal({ op: "update", id, patch: toRemote(e) }); }
   return e;
 }
-export const toReview = () => siteJournal().filter(e => !e.reviewed).length;
+export const toReview = () => siteJournal().filter(e => !e.reviewed && (!e.agent || e.agent === sess.agent)).length;
 
 export const cache = {
   get catalog() { return load(K.cat, null); },

@@ -7,6 +7,7 @@ import { loadBase } from "../shared/catalog.js";
 import { sess, isLoggedIn, isDemo, applyAccess, clearSess, saveSess, toReview, cache, deviceName } from "./store.js";
 import { initImages, onImages } from "./images.js";
 import { syncMemory } from "./memory.js";
+import { syncJournal } from "./journal-sync.js";
 import { quotaChip } from "./common.js";
 import { loadSiteCatalog } from "./session.js";
 
@@ -175,6 +176,7 @@ export async function heartbeat(force = false) {
     app.updateQuota();
     // La mémoire d'équipe apprise sur d'autres appareils arrive au fil de l'eau, pas seulement à la connexion.
     syncMemory().then(() => { if (current === "memory") app.softRefresh(); });
+    syncJournal().then(() => { if (current === "journal") app.softRefresh(); app.updateTabs(); });
     if (current === "profile") app.softRefresh();
   } catch (e) {
     if (e instanceof ApiError && (e.status === 401 || e.status === 403)) app.sessionLost(e.status === 403 ? e.message : "Session fermée ou reprise sur un autre appareil.");

@@ -772,6 +772,19 @@ async function handleAdmin(request, env) {
     return json({ ok: true, site: siteSummary(code, data) });
   }
 
+  if (action === "journal") {
+    const code = normalizeCode(body.code);
+    const site = await readJsonKV(env.AUTH_STORE, code);
+    if (!site) return json({ error: "Site introuvable" }, 404);
+    const [st, li] = await Promise.all([usageOp(env, code, site, "journal-stats", { month: body.month }), usageOp(env, code, site, "journal-list", { days: body.days || 30, limit: body.limit || 300 })]);
+    return json({ ok: true, stats: st && st.stats, items: (li && li.items) || [] });
+  }
+  if (action === "send-recaps") {
+    const month = /^\d{4}-\d{2}$/.test(body.month || "") ? body.month : previousMonth();
+    const r = await runMonthlyRecaps(env, month);
+    return json({ ok: true, month, sent: r.sent });
+  }
+
   if (action === "images-all") {
     // Toutes les photos (globales et par site) avec leur code, pour l'écran Produits de l'admin.
     const origin = new URL(request.url).origin;
@@ -879,6 +892,83 @@ function catalogEntry(item, by) {
     status: "active"
   };
 }
+
+// ---------- journal des tris du site (partagé) ----------
+const JOURNAL_FIELDS = ["id", "t", "agent", "n", "to", "f", "x", "src", "v", "review", "over", "conf", "brand", "tone"];
+function cleanJournalEntry(e, agentName) {
+  const out = {};
+  for (const k of JOURNAL_FIELDS) if (e[k] !== undefined && e[k] !== null) out[k] = typeof e[k] === "string" ? clip(e[k], 160) : e[k];
+  out.agent = agentName; // l'auteur est toujours la session, jamais une valeur libre
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(out.t || "")) out.t = nowIso();
+  return out;
+}
+async function handleJournal(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const v = await verifySession(env, body, request);
+  if (v.error) return json({ error: v.error }, v.status);
+  const { code, site, agent } = v;
+  if (!env.SITE_USAGE) return json({ error: "Journal partagé indisponible" }, 503);
+  const action = body.action || "list";
+  if (action === "sync") {
+    const items = (Array.isArray(body.items) ? body.items : []).slice(0, 200).map(it => it.op === "update"
+      ? { op: "update", id: clip(it.id, 40), patch: cleanJournalEntry(it.patch || {}, agent.name) }
+      : { op: "add", entry: cleanJournalEntry(Object.assign({}, it.entry, { id: clip((it.entry || {}).id, 40) }), agent.name) });
+    for (const it of items) if (it.op === "update") delete it.patch.agent;
+    const d = await usageOp(env, code, site, "journal-sync", { items });
+    return json({ ok: !!(d && d.ok), synced: d ? d.synced : 0 });
+  }
+  if (action === "list") {
+    const d = await usageOp(env, code, site, "journal-list", { days: body.days, limit: body.limit });
+    return json({ ok: true, items: (d && d.items) || [], total: d ? d.total : 0 });
+  }
+  if (action === "stats") {
+    const d = await usageOp(env, code, site, "journal-stats", { month: body.month });
+    return json({ ok: true, stats: d && d.stats });
+  }
+  return json({ error: "Action inconnue" }, 400);
+}
+
+// Récapitulatif mensuel envoyé au responsable de chaque site (déclencheur planifié, le 2 du mois).
+function monthLabel(month) {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
+}
+async function sendMonthlyRecap(env, code, site, stats) {
+  const to = normalizeEmail(site.principalEmail || site.adminEmail);
+  if (!to) return { sent: false, skipped: true };
+  const base = (env.SITE_BASE_URL || "https://tridds.com").replace(/\/+$/, "");
+  const row = (k, v) => `<tr><td style="padding:6px 0;color:#4a5a4f">${escHtml(k)}</td><td style="padding:6px 0;text-align:right;font-weight:700">${escHtml(String(v))}</td></tr>`;
+  const list = (arr, empty) => arr.length ? `<ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">${arr.map(([k, n]) => `<li>${escHtml(k)} <span style="color:#4a5a4f">(${n})</span></li>`).join("")}</ul>` : `<p style="margin:6px 0 0;color:#4a5a4f">${empty}</p>`;
+  const agents = Object.entries(stats.byAgent || {}).sort((a, b) => b[1] - a[1]);
+  const inner = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6">Bonjour ${escHtml(site.principalName || "")},</p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6">Voici l'activité de <strong>${escHtml(site.site)}</strong> en ${escHtml(monthLabel(stats.month))}.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:15px">
+      ${row("Produits orientés", stats.total)}${row("dont par photo", stats.scans)}${row("Validés", stats.confirmed)}${row("Corrigés par l'équipe", stats.corrected)}${row("Refusés ou à isoler", stats.refused)}${row("EcoDDS / hors EcoDDS", stats.eco + " / " + stats.hors)}${row("Restant à vérifier", stats.toReview)}
+    </table>
+    <h3 style="margin:18px 0 4px;font-size:15px">Par agent</h3>${list(agents, "Aucune activité.")}
+    <h3 style="margin:18px 0 4px;font-size:15px">Produits les plus fréquents</h3>${list(stats.topProducts || [], "Aucun.")}
+    <h3 style="margin:18px 0 4px;font-size:15px">Corrections les plus fréquentes</h3>${list(stats.topCorrections || [], "Aucune correction : les lectures ont toutes été validées.")}
+    <p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#4a5a4f">Le journal complet est consultable dans l'application (onglet Journal), avec export CSV.</p>
+    <a href="${base}/" style="display:inline-block;margin-top:14px;padding:14px 22px;border-radius:10px;background:#2f7d32;color:#fff;text-decoration:none;font-weight:700">Ouvrir TriDDS</a>`;
+  const text = `Activité de ${site.site} en ${monthLabel(stats.month)} : ${stats.total} produits orientés (${stats.scans} par photo), ${stats.confirmed} validés, ${stats.corrected} corrigés, ${stats.refused} refusés ou à isoler, ${stats.toReview} à vérifier.`;
+  return sendEmail(env, { to, subject: `TriDDS — ${site.site} : récapitulatif de ${monthLabel(stats.month)}`, html: emailShell("Récapitulatif mensuel", inner), text, replyTo: env.NOTIFY_EMAIL || undefined });
+}
+async function runMonthlyRecaps(env, month) {
+  if (!env.SITE_USAGE) return { sent: 0 };
+  const index = await readIndex(env);
+  let sent = 0;
+  for (const code of index.codes) {
+    const site = await readJsonKV(env.AUTH_STORE, code);
+    if (!site || site.active === false) continue;
+    const d = await usageOp(env, code, site, "journal-stats", { month });
+    if (!d || !d.stats || !d.stats.total) continue;
+    const r = await sendMonthlyRecap(env, code, site, d.stats).catch(() => ({ sent: false }));
+    if (r.sent) sent++;
+  }
+  return { sent };
+}
+const previousMonth = () => { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); };
 
 // ---------- changements sensibles confirmés par email ----------
 const PENDING_TTL_MS = 24 * 3600 * 1000;
@@ -1464,6 +1554,10 @@ export default {
   async fetch(request, env, ctx) {
     return withCors(request, await this.route(request, env, ctx));
   },
+  // Déclencheur planifié (wrangler.toml › triggers) : récapitulatif du mois précédent aux responsables.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runMonthlyRecaps(env, previousMonth()));
+  },
   async route(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response("", { status: 204, headers: CORS });
     const path = new URL(request.url).pathname.replace(/\/+$/, "");
@@ -1479,6 +1573,7 @@ export default {
       if (path === "/api/confirm" && request.method === "GET") return handleConfirm(request, env);
       if (path === "/api/auth") return handleAuth(request, env);
       if (path === "/api/memory-get") return handleMemoryGet(request, env);
+      if (path === "/api/journal") return handleJournal(request, env);
       if (path === "/api/memory-set") return handleMemorySet(request, env);
       if (path === "/api/site-catalog") return handleSiteCatalog(request, env);
       if (path === "/api/site-admin") return handleSiteAdmin(request, env);

@@ -24,6 +24,10 @@ class_name = "SiteUsage"
 tag = "v1-site-usage"
 new_sqlite_classes = ["SiteUsage"]
 
+# Récapitulatif mensuel du journal aux responsables : le 2 de chaque mois à 06:00 UTC.
+[triggers]
+crons = ["0 6 2 * *"]
+
 [vars]
 SITE_BASE_URL = "https://tridds.com"
 
