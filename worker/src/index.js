@@ -4,6 +4,21 @@
 
 import { PLANS, planOf, planLabel } from "./plans.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
+import { SiteUsage } from "./usage.js";
+export { SiteUsage };
+
+// ---------- compteurs atomiques (Durable Object SiteUsage) ----------
+// Sans binding (tests, ancien déploiement) : repli sur les compteurs KV, non atomiques.
+async function usageOp(env, code, site, op, extra = {}) {
+  if (!env.SITE_USAGE) return null;
+  const id = env.SITE_USAGE.idFromName(code);
+  const stub = env.SITE_USAGE.get(id);
+  const seed = { usageMonth: site.usageMonth, monthlyUsed: site.monthlyUsed || 0, trialUsed: site.trialUsed || 0 };
+  const res = await stub.fetch("https://usage/" + op, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ op, seed }, extra)) });
+  const data = await res.json().catch(() => ({ ok: false }));
+  if (data.usage) { site.usageMonth = data.usage.usageMonth; site.monthlyUsed = data.usage.monthlyUsed; site.trialUsed = data.usage.trialUsed; }
+  return data;
+}
 
 // Origines autorisées à appeler l'API depuis un navigateur : le site et ses adresses techniques.
 // (Les images restent lisibles de partout : balises <img>.)
@@ -392,6 +407,8 @@ async function handleAuth(request, env) {
     return json({ error: GENERIC_AUTH_ERROR }, 401);
   }
   site = cleanupAgentSessions(ensureUsageState(site));
+  // Compteurs à jour depuis l'objet d'usage (le site KV n'est qu'un miroir d'affichage).
+  await usageOp(env, code, site, "get");
 
   if (action === "login") {
     return json(buildAccessPayload(site, code));
@@ -687,7 +704,7 @@ async function handleAdmin(request, env) {
     if (body.trialTotal !== undefined) data.trialTotal = Math.max(0, parseInt(body.trialTotal, 10) || 0);
     if (body.agentsOverride !== undefined) data.agentsOverride = body.agentsOverride === "" || body.agentsOverride == null ? null : Number(body.agentsOverride);
     if (body.scansOverride !== undefined) data.scansOverride = body.scansOverride === "" || body.scansOverride == null ? null : Number(body.scansOverride);
-    if (body.resetUsage) { data.monthlyUsed = 0; data.trialUsed = 0; }
+    if (body.resetUsage) { data.monthlyUsed = 0; data.trialUsed = 0; await usageOp(env, code, data, "reset"); }
     ensureUsageState(data);
     normalizeRoles(data);
     if ((body.plan !== undefined && body.plan !== prevPlan) || (body.active !== undefined && !!body.active !== (prevActive !== false))) invalidateAllSessions(data);
@@ -1083,23 +1100,32 @@ async function handleAnalyze(request, env) {
   let agent = ensureAgents(site).find(x => x.name === v.agent.name);
   if (!agent) return json({ error: "Session expirée. Reconnectez-vous." }, 401);
   let charged = null;
+  const quotaMessage = u => u.trialExpired
+    ? "Votre mois d'essai est terminé. La recherche reste disponible ; contactez TriDDS pour continuer avec l'analyse photo."
+    : u.monthlyLimit > 0
+      ? "Quota de photos du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
+      : "L'analyse photo n'est pas incluse dans cet accès. Contactez TriDDS pour l'activer.";
   if (mode === "retry") {
-    if (!agent.retryLeft || agent.lastScanHash !== imageHash || !agent.lastScanAt || Date.now() - new Date(agent.lastScanAt).getTime() > 180000) {
-      return json({ error: "Seconde analyse indisponible. Relancez un scan." }, 409);
+    const d = await usageOp(env, code, site, "retry", { agent: agent.name, hash: imageHash });
+    if (d) {
+      if (!d.ok) return json({ error: "Seconde analyse indisponible. Relancez un scan." }, 409);
+    } else {
+      if (!agent.retryLeft || agent.lastScanHash !== imageHash || !agent.lastScanAt || Date.now() - new Date(agent.lastScanAt).getTime() > 180000) {
+        return json({ error: "Seconde analyse indisponible. Relancez un scan." }, 409);
+      }
+      agent.retryLeft = 0;
     }
-    agent.retryLeft = 0;
   } else {
     const u = usageView(site);
-    if (!u.aiEnabled) {
-      const msg = u.trialExpired
-        ? "Votre mois d'essai est terminé. La recherche reste disponible ; contactez TriDDS pour continuer avec l'analyse photo."
-        : u.monthlyLimit > 0
-          ? "Quota de photos du mois atteint. Il repart le 1er du mois, ou contactez TriDDS pour l'augmenter."
-          : "L'analyse photo n'est pas incluse dans cet accès. Contactez TriDDS pour l'activer.";
-      return json({ error: msg, usage: buildAccessPayload(site, code, agent.name) }, 403);
+    if (!u.aiEnabled) return json({ error: quotaMessage(u), usage: buildAccessPayload(site, code, agent.name) }, 403);
+    const d = await usageOp(env, code, site, "charge", { agent: agent.name, hash: imageHash, monthlyLimit: u.monthlyLimit, trialTotal: site.trialTotal || 0, trialExpired: u.trialExpired });
+    if (d) {
+      if (!d.ok) return json({ error: quotaMessage(usageView(site)), usage: buildAccessPayload(site, code, agent.name) }, 403);
+      charged = d.charged;
+    } else {
+      if (u.monthlyRemaining > 0) { site.monthlyUsed = (site.monthlyUsed || 0) + 1; charged = "monthly"; }
+      else { site.trialUsed = (site.trialUsed || 0) + 1; charged = "trial"; }
     }
-    if (u.monthlyRemaining > 0) { site.monthlyUsed = (site.monthlyUsed || 0) + 1; charged = "monthly"; }
-    else { site.trialUsed = (site.trialUsed || 0) + 1; charged = "trial"; }
     agent.lastScanAt = nowIso();
     agent.lastScanHash = imageHash;
     agent.retryLeft = 1;
@@ -1132,8 +1158,11 @@ async function handleAnalyze(request, env) {
   site = ensureUsageState(await readJsonKV(env.AUTH_STORE, code) || site);
   agent = ensureAgents(site).find(x => x.name === v.agent.name) || agent;
   if (!response.ok) {
-    if (charged === "monthly") site.monthlyUsed = Math.max(0, (site.monthlyUsed || 0) - 1);
-    if (charged === "trial") site.trialUsed = Math.max(0, (site.trialUsed || 0) - 1);
+    const d = await usageOp(env, code, site, "refund", { charged, mode, agent: v.agent.name });
+    if (!d) {
+      if (charged === "monthly") site.monthlyUsed = Math.max(0, (site.monthlyUsed || 0) - 1);
+      if (charged === "trial") site.trialUsed = Math.max(0, (site.trialUsed || 0) - 1);
+    }
     if (mode === "retry" && agent) agent.retryLeft = 1;
     await writeJsonKV(env.AUTH_STORE, code, site);
     return json({ error: (data && data.error && data.error.message) || "Le service d'analyse ne répond pas. La photo n'a pas été décomptée.", usage: buildAccessPayload(site, code, v.agent.name) }, 502);
@@ -1255,10 +1284,15 @@ async function handleProductImages(request, env, { admin = false } = {}) {
     // Un agent envoie une vraie photo (pas d'URL externe ni de clé R2 existante), 40 par jour et par site au plus.
     if (!body.imageData) return json({ error: "Photo requise" }, 400);
     body.item = Object.assign({}, body.item, { url: "", r2Key: "", id: "" });
-    const dayKey = "_rl_img_" + code + "_" + nowIso().slice(0, 10);
-    const used = parseInt(await env.AUTH_STORE.get(dayKey) || "0", 10);
-    if (used >= 40) return json({ error: "Limite de photos atteinte pour aujourd'hui." }, 429);
-    await env.AUTH_STORE.put(dayKey, String(used + 1), { expirationTtl: 172800 });
+    const d = await usageOp(env, code, v.site, "img", { limit: 40 });
+    if (d) {
+      if (!d.ok) return json({ error: "Limite de photos atteinte pour aujourd'hui." }, 429);
+    } else {
+      const dayKey = "_rl_img_" + code + "_" + nowIso().slice(0, 10);
+      const used = parseInt(await env.AUTH_STORE.get(dayKey) || "0", 10);
+      if (used >= 40) return json({ error: "Limite de photos atteinte pour aujourd'hui." }, 429);
+      await env.AUTH_STORE.put(dayKey, String(used + 1), { expirationTtl: 172800 });
+    }
   }
 
   if (action === "save") {

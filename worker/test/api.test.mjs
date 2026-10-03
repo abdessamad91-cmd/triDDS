@@ -72,6 +72,18 @@ r = await call("analyze", Object.assign({ image: JPG, prompt: "p", model: "sonne
 ok(r.status === 200 && r.data.usage.monthlyUsed === 169 && lastAnthropic().model.includes("sonnet"), "seconde passe Sonnet non comptée");
 r = await call("analyze", Object.assign({ image: JPG, prompt: "p", model: "sonnet", mode: "retry" }, S));
 ok(r.status === 409, "pas de seconde passe gratuite à répétition");
+// Concurrence : 12 scans lancés en même temps, 5 restants → exactement 5 acceptés, 7 refusés.
+await admin("update", { code: "LUDR-2026-ABC", scansOverride: 174 });
+const burst = await Promise.all(Array.from({ length: 12 }, () => call("analyze", Object.assign({ image: JPG, mode: "final" }, S))));
+const accepted = burst.filter(x => x.status === 200).length, refused = burst.filter(x => x.status === 403).length;
+ok(accepted === 5 && refused === 7, `scans simultanés : ${accepted} acceptés, ${refused} refusés, jamais au-delà du quota`);
+r = await call("auth", { action: "login", code: "LUDR-2026-ABC" });
+ok(r.data.monthlyUsed === 174 && r.data.monthlyRemaining === 0, "compteur exact après la rafale (174/174)");
+const retries = await Promise.all(Array.from({ length: 5 }, () => call("analyze", Object.assign({ image: JPG, mode: "retry" }, S))));
+ok(retries.filter(x => x.status === 200).length === 1, "une seule seconde lecture gratuite, même en parallèle");
+await admin("update", { code: "LUDR-2026-ABC", scansOverride: "" });
+r = await call("auth", { action: "login", code: "LUDR-2026-ABC" });
+ok(r.data.monthlyLimit === 200 && r.data.monthlyUsed === 174, "quota de l'offre rétabli, consommation conservée");
 
 console.log("Ancien essai gratuit épuisé");
 r = await call("auth", { action: "start-session", code: "TRY-OLDTRIAL", agent: "Marc" });
@@ -100,7 +112,7 @@ ok(r.status === 401, "clé admin incorrecte refusée");
 r = await admin("dashboard");
 ok(r.status === 200 && r.data.requests.length >= 2 && r.data.stats.openRequests >= 2, "tableau de bord avec demandes");
 const legacySite = r.data.sites.find(s => s.code === "LUDR-2026-ABC");
-ok(legacySite.monthlyUsed === 169 && legacySite.maxAgents === 25, "usage par site, 25 profils max en offre Déchèterie");
+ok(legacySite.monthlyUsed === 174 && legacySite.maxAgents === 25, "usage par site, 25 profils max en offre Déchèterie");
 ok(legacySite.teamLocked === false && legacySite.trialTotal === legacySite.trialUsed, "site v1 : responsable autonome, pas de scans d'essai en plus sur une offre payante");
 sent.length = 0;
 r = await admin("create", { site: "Déchèterie de Château-Salins", client: "SIVOM du Saulnois", responsable: "Claire Martin", principalEmail: "c.martin@sivom.fr", agents: ["Luc", "Ana", "luc"], plan: "essentiel", requestId: "REQ-TEST0001", sendEmail: true });
