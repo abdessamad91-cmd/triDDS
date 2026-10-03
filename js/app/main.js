@@ -173,6 +173,8 @@ export async function heartbeat(force = false) {
     const d = await post("auth", { action: "heartbeat", code: sess.code, agent: sess.agent, sessionId: sess.sessionId, deviceName: sess.deviceName || deviceName() }, { timeout: 12000 });
     applyAccess(d);
     app.updateQuota();
+    // La mémoire d'équipe apprise sur d'autres appareils arrive au fil de l'eau, pas seulement à la connexion.
+    syncMemory().then(() => { if (current === "memory") app.softRefresh(); });
     if (current === "profile") app.softRefresh();
   } catch (e) {
     if (e instanceof ApiError && (e.status === 401 || e.status === 403)) app.sessionLost(e.status === 403 ? e.message : "Session fermée ou reprise sur un autre appareil.");
