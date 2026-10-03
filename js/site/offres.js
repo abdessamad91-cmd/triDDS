@@ -16,10 +16,11 @@ if (n) $("[data-count]").textContent = `${n} produits classés selon le référe
 const PHOTO = {
   label: "Photo d'une caisse en vrac",
   src: "./assets/demo-caisse.jpg",
+  // Résultat réel de l'analyse de cette photo dans l'appli.
   products: [
-    { q: "pot de peinture", label: "Pot de peinture 2,5 L" },
-    { q: "brou de noix", label: "Brou de noix (teinte bois)" },
-    { q: "peinture maquette", label: "Petit pot de peinture émail" }
+    { q: "Peinture loisir, art : gouache aquarelle", label: "Lu : peinture laque émail miniature Revell" },
+    { q: "brou de noix", label: "Lu : brou de noix" },
+    { q: "Produit non identifié, sans étiquette", label: "Pot rouillé, étiquette illisible" }
   ]
 };
 // Un cas par couleur : EcoDDS, hors EcoDDS, refusé.
@@ -54,8 +55,8 @@ async function showPhotoDemo() {
       <span class="dm-t"><b>${d.bac}</b><small>${label} · ${d.kicker}</small></span>
     </li>`;
   });
-  out.innerHTML = html`<div class="demo-multi"><div class="dm-head">${PHOTO.products.length} produits reconnus sur la photo</div><ul>${rows}</ul></div>`.toString();
-  foot.textContent = "Une seule photo, chaque produit avec son bac. L'agent valide ou corrige, et le site s'en souvient.";
+  out.innerHTML = html`<div class="demo-multi"><div class="dm-head">${PHOTO.products.length} produits sur la photo, à valider</div><ul>${rows}</ul></div>`.toString();
+  foot.textContent = "Une seule photo, chaque produit avec son bac, même sans étiquette lisible. L'agent touche un produit pour vérifier le seuil et valider.";
 }
 
 function showDemo() {
