@@ -1,7 +1,7 @@
 {
   "name": "TriDDS — tri des déchets dangereux",
   "short_name": "TriDDS",
-  "description": "Le bon bac en deux secondes : recherche et scan d'étiquette pour les déchèteries.",
+  "description": "Le bon bac, en une photo : recherche et photo des produits pour les déchèteries.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

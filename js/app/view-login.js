@@ -54,7 +54,7 @@ export const loginView = {
     return html`<div class="login">
       <div class="login-in">
         <div class="login-brand"><img src="./assets/symbol-128.png" alt="" width="52" height="52"><b>TriDDS</b></div>
-        <div><h1>Le bon bac, en deux secondes.</h1>
+        <div><h1>Le bon bac, en une photo.</h1>
         <p class="lead" style="margin-top:8px">Cherchez un produit ou prenez-le en photo : TriDDS indique s'il va en EcoDDS, hors EcoDDS ou s'il doit être refusé.</p></div>
         ${resume}
         ${card}
