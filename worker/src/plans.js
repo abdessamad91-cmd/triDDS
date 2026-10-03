@@ -26,7 +26,7 @@ export const PLANS = {
   pro: {
     key: "pro",
     label: "Déchèterie",
-    price: 29,
+    price: 49,
     scans: 200,
     agents: 25,
     pitch: "Tout TriDDS pour une déchèterie, agents illimités.",
@@ -52,7 +52,7 @@ export const PLANS = {
     scans: 200,
     agents: 25,
     pitch: "À partir de 3 déchèteries, tarif dégressif par site.",
-    features: ["Tout l'offre Déchèterie, sur chaque site", "24 € par site dès 3 sites, 19 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
+    features: ["Tout l'offre Déchèterie, sur chaque site", "39 € par site dès 3 sites, 29 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
     public: true
   }
 };

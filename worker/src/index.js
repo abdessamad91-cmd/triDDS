@@ -849,7 +849,7 @@ async function handleSiteAdmin(request, env) {
   const catKey = "catalog-" + code;
   const cat = await readJsonKV(env.MEMORY_STORE, catKey) || { items: [] };
   if (action === "catalog-list") return json({ ok: true, items: cat.items || [] });
-  if (!payload.canManageCatalog) return json({ error: "La base produits du site est incluse à partir de l'offre Pro." }, 403);
+  if (!payload.canManageCatalog) return json({ error: "La base produits du site est incluse à partir de l'offre Déchèterie." }, 403);
   if (action === "catalog-save") {
     const entry = catalogEntry(body.item || {}, agent.name);
     if (!entry.n || !entry.x) return json({ error: "Nom et catégorie requis" }, 400);

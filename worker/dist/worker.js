@@ -28,7 +28,7 @@ const PLANS = {
   pro: {
     key: "pro",
     label: "Déchèterie",
-    price: 29,
+    price: 49,
     scans: 200,
     agents: 25,
     pitch: "Tout TriDDS pour une déchèterie, agents illimités.",
@@ -54,7 +54,7 @@ const PLANS = {
     scans: 200,
     agents: 25,
     pitch: "À partir de 3 déchèteries, tarif dégressif par site.",
-    features: ["Tout l'offre Déchèterie, sur chaque site", "24 € par site dès 3 sites, 19 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
+    features: ["Tout l'offre Déchèterie, sur chaque site", "39 € par site dès 3 sites, 29 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
     public: true
   }
 };
@@ -930,7 +930,7 @@ async function handleSiteAdmin(request, env) {
   const catKey = "catalog-" + code;
   const cat = await readJsonKV(env.MEMORY_STORE, catKey) || { items: [] };
   if (action === "catalog-list") return json({ ok: true, items: cat.items || [] });
-  if (!payload.canManageCatalog) return json({ error: "La base produits du site est incluse à partir de l'offre Pro." }, 403);
+  if (!payload.canManageCatalog) return json({ error: "La base produits du site est incluse à partir de l'offre Déchèterie." }, 403);
   if (action === "catalog-save") {
     const entry = catalogEntry(body.item || {}, agent.name);
     if (!entry.n || !entry.x) return json({ error: "Nom et catégorie requis" }, 400);

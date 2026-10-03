@@ -11,9 +11,9 @@ qui n'était jusqu'ici que dans le tableau de bord Cloudflare.
 - **Demandes d'accès** : `POST /api/request-access` enregistre la demande (clé KV `_requests`),
   et vous envoie un email (`NOTIFY_EMAIL`, réponse directe au prospect). Aucun email n'est envoyé à l'adresse
   saisie par le visiteur (pas de relais de spam). Limite de 5 demandes par heure et par adresse IP, champ piège anti-robot.
-- **Offres** (`src/plans.js`) : deux offres à la vente, « Déchèterie » 29 € HT par site et par mois
+- **Offres** (`src/plans.js`) : deux offres à la vente, « Déchèterie » 49 € HT par site et par mois
   (clé `pro`, 200 photos, agents illimités) et « Collectivité ou réseau » sur devis dès 3 sites (clé `enterprise`,
-  dégressif 24 € dès 3 sites, 19 € dès 10). Plus un **mois d'essai gratuit** : site en facturation `essai` avec une
+  dégressif 39 € dès 3 sites, 29 € dès 10). Plus un **mois d'essai gratuit** : site en facturation `essai` avec une
   date de fin ; passée cette date, l'analyse photo s'arrête, la recherche reste. Les anciennes clés (`free`,
   `essentiel`, `multisite`) restent reconnues pour les sites existants.
 - **Responsable autonome** : le responsable du site gère son équipe (ajout, retrait, transfert du rôle),
