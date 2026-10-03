@@ -50,9 +50,58 @@ input.addEventListener("input", debounce(showDemo, 80));
 $("[data-chips]").addEventListener("click", e => {
   const b = e.target.closest("[data-sample]");
   if (!b) return;
+  stopAutoDemo();
   input.value = b.dataset.sample;
+  markChip(b.dataset.sample);
   showDemo();
 });
+
+// La démo joue toute seule tant que le visiteur n'y touche pas : le nom se tape dans
+// le champ, le bac s'affiche, puis produit suivant. Le premier geste du visiteur l'arrête.
+function markChip(name) {
+  document.querySelectorAll("[data-sample]").forEach(b => b.classList.toggle("is-on", b.dataset.sample === name));
+}
+let autoTimer = null;
+let autoOn = false;
+function stopAutoDemo() {
+  if (!autoOn) return;
+  autoOn = false;
+  clearTimeout(autoTimer);
+  $(".demo").classList.remove("is-auto");
+}
+function startAutoDemo() {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) { input.value = SAMPLES[0]; markChip(SAMPLES[0]); showDemo(); return; }
+  autoOn = true;
+  $(".demo").classList.add("is-auto");
+  let i = 0;
+  const wait = ms => new Promise(r => { autoTimer = setTimeout(r, ms); });
+  (async () => {
+    await wait(900);
+    while (autoOn) {
+      const name = SAMPLES[i % SAMPLES.length];
+      markChip(name);
+      input.value = "";
+      for (const ch of name) {
+        if (!autoOn) return;
+        input.value += ch;
+        await wait(55 + Math.random() * 45);
+      }
+      showDemo();
+      await wait(3200);
+      i++;
+    }
+  })();
+}
+["pointerdown", "keydown", "focus"].forEach(ev => input.addEventListener(ev, stopAutoDemo));
+$("[data-chips]").addEventListener("pointerdown", stopAutoDemo);
+// Ne démarre que lorsque la démo est visible (sur mobile elle est sous le titre).
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver(entries => {
+    if (entries.some(e => e.isIntersecting)) { io.disconnect(); startAutoDemo(); }
+  }, { threshold: 0.4 });
+  io.observe($(".demo"));
+} else startAutoDemo();
 
 // ---------- offres ----------
 let yearly = false;
