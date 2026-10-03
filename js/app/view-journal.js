@@ -50,7 +50,7 @@ export const journalView = {
       const ok = e.target.closest("[data-ok]");
       if (ok) {
         const it = updateJournal(ok.dataset.ok, { reviewed: true, validationType: "confirmed" });
-        if (it && it.brand) learn(it.brand, it.name, it.flux, it.category);
+        if (it && it.brand && it.name !== "Produit non identifié" && it.category !== "Produits non ID ou Laboratoire") learn(it.brand, it.name, it.flux, it.category);
         app.updateTabs();
         return app.refresh();
       }

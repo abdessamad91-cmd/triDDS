@@ -49,7 +49,8 @@ async function showPhotoDemo() {
   if (run !== photoRun) return;
   const rows = PHOTO.products.map(({ q, label }) => {
     const r = search(q, 1)[0];
-    const d = destination(r);
+    const d = r && destination(r);
+    if (!d) return "";
     return html`<li class="${d.tone}">
       <span class="dm-k">${d.tone === "int" ? icon("alert") : html`<img src="./assets/${d.tone === "eco" ? "eco-dds-96" : "hors-eco-dds-96"}.png" alt="" width="28" height="28">`}</span>
       <span class="dm-t"><b>${d.bac}</b><small>${label} · ${d.kicker}</small></span>

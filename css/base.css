@@ -92,7 +92,7 @@ a { color: inherit; }
 .btn-danger { background: var(--paper); border-color: var(--int-line); color: var(--int-text); }
 .btn-block { width: 100%; }
 .btn-lg { min-height: 58px; font-size: 18px; border-radius: 14px; }
-.btn-sm { min-height: 36px; padding: 0 12px; font-size: 14px; border-radius: var(--r-s); }
+.btn-sm { min-height: 44px; padding: 0 14px; font-size: 14px; border-radius: var(--r-s); }
 .btn-icon { width: 48px; padding: 0; }
 
 /* ---------- champs ---------- */

@@ -3,7 +3,7 @@
 
 import { html, raw, icon, esc, toast, openSheet } from "../shared/ui.js";
 import { post } from "../shared/api.js";
-import { destination, seuilText, findByName, horsBacFor } from "../shared/catalog.js";
+import { destination, seuilText, findByName, horsBacFor , NON_ID } from "../shared/catalog.js";
 import { sess, isDemo, addHistory, addJournal, updateJournal } from "./store.js";
 import { photosFor, addLocalPhoto, refreshImages } from "./images.js";
 import { learn } from "./memory.js";
@@ -137,7 +137,8 @@ export const resultView = {
         r.validated = true;
         r.conf = Math.max(r.conf || 0, 80);
         const brand = r.aiData ? (r.aiData.marque || r.aiData.nom || r.n) : r.n;
-        learn(brand, r.n, r.f, r.x, "learn");
+        // Un produit non identifié ou absent de la base n'apprend rien à l'équipe (et n'envoie pas de photo).
+        if (isTeachable(r)) learn(brand, r.n, r.f, r.x, "learn");
         if (r.jrnId) updateJournal(r.jrnId, { reviewed: !r.seuilUnknown, validationType: "confirmed", confidence: r.conf, overSeuil: !!r.overSeuil });
         addHistory(r);
         saveCropAsReference(r);
@@ -190,8 +191,9 @@ function syncMulti(app, r) {
 }
 
 // Première photo validée d'un produit : elle devient une référence pour tous.
+const isTeachable = r => !!r && r.conf > 0 && !r.notInBase && r.x !== NON_ID && r.n !== "Produit non identifié";
 function saveCropAsReference(r) {
-  if (!r.cropImage || isDemo() || r._cropSaved) return;
+  if (!r.cropImage || isDemo() || r._cropSaved || !isTeachable(r)) return;
   const flux = r.overSeuil ? "H" : r.f;
   if (photosFor(r.n, flux).length) return;
   r._cropSaved = true;

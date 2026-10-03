@@ -27,7 +27,7 @@ export const profileView = {
             <dt>Accès</dt><dd>${offer}</dd>
           </dl>
           ${sess.trialExpired ? html`<p class="note hors" style="margin-top:12px">Votre mois d'essai est terminé. La recherche reste disponible ; pour continuer avec l'analyse photo, contactez TriDDS.</p>` : ""}
-          ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans analyse photo ni journal partagé.</p>`
+          ${isDemo() ? html`<p class="hint" style="margin-top:12px">Mode démonstration : recherche et guide complets, sans analyse photo ni mémoire d'équipe.</p>`
             : q.total ? html`<div class="meter ${pct <= 10 ? "low" : ""}"><div style="display:flex;justify-content:space-between"><b>Photos analysées</b><b>${q.left} restantes sur ${q.total}</b></div>
                 <div class="bar"><i style="width:${pct}%"></i></div><p>${q.kind === "mois" ? "Le compteur repart le 1er du mois." : "Essai offert par TriDDS."}</p></div>`
             : html`<p class="hint" style="margin-top:12px">L'analyse photo n'est pas incluse dans cet accès. La recherche reste illimitée.</p>`}
@@ -140,12 +140,13 @@ export const accessView = {
         <section class="card" style="display:grid;gap:12px">
           <div class="section-h">Code du site</div>
           <div class="codebox"><b>${access.code}</b><button class="btn btn-ghost btn-sm" data-copy>${icon("copy")}Copier</button></div>
-          <p class="hint">C'est le mot de passe du site : il est commun à toute l'équipe. Si vous l'avez transmis à quelqu'un qui ne devrait plus y avoir accès, changez-le. Tout le monde devra se reconnecter avec le nouveau code.</p>
+          <p class="hint">C'est le mot de passe du site : il est commun à toute l'équipe. Si vous l'avez transmis à quelqu'un qui ne devrait plus y avoir accès, changez-le. Le changement est confirmé par un lien envoyé à l'email de récupération, puis tout le monde se reconnecte avec le nouveau code.</p>
+          ${access.pending ? html`<div class="note">${icon("mail")}<span>Demande en attente de confirmation (${access.pending.type === "code" ? "changement de code" : "nouvel email"}) : un lien a été envoyé à ${access.pending.sentTo}. Il est valable 24 h.</span></div>` : ""}
           <button class="btn btn-ghost" data-change>${icon("refresh")}Changer le code du site</button>
         </section>
         <form class="card" data-email style="display:grid;gap:12px">
           <div class="section-h">Email de récupération</div>
-          <p class="hint">Reçoit le code en cas d'oubli (bouton « Code oublié » à la connexion) et à chaque changement de code.</p>
+          <p class="hint">Reçoit le code en cas d'oubli (bouton « Code oublié » à la connexion) et à chaque changement de code. Pour la remplacer, un lien de confirmation est envoyé à l'adresse actuelle.</p>
           <label class="field"><span>Email du responsable</span><input class="input" type="email" name="email" value="${access.recoveryEmail}" required autocomplete="email"></label>
           <button class="btn btn-primary" type="submit">Enregistrer</button>
         </form>` : html`<div class="empty-state"><span class="spinner"></span></div>`}
@@ -161,14 +162,18 @@ export const accessView = {
     });
     el.querySelector("[data-email]").addEventListener("submit", async e => {
       e.preventDefault();
-      try { const d = await siteCall("set-recovery-email", { email: e.target.email.value.trim() }); access.recoveryEmail = d.recoveryEmail; toast("Email enregistré"); } catch (err) { app.handleError(err); }
+      try {
+        const d = await siteCall("set-recovery-email", { email: e.target.email.value.trim() });
+        if (d.pending) { access.pending = { type: "email", sentTo: d.sentTo }; toast("Lien de confirmation envoyé à " + d.sentTo + ". L'adresse changera après confirmation.", { ms: 8000 }); app.refresh(); }
+        else { access.recoveryEmail = d.recoveryEmail; toast("Email enregistré"); }
+      } catch (err) { app.handleError(err); }
     });
     el.querySelector("[data-change]").addEventListener("click", () => {
       openSheet({
         title: "Changer le code du site",
-        body: html`<p>Tous les agents seront déconnectés et devront saisir le nouveau code. Il sera aussi envoyé à ${access.recoveryEmail || "l'email de récupération"}.</p>
-          <label class="field"><span>Nouveau code (ou laissez vide pour en générer un)</span><input class="input code-input" data-new placeholder="Ex. : NANC-2026" autocapitalize="characters" autocomplete="off"></label>
-          <p class="hint">6 à 24 caractères : lettres, chiffres et tirets.</p>`.toString(),
+        body: html`<p>Un lien de confirmation sera envoyé à ${access.recoveryEmail || "l'email de récupération"}. Après confirmation, tous les agents seront déconnectés et le nouveau code sera envoyé à cette adresse.</p>
+          <label class="field"><span>Nouveau code (ou laissez vide pour en générer un)</span><input class="input code-input" data-new placeholder="Ex. : NANC-7K2P4F" autocapitalize="characters" autocomplete="off"></label>
+          <p class="hint">Préfixe, tiret, puis au moins 6 lettres et chiffres mélangés. Le plus simple : laisser vide.</p>`.toString(),
         foot: `<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-int" data-go>Changer le code</button>`,
         onMount(sheet, close) {
           const input = sheet.querySelector("[data-new]");
@@ -179,10 +184,9 @@ export const accessView = {
             try {
               const d = await siteCall("change-code", { newCode: input.value.trim() });
               close();
-              clearSess();
-              try { localStorage.setItem("tridds_last", JSON.stringify({ code: d.code, site: sess.site || "", agent: "" })); } catch (err) { /* ignore */ }
-              toast("Nouveau code : " + d.code + (d.emailSent ? " (envoyé par email)" : ""), { ms: 8000 });
-              app.go("login", { replace: true });
+              access.pending = { type: "code", sentTo: d.sentTo };
+              toast("Lien de confirmation envoyé à " + d.sentTo + ". Le code changera après confirmation.", { ms: 8000 });
+              app.refresh();
             } catch (err) { btn.disabled = false; btn.textContent = "Changer le code"; app.handleError(err); }
           });
         }

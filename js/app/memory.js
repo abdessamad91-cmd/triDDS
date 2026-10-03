@@ -15,7 +15,7 @@ export async function syncMemory() {
   if (isDemo()) return;
   if (!sess.memoryEnabled) { setBrands(cache.localMemory.brands); return; }
   try {
-    const d = await post("memory-get", { code: sess.code }, { timeout: 12000 });
+    const d = await post("memory-get", { code: sess.code, agent: sess.agent, sessionId: sess.sessionId }, { timeout: 12000 });
     if (d && d.brands) setBrands(d.brands);
   } catch (e) { /* hors ligne : on garde l'état courant */ }
 }
