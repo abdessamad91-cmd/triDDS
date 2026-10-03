@@ -7,7 +7,6 @@ import { searchMany, search, fluxForCategory, NON_ID } from "../shared/catalog.j
 import { sess } from "./store.js";
 import { memory } from "./memory.js";
 
-const SYS = window.TRIDDS_PROMPT || "";
 
 export function toJpeg(dataUrl, max = 1280, quality = 0.8) {
   return new Promise((resolve, reject) => {
@@ -46,16 +45,7 @@ export function crop(src, bb) {
   });
 }
 
-function memoryContext() {
-  const entries = Object.entries(memory.brands || {}).sort((a, b) => (b[1].n || 0) - (a[1].n || 0)).slice(0, 60);
-  if (!entries.length) return "";
-  return "\n\nMarques déjà identifiées par l'équipe de ce site :\n" + entries.map(([b, e]) => `- "${b}" → ${e.p} [${e.c} / ${e.f === "E" ? "EcoDDS" : "Hors EcoDDS"}] (vu ${e.n} fois)`).join("\n");
-}
 
-const PROMPT = `Analyse cette photo prise en déchèterie (local DDS). Pour CHAQUE produit distinct visible :
-1) lis le texte exact de l'étiquette ; 2) déduis le type si l'emballage est reconnaissable ; 3) estime le volume ou la masse du contenant ;
-4) classe-le dans le référentiel (nom_referentiel, categorie, filiere) en traduisant les noms commerciaux ; 5) donne sa position bbox={x,y,w,h} en % de l'image ; 6) donne une confiance de 0 à 100.
-Réponds UNIQUEMENT en JSON : {"produits":[{"texte_lu":"","nom":"","marque":"","nom_referentiel":"","categorie":"","filiere":"EcoDDS|Hors EcoDDS|Cas spécial","volume_estime":"","confiance":0,"consigne":"","bbox":{"x":0,"y":0,"w":0,"h":0}}]}`;
 
 function parseProducts(text) {
   const m = (text || "").match(/\{[\s\S]*\}/);
@@ -80,9 +70,8 @@ function dedupe(prods) {
 
 async function callModel(b64, model, mode) {
   const d = await post("analyze", {
-    // Worker v2 : consignes côté serveur, seule la mémoire du site est envoyée (context).
-    // Worker v1 : utilise system et prompt.
-    image: b64, mime: "image/jpeg", system: SYS, prompt: PROMPT + memoryContext(), context: memoryContext().trim(),
+    // Consignes et mémoire du site sont assemblées côté serveur : on n'envoie que l'image.
+    image: b64, mime: "image/jpeg",
     model, mode, code: sess.code, agent: sess.agent, sessionId: sess.sessionId
   }, { timeout: model === "sonnet" ? 60000 : 40000 });
   const text = d.content && d.content[0] ? d.content[0].text : "";

@@ -71,7 +71,10 @@ export const app = {
   },
   updateQuota() {
     const chip = root.querySelector(".quota-chip");
-    if (chip) chip.outerHTML = String(quotaChip());
+    if (!chip) return;
+    chip.outerHTML = String(quotaChip());
+    const fresh = root.querySelector(".quota-chip");
+    if (fresh) fresh.addEventListener("click", () => app.go(fresh.dataset.tabGo, { replace: true }));
   },
   updateTabs: () => renderTabs(),
 

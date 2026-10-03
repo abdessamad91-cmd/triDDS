@@ -151,6 +151,7 @@ async function startSession(app, agent, force = false) {
       const where = e.data && e.data.activeSession ? e.data.activeSession.deviceName : "un autre appareil";
       const ok = await confirmDialog({ title: `${agent} est déjà connecté`, message: `Une session est ouverte sur ${where}. Continuer ici fermera l'autre session.`, ok: "Continuer ici" });
       if (ok) return startSession(app, agent, true);
+      app.refresh();
       return;
     }
     msg = { kind: "err", text: e.message || "Connexion impossible" };

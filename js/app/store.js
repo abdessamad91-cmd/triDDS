@@ -45,7 +45,8 @@ export function quota() {
   if (sess.monthlyLimit > 0) return { total: sess.monthlyLimit, left: sess.monthlyRemaining || 0, kind: "mois" };
   return { total: sess.trialTotal || 0, left: sess.trialRemaining || 0, kind: "essai" };
 }
-export const hasAi = () => quota().left > 0;
+// Le serveur fait foi : il autorise aussi le reliquat d'essai quand le quota mensuel est épuisé.
+export const hasAi = () => (sess.aiEnabled === true) || (sess.monthlyRemaining || 0) > 0 || ((sess.trialRemaining || 0) > 0 && !sess.trialExpired);
 
 export function deviceName() {
   const ua = navigator.userAgent || "";

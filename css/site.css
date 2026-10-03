@@ -37,7 +37,7 @@ body.site { background: var(--concrete); }
 .demo .search-field svg { width: 22px; height: 22px; margin-left: 12px; color: var(--muted); }
 .demo .search-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; height: 54px; font-size: 19px; padding: 0 10px; }
 .demo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.demo-chips button { padding: 6px 12px; border-radius: 999px; background: var(--paper-2); border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; }
+.demo-chips button { min-height: 40px; padding: 6px 14px; border-radius: 999px; background: var(--paper-2); border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; }
 .demo-chips button:hover { border-color: var(--ink-2); }
 .demo-chips button.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .demo-chips .chip-photo { display: inline-flex; align-items: center; gap: 6px; border-color: var(--ink-2); }

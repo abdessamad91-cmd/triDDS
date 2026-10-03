@@ -30,8 +30,8 @@ export const PLANS = {
     price: 49,
     scans: 200,
     agents: 25,
-    pitch: "Tout TriDDS pour une déchèterie, agents illimités.",
-    features: ["Tous les agents du site (jusqu'à 25 profils)", "200 photos analysées par mois", "Recherche illimitée, même sans réseau", "Mémoire de l'équipe", "Photos de référence et fiches du site", "Journal des tris"],
+    pitch: "Tout TriDDS pour une déchèterie et toute son équipe.",
+    features: ["Tous les agents du site (jusqu'à 25 profils)", "200 photos analysées par mois", "Recherche illimitée, même sans réseau", "Mémoire de l'équipe", "Photos de référence et fiches du site", "Journal des tris sur chaque téléphone"],
     public: true,
     featured: true
   },
