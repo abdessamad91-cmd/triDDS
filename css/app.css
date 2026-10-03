@@ -243,6 +243,12 @@ body.app { background: var(--concrete); min-height: 100dvh; overscroll-behavior-
 .name-btn small { margin-left: auto; font-size: 13px; color: var(--muted); font-weight: 600; }
 .login-err { color: var(--int-text); background: var(--int-soft); border-radius: var(--r-s); padding: 10px 12px; font-size: 15px; font-weight: 600; }
 .login-ok { color: var(--eco-text); background: var(--eco-soft); border-radius: var(--r-s); padding: 10px 12px; font-size: 15px; font-weight: 600; }
+.login-discover { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18); color: #fff; text-decoration: none; min-height: 44px; }
+.login-discover > div { flex: 1; display: grid; gap: 3px; }
+.login-discover b { font-weight: 700; font-size: 16px; }
+.login-discover span { font-size: 14px; line-height: 1.35; color: rgba(255, 255, 255, .78); }
+.login-discover svg { width: 20px; height: 20px; flex-shrink: 0; opacity: .7; }
+.login-discover:hover { background: rgba(255, 255, 255, .14); }
 .login-foot { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; padding: 16px 20px calc(18px + var(--safe-b)); font-size: 15px; }
 .login-foot a, .login-foot button { color: rgba(255, 255, 255, .8); text-decoration: underline; text-underline-offset: 3px; min-height: 40px; }
 .resume { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r); background: rgba(255, 255, 255, .08); border: 1.5px solid rgba(255, 255, 255, .18); color: #fff; text-align: left; width: 100%; }

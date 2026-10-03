@@ -114,7 +114,9 @@ body.site { background: var(--concrete); }
 .site-foot { background: var(--ink); color: rgba(255, 255, 255, .7); padding: 28px 0; font-size: 15px; }
 .site-foot .site-w { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; }
 .site-foot a { color: rgba(255, 255, 255, .85); }
-.site-foot .grow { margin-right: auto; }
+.site-foot .grow { margin-right: auto; flex-basis: 100%; line-height: 1.5; }
+.site-foot .grow a { text-decoration: none; }
+.site-foot .grow a:hover { text-decoration: underline; }
 
 /* ---------- page d'activation (ancienne redirection Stripe) ---------- */
 .center-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
