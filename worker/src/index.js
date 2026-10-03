@@ -5,12 +5,30 @@
 import { PLANS, planOf, planLabel } from "./plans.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
 
+// Origines autorisées à appeler l'API depuis un navigateur : le site et ses adresses techniques.
+// (Les images restent lisibles de partout : balises <img>.)
+const ALLOWED_ORIGINS = ["https://tridds.com", "https://www.tridds.com", "https://abdessamad91-cmd.github.io", "http://localhost:8765", "http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:8765"];
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://tridds.com",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Vary": "Origin",
   "Content-Type": "application/json"
 };
+function allowedOrigin(request) {
+  const origin = request.headers.get("Origin") || "";
+  const ok = ALLOWED_ORIGINS.includes(origin) || /^https:\/\/[a-z0-9-]+\.abdessamad91\.workers\.dev$/.test(origin);
+  return ok ? origin : "https://tridds.com";
+}
+// Pose l'origine autorisée sur la réponse, par requête (pas d'état partagé entre requêtes).
+function withCors(request, res) {
+  const out = new Response(res.body, res);
+  if (!(out.headers.get("Access-Control-Allow-Origin") === "*" && out.headers.get("Content-Type")?.startsWith("image/"))) {
+    out.headers.set("Access-Control-Allow-Origin", allowedOrigin(request));
+    out.headers.set("Vary", "Origin");
+  }
+  return out;
+}
 
 const SESSION_TIMEOUT_MINUTES = 30;
 const MAX_IMAGE_B64 = 7 * 1024 * 1024; // ~5 Mo d'image
@@ -694,6 +712,11 @@ async function handleAdmin(request, env) {
     await writeJsonKV(env.AUTH_STORE, "_index", index);
     await env.MEMORY_STORE.delete("mem-" + code);
     await env.MEMORY_STORE.delete("catalog-" + code);
+    // Photos du site : objets R2 effacés, liste supprimée, cache public vidé.
+    const imgs = await readJsonKV(env.MEMORY_STORE, "images-" + code);
+    if (imgs && env.IMAGES_BUCKET) for (const i of imgs.items || []) { if (i.r2Key && (i.r2Key.startsWith(code + "/") || i.r2Key.startsWith("img/"))) { try { await env.IMAGES_BUCKET.delete(i.r2Key); } catch (e) {} } }
+    await env.MEMORY_STORE.delete("images-" + code);
+    await purgePublicImagesCache(request);
     return json({ ok: true });
   }
 
@@ -1355,7 +1378,7 @@ async function handleCatImages(request, env) {
     return json({ ok: true, categories: data.categories }, 200, { "Cache-Control": "public, max-age=300" });
   }
   const body = await request.json().catch(() => ({}));
-  if (!isAdminRequest(request, env) && !safeEqual(body.adminKey, env.TRIDDS_ADMIN_KEY)) return json({ error: "Non autorisé" }, 403);
+  if (!isAdminRequest(request, env)) return json({ error: "Non autorisé" }, 401);
   const category = clip(body.category, 120);
   if (!category) return json({ error: "Catégorie requise" }, 400);
   if ((body.action || "save") === "delete") {
@@ -1405,6 +1428,9 @@ const GONE = json.bind(null, { error: "Les accès TriDDS sont créés sur demand
 
 export default {
   async fetch(request, env, ctx) {
+    return withCors(request, await this.route(request, env, ctx));
+  },
+  async route(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response("", { status: 204, headers: CORS });
     const path = new URL(request.url).pathname.replace(/\/+$/, "");
 

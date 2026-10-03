@@ -74,6 +74,7 @@ export const scanView = {
       const f = ev.target.files && ev.target.files[0];
       if (!f) return;
       if (!/^image\//.test(f.type)) return toast("Choisissez une image.", { error: true });
+      if (/heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name || "")) return toast("Photo au format HEIC non lisible ici : prenez la photo directement avec le bouton, ou réglez l'appareil photo sur « Le plus compatible ».", { error: true, ms: 6000 });
       const fr = new FileReader();
       fr.onload = () => review(fr.result);
       fr.readAsDataURL(f);

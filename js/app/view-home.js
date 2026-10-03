@@ -91,6 +91,7 @@ export function openProduct(app, p) {
 
 export function startScan(app) {
   if (isDemo()) return toast("L'analyse photo est disponible avec un code d'accès.", { ms: 3600 });
+  if (navigator.onLine === false) return toast("Pas de réseau : l'analyse photo a besoin d'une connexion. La recherche par nom reste disponible.", { error: true, ms: 4500 });
   if (!hasAi()) {
     return toast(sess.trialExpired ? "Mois d'essai terminé. La recherche reste disponible ; contactez TriDDS pour continuer avec l'analyse photo." : sess.monthlyLimit > 0 ? "Quota de photos du mois atteint. Il repart le 1er du mois." : "L'analyse photo n'est pas incluse dans cet accès.", { error: true, ms: 4500 });
   }
