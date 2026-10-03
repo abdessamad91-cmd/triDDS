@@ -1,0 +1,53 @@
+name: Déployer le Worker
+
+# Déploie l'API TriDDS (Cloudflare Worker wild-morning-f974) à chaque fusion sur main
+# qui touche le dossier worker/. Peut aussi être lancé à la main (onglet Actions › Run workflow).
+#
+# Secrets à créer une fois dans GitHub › Settings › Secrets and variables › Actions :
+#   CLOUDFLARE_API_TOKEN  : jeton API Cloudflare avec le modèle « Edit Cloudflare Workers »
+#   CLOUDFLARE_ACCOUNT_ID : identifiant du compte (Cloudflare › Workers & Pages, colonne de droite)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/src/**"
+      - "worker/wrangler.toml"
+      - ".github/workflows/deploy-worker.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: wrangler deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier que les secrets sont présents
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+            echo "::error::Secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID manquants (GitHub › Settings › Secrets and variables › Actions)."
+            exit 1
+          fi
+
+      - name: Déployer sur Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy
+
+      - name: Vérifier que l'API répond
+        run: |
+          body=$(curl -fsS https://wild-morning-f974.abdessamad91.workers.dev/)
+          echo "$body"
+          echo "$body" | grep -q "TriDDS API v2 OK"

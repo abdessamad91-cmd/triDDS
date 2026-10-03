@@ -36,7 +36,7 @@ export const profileView = {
         ${resp && !isDemo() ? html`<nav class="menu" aria-label="Outils du responsable">
           <button class="menu-item" data-go="access">${icon("lock")}<div><b>Accès du site</b><span>Code du site, email de récupération</span></div>${icon("chevron")}</button>
           ${!sess.teamLocked ? html`<button class="menu-item" data-go="team">${icon("team")}<div><b>Mon équipe</b><span>Ajouter ou retirer un agent, désigner le responsable</span></div>${icon("chevron")}</button>` : ""}
-          <button class="menu-item" data-go="catalog">${icon("box")}<div><b>Produits du site</b><span>${sess.canManageCatalog ? "Fiches propres à votre déchèterie" : "Inclus à partir de l'offre Pro"}</span></div>${icon("chevron")}</button>
+          <button class="menu-item" data-go="catalog">${icon("box")}<div><b>Produits du site</b><span>${sess.canManageCatalog ? "Fiches propres à votre déchèterie" : "Inclus à partir de l'offre Déchèterie"}</span></div>${icon("chevron")}</button>
           <button class="menu-item" data-go="memory">${icon("brain")}<div><b>Mémoire de l'équipe</b><span>${memoryCount()} marque${memoryCount() > 1 ? "s" : ""} reconnue${memoryCount() > 1 ? "s" : ""} par les photos</span></div>${icon("chevron")}</button>
         </nav>` : ""}
 
@@ -200,7 +200,7 @@ export const catalogView = {
     return html`${topbar({ title: "Produits du site", back: true })}
       <div class="profile wrap">
         <p class="hint">Ajoutez les produits propres à votre déchèterie : ils apparaissent dans la recherche de toute l'équipe.</p>
-        ${can ? html`<button class="btn btn-primary btn-lg" data-new>${icon("plus")}Nouvelle fiche</button>` : html`<div class="note">La base produits du site est incluse à partir de l'offre Pro.</div>`}
+        ${can ? html`<button class="btn btn-primary btn-lg" data-new>${icon("plus")}Nouvelle fiche</button>` : html`<div class="note">La base produits du site est incluse à partir de l'offre Déchèterie.</div>`}
         <div class="rows" data-list>${items ? (items.length ? items.map((it, i) => productRow(it, `data-i="${i}"`)) : html`<p class="hint">Aucune fiche ajoutée pour l'instant.</p>`) : html`<div class="empty-state"><span class="spinner"></span></div>`}</div>
       </div>`.toString();
   },

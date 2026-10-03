@@ -11,9 +11,9 @@ qui n'était jusqu'ici que dans le tableau de bord Cloudflare.
 - **Demandes d'accès** : `POST /api/request-access` enregistre la demande (clé KV `_requests`),
   et vous envoie un email (`NOTIFY_EMAIL`, réponse directe au prospect). Aucun email n'est envoyé à l'adresse
   saisie par le visiteur (pas de relais de spam). Limite de 5 demandes par heure et par adresse IP, champ piège anti-robot.
-- **Offres** (`src/plans.js`) : deux offres à la vente, « Déchèterie » 29 € HT par site et par mois
+- **Offres** (`src/plans.js`) : deux offres à la vente, « Déchèterie » 49 € HT par site et par mois
   (clé `pro`, 200 photos, agents illimités) et « Collectivité ou réseau » sur devis dès 3 sites (clé `enterprise`,
-  dégressif 24 € dès 3 sites, 19 € dès 10). Plus un **mois d'essai gratuit** : site en facturation `essai` avec une
+  dégressif 39 € dès 3 sites, 29 € dès 10). Plus un **mois d'essai gratuit** : site en facturation `essai` avec une
   date de fin ; passée cette date, l'analyse photo s'arrête, la recherche reste. Les anciennes clés (`free`,
   `essentiel`, `multisite`) restent reconnues pour les sites existants.
 - **Responsable autonome** : le responsable du site gère son équipe (ajout, retrait, transfert du rôle),
@@ -44,7 +44,22 @@ node test/dev-server.mjs 8787 # API locale avec des données d'exemple
 
 Après une modification des consignes dans `data.js` : `node scripts/build-prompt.mjs`.
 
-## Déployer sans rien installer (depuis le tableau de bord Cloudflare)
+## Déploiement automatique (GitHub Actions)
+
+Le workflow `.github/workflows/deploy-worker.yml` lance `wrangler deploy` à chaque fusion sur `main`
+qui modifie `worker/src/` ou `wrangler.toml`, puis vérifie que l'API répond. Il peut aussi être lancé
+à la main (onglet *Actions* › *Déployer le Worker* › *Run workflow*).
+
+Deux secrets à créer une fois dans GitHub › *Settings* › *Secrets and variables* › *Actions* :
+
+- `CLOUDFLARE_API_TOKEN` : Cloudflare › *My Profile* › *API Tokens* › *Create Token* › modèle
+  **Edit Cloudflare Workers** (laisser les droits par défaut, limiter au compte si proposé).
+- `CLOUDFLARE_ACCOUNT_ID` : Cloudflare › *Workers & Pages*, « Account ID » dans la colonne de droite.
+
+Les secrets du Worker (`TRIDDS_ADMIN_KEY`, `ANTHROPIC_API_KEY`, `RESEND_*`, `NOTIFY_EMAIL`) et les bindings
+restent dans Cloudflare : `wrangler deploy` ne les touche pas.
+
+## Déployer sans rien installer (depuis le tableau de bord Cloudflare, méthode de secours)
 
 Le fichier `dist/worker.js` contient tout le Worker en un seul morceau (généré par `node scripts/bundle.mjs`,
 testé à l'identique des sources).
