@@ -33,7 +33,7 @@ export const adm = {
   },
   go(view) {
     adm.view = view;
-    history.replaceState(null, "", "#" + view);
+    if (location.hash !== "#" + view) history.pushState(null, "", "#" + view);
     render();
   },
   render: () => render(),
@@ -84,9 +84,18 @@ function renderLogin(msg = "") {
 }
 
 function start() {
+  routeFromHash();
+  window.addEventListener("popstate", () => { document.querySelectorAll(".drawer-back").forEach(b => b.remove()); routeFromHash(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || "")) { const q = document.querySelector("[data-q]"); if (q) { e.preventDefault(); q.focus(); } }
+  });
+}
+// Navigation par adresse : #sites, #demandes… et #sites/CODE pour ouvrir directement une fiche.
+function routeFromHash() {
   const h = location.hash.slice(1);
-  if (VIEWS[h]) adm.view = h;
-  render();
+  const [view, arg] = h.split("/");
+  if (VIEWS[view]) adm.view = view;
+  render().then(() => { if (view === "sites" && arg) openSite(adm, decodeURIComponent(arg)); });
 }
 
 async function render() {

@@ -46,6 +46,43 @@ function planOptions(selected) {
   return PLAN_ORDER.filter(k => PLANS[k].public || k === selected || k === "free").map(k => html`<option value="${k}" ${raw(k === selected ? "selected" : "")}>${PLANS[k].label}${PLANS[k].price ? ` (${PLANS[k].price} € par site)` : PLANS[k].price === 0 ? " (recherche seule)" : " (devis)"}</option>`);
 }
 const plusDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const plusMonths = n => { const d = new Date(); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10); };
+const frDate = iso => iso ? iso.split("-").reverse().join("/") : "";
+// Même règle que le serveur pour le préfixe du code : 4 lettres du nom de la commune.
+const CODE_SKIP = ["dechetterie", "decheterie", "decheteries", "site", "centre", "ecopoint", "de", "du", "des", "la", "le", "les", "d", "l", "sur", "en"];
+function codePrefix(siteName) {
+  const w = (siteName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z]+/).filter(x => x && !CODE_SKIP.includes(x));
+  return (w[0] || "tri").slice(0, 4).toUpperCase();
+}
+
+// Formules proposées à la création : chacune remplit offre, facturation, échéance et quotas.
+export const FORMULES = [
+  { id: "essai", label: "Mois d'essai gratuit", hint: "Recommandé pour commencer : accès complet 30 jours, rien n'est facturé.", plan: "pro", billing: "essai", until: () => plusDays(TRIAL_DAYS) },
+  { id: "mensuel", label: "Déchèterie, mensuel", hint: "49 € HT par mois, facture mensuelle.", plan: "pro", billing: "mensuelle", until: () => plusMonths(1) },
+  { id: "annuel", label: "Déchèterie, annuel", hint: "490 € HT par an, 2 mois offerts.", plan: "pro", billing: "annuelle", until: () => plusMonths(12) },
+  { id: "reseau", label: "Collectivité ou réseau", hint: "Dès 3 déchèteries, sur devis : un accès par site.", plan: "enterprise", billing: "", until: () => "" },
+  { id: "decouverte", label: "Découverte (démo)", hint: "Recherche seule, quelques photos offertes. Pour une démonstration.", plan: "free", billing: "offert", until: () => "", trialTotal: 20 }
+];
+function formuleCards(selected) {
+  return html`<div class="formules" role="radiogroup" aria-label="Formule">${FORMULES.map(f => html`<label class="formule ${f.id === selected ? "on" : ""}"><input type="radio" name="formule" value="${f.id}" ${raw(f.id === selected ? "checked" : "")}><b>${f.label}</b><span>${f.hint}</span></label>`)}</div>`;
+}
+// Résumé en clair de ce que le site obtiendra, mis à jour en direct.
+function formuleSummary(f, { site = "", email = "", scansOverride = "", agentsOverride = "" } = {}) {
+  const p = PLANS[f.plan];
+  const scans = scansOverride !== "" ? Number(scansOverride) : p.scans;
+  const agents = agentsOverride !== "" ? Number(agentsOverride) : p.agents;
+  const until = f.until();
+  const parts = [];
+  if (f.billing === "essai") parts.push(`accès complet jusqu'au ${frDate(until)}, puis l'analyse photo s'arrête tant que vous ne passez pas le site en facturation`);
+  else if (f.billing === "mensuelle" || f.billing === "annuelle") parts.push(`payé jusqu'au ${frDate(until)} (à mettre à jour à chaque facture)`);
+  else if (f.id === "reseau") parts.push("facturation sur devis, échéance à renseigner");
+  else parts.push("sans facturation");
+  parts.push(scans ? `${scans} photos analysées par mois` : f.trialTotal ? `${f.trialTotal} photos offertes en tout, recherche illimitée` : "recherche seule, pas d'analyse photo");
+  parts.push(agents ? `jusqu'à ${agents} profils` : "profils illimités");
+  if (f.plan !== "free") parts.push("mémoire d'équipe et journal partagé");
+  const code = site ? `Code du site : ${codePrefix(site)}-xxxxxx, généré à la création` : "Le code du site est généré à la création";
+  return html`<div class="note eco" data-summary><b>Ce que le site obtient</b><br>${parts.join(" · ")}.<br><span class="hint">${code}${email ? ` et envoyé à ${email}` : ", à transmettre au responsable"}.</span></div>`;
+}
 
 export function welcomeText(site, code, agents = [], responsable = "") {
   return `Bonjour${responsable ? " " + responsable : ""},
@@ -63,71 +100,72 @@ Ce code donne accès au site : merci de ne le transmettre qu'à votre équipe.`;
 // ---------- création ----------
 export function openCreate(adm, req = null) {
   const r = req || {};
-  const plan = r.plan && PLANS[r.plan] && PLANS[r.plan].public ? r.plan : "pro";
-  const trial = req ? !!r.trial : true;
+  const formuleInit = req ? (r.trial ? "essai" : r.plan === "enterprise" ? "reseau" : r.plan === "pro" ? "mensuel" : "essai") : "essai";
   openDrawer({
     title: req ? "Créer l'accès demandé" : "Créer un accès",
-    sub: req ? `${r.organisation}, demande du ${new Date(r.createdAt).toLocaleDateString("fr-FR")}` : "Seule façon d'ouvrir TriDDS à un site",
-    body: html`<form data-create style="display:grid;gap:14px">
+    sub: req ? `${r.organisation}, demande du ${new Date(r.createdAt).toLocaleDateString("fr-FR")}` : "Trois étapes : le site, l'équipe, la formule.",
+    body: html`<form data-create style="display:grid;gap:16px">
+      <div class="section-h">1. Le site</div>
       <div class="grid2">
-        <label class="field"><span>Structure</span><input class="input" name="client" value="${r.organisation || ""}" placeholder="Commune, syndicat, exploitant"></label>
-        <label class="field"><span>Nom du site</span><input class="input" name="site" value="${r.siteName || ""}" required placeholder="Déchèterie de…"></label>
+        <label class="field"><span>Nom du site</span><input class="input" name="site" value="${r.siteName || ""}" required placeholder="Déchèterie de Ludres" autofocus><span class="hint">Tel qu'il s'affichera aux agents.</span></label>
+        <label class="field"><span>Structure</span><input class="input" name="client" value="${r.organisation || ""}" placeholder="Commune, syndicat ou exploitant"><span class="hint">Facultatif, pour vos factures.</span></label>
       </div>
+      <div class="section-h">2. L'équipe</div>
       <div class="grid2">
-        <label class="field"><span>Responsable du site</span><input class="input" name="responsable" value="${r.name || ""}" placeholder="Prénom Nom"></label>
-        <label class="field"><span>Email du responsable</span><input class="input" type="email" name="principalEmail" value="${r.email || ""}"></label>
+        <label class="field"><span>Responsable du site</span><input class="input" name="responsable" value="${r.name || ""}" placeholder="Prénom Nom"><span class="hint">Il gère l'équipe depuis l'appli et reçoit le code.</span></label>
+        <label class="field"><span>Email du responsable</span><input class="input" type="email" name="principalEmail" value="${r.email || ""}" placeholder="prenom@collectivite.fr"><span class="hint">Code, « code oublié », confirmations et récapitulatif mensuel.</span></label>
       </div>
-      <label class="field"><span>Agents (un par ligne)</span><textarea class="textarea" name="agents" placeholder="Prénom Nom"></textarea><span class="hint">Les noms affichés à la connexion. Le responsable est ajouté automatiquement.</span></label>
-      <label class="check"><input type="checkbox" name="trial" ${raw(trial ? "checked" : "")}><span><b>Mois d'essai gratuit</b><br><span class="hint">Accès complet jusqu'au ${plusDays(TRIAL_DAYS).split("-").reverse().join("/")}. Ensuite, l'analyse photo s'arrête jusqu'à ce que vous passiez le site en facturation.</span></span></label>
-      <label class="field"><span>Offre</span><select class="select" name="plan">${planOptions(plan)}</select></label>
-      <label class="check"><input type="checkbox" name="teamLocked" checked><span><b>Profils gérés par TriDDS</b><br><span class="hint">Le responsable du site ne peut ni ajouter ni retirer d'agents depuis l'appli. Décoché : il le peut, dans la limite de l'offre.</span></span></label>
-      <details><summary class="hint" style="cursor:pointer">Options avancées</summary>
+      <label class="field"><span>Agents (un par ligne, facultatif)</span><textarea class="textarea" name="agents" placeholder="Prénom Nom&#10;Prénom Nom"></textarea><span class="hint">Le responsable est ajouté automatiquement. L'équipe peut aussi être complétée plus tard, par vous ou par le responsable.</span></label>
+      <div class="section-h">3. La formule</div>
+      ${formuleCards(formuleInit)}
+      <div data-summary-box></div>
+      <details><summary class="hint" style="cursor:pointer">Réglages particuliers (rarement utiles)</summary>
         <div style="display:grid;gap:12px;margin-top:12px">
           <div class="grid2">
-            <label class="field"><span>Code personnalisé (facultatif)</span><input class="input mono" name="code" placeholder="généré automatiquement" style="text-transform:uppercase"></label>
-            <label class="field"><span>Facturation (si pas d'essai)</span><select class="select" name="billing"><option value="">À définir</option><option value="mensuelle">Mensuelle</option><option value="annuelle">Annuelle</option><option value="offert">Offert</option></select></label>
-            <label class="field"><span>Scans d'essai hors quota</span><input class="input" type="number" name="trialTotal" min="0" value="0"><span class="hint">Pour un site Découverte, sinon laisser 0.</span></label>
+            <label class="field"><span>Photos analysées par mois</span><input class="input" type="number" name="scansOverride" min="0" placeholder="selon la formule"><span class="hint">Laissez vide pour garder le quota de la formule.</span></label>
+            <label class="field"><span>Nombre de profils maximum</span><input class="input" type="number" name="agentsOverride" min="0" placeholder="selon la formule"><span class="hint">Laissez vide pour garder la limite de la formule.</span></label>
           </div>
           <div class="grid2">
-            <label class="field"><span>Quota de scans mensuel (si différent de l'offre)</span><input class="input" type="number" name="scansOverride" min="0"></label>
-            <label class="field"><span>Nombre d'agents max (si différent)</span><input class="input" type="number" name="agentsOverride" min="1"></label>
+            <label class="field"><span>Code du site</span><input class="input mono" name="code" placeholder="généré automatiquement" style="text-transform:uppercase"><span class="hint">Forme NANC-7K2P4F. Laissez vide : le serveur en tire un.</span></label>
+            <label class="check" style="align-self:end"><input type="checkbox" name="teamLocked"><span><b>Équipe gérée par TriDDS uniquement</b><br><span class="hint">Coché, le responsable ne peut plus ajouter ni retirer d'agents depuis l'appli.</span></span></label>
           </div>
           <label class="field"><span>Notes internes</span><textarea class="textarea" name="notes">${r.message ? "Demande : " + r.message : ""}</textarea></label>
         </div>
       </details>
-      <label class="check"><input type="checkbox" name="sendEmail" ${raw(r.email ? "checked" : "")}><span>Envoyer le code par email au responsable</span></label>
+      <label class="check"><input type="checkbox" name="sendEmail" ${raw(r.email ? "checked" : "")}><span>Envoyer le code par email au responsable dès la création</span></label>
       <div data-out></div>
     </form>`.toString(),
     foot: `<button class="btn btn-ghost" data-x>Annuler</button><button class="btn btn-primary" data-go style="margin-left:auto">${icon("check")}Créer l'accès</button>`,
     onMount(el, close, setBody) {
       const f = el.querySelector("[data-create]");
       const go = el.querySelector("[data-go]");
-      f.plan.addEventListener("change", () => { if (f.plan.value !== "free" && f.trialTotal.value === "20") f.trialTotal.value = 0; });
+      const box = el.querySelector("[data-summary-box]");
+      const current = () => FORMULES.find(x => x.id === (f.formule.value || formuleInit)) || FORMULES[0];
+      const refreshSummary = () => {
+        box.innerHTML = formuleSummary(current(), { site: f.site.value, email: f.principalEmail.value, scansOverride: f.scansOverride.value, agentsOverride: f.agentsOverride.value }).toString();
+        el.querySelectorAll(".formule").forEach(c => c.classList.toggle("on", c.querySelector("input").checked));
+        // L'envoi du code par email suit l'adresse saisie, tant que l'administrateur n'a pas décidé lui-même.
+        f.sendEmail.disabled = !f.principalEmail.value;
+        if (!f.sendEmail.dataset.touched) f.sendEmail.checked = !!f.principalEmail.value;
+      };
+      f.sendEmail.addEventListener("change", () => { f.sendEmail.dataset.touched = "1"; });
+      f.addEventListener("input", refreshSummary);
+      f.addEventListener("change", refreshSummary);
+      refreshSummary();
       go.addEventListener("click", async () => {
         if (!f.reportValidity()) return;
         const fd = Object.fromEntries(new FormData(f).entries());
-        const agents = (fd.agents || "").split("\n").map(s => s.trim()).filter(Boolean);
-        if (!fd.code && !adm.v2) {
-          // Le Worker précédent exige un code fourni.
-          const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          const skip = ["dechetterie", "decheterie", "site", "centre", "de", "du", "des", "la", "le", "les", "d", "l", "sur", "en"];
-          const w = (fd.site || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z]+/).filter(x => x && !skip.includes(x));
-          fd.code = (w[0] || "tri").slice(0, 4).toUpperCase() + "-" + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => a[b % a.length]).join("");
-        }
+        const fo = current();
+        const agents = (fd.agents || "").split("\n").map(x => x.trim()).filter(Boolean);
         go.disabled = true; go.textContent = "Création…";
         try {
           const d = await adm.call("create", {
             client: fd.client, site: fd.site, responsable: fd.responsable, principal: fd.responsable, principalEmail: fd.principalEmail,
-            agents, plan: fd.plan, trialTotal: fd.trialTotal, teamLocked: !!f.teamLocked.checked, code: fd.code,
-            billing: f.trial.checked ? "essai" : fd.billing, paidUntil: f.trial.checked ? plusDays(TRIAL_DAYS) : "",
+            agents, plan: fo.plan, trialTotal: fo.trialTotal || 0, teamLocked: !!f.teamLocked.checked, code: (fd.code || "").trim().toUpperCase(),
+            billing: fo.billing, paidUntil: fo.until(),
             scansOverride: fd.scansOverride, agentsOverride: fd.agentsOverride, notes: fd.notes,
             sendEmail: !!f.sendEmail.checked, requestId: r.id || ""
           });
-          if (!adm.v2 && agents.length) {
-            // Worker précédent : ajout des profils un par un.
-            const all = (fd.responsable ? [fd.responsable] : []).concat(agents);
-            for (const [i, name] of all.entries()) await adm.call("add-agent", { code: d.code, agent: name, role: i === 0 && fd.responsable ? "responsable" : "agent" }).catch(() => {});
-          }
           await adm.reload();
           adm.render();
           const names = (fd.responsable ? [fd.responsable] : []).concat(agents);
@@ -150,7 +188,10 @@ export function openCreate(adm, req = null) {
 export function openSite(adm, code) {
   const s = (adm.data.sites || []).find(x => x.code === code);
   if (!s) return toast("Site introuvable");
+  // Lien direct : #sites/CODE ouvre la fiche, et le bouton Précédent la referme.
+  if (location.hash !== "#sites/" + code) history.pushState(null, "", "#sites/" + code);
   const d = openDrawer({
+    onClose() { if (location.hash === "#sites/" + code) history.replaceState(null, "", "#sites"); },
     title: s.site, sub: (s.client && s.client !== s.site ? s.client + ", " : "") + "créé " + (s.created ? relTime(s.created) : "?"),
     body: siteBody(s),
     foot: `<button class="btn btn-ghost btn-sm" data-act="email">${icon("mail")}Renvoyer le code par email</button>
@@ -162,33 +203,51 @@ export function openSite(adm, code) {
   return d;
 }
 
-function siteBody(s) {
+// État du site en une phrase, pour ne pas avoir à lire les champs.
+function statusLine(s) {
   const lim = s.monthlyLimit || 0;
-  return html`<div class="codebox"><b>${s.code}</b><button class="btn btn-ghost btn-sm" data-copy-code>${icon("copy")}Code</button><button class="btn btn-ghost btn-sm" data-copy-msg>${icon("copy")}Message</button></div>
-    ${!s.active ? html`<div class="note int">Accès suspendu : plus personne ne peut se connecter.</div>` : ""}
-    ${s.billing === "essai" ? html`<div class="note ${s.trialExpired ? "int" : "eco"}">${s.trialExpired ? "Essai terminé : l'analyse photo est coupée. Passez la facturation en « mensuelle » ou « annuelle » pour rouvrir, ou suspendez le site." : "Essai gratuit en cours jusqu'au " + (s.paidUntil || "?").split("-").reverse().join("/") + "."}</div>` : ""}
-    <div class="kpis" style="margin:0">
-      <div class="kpi"><span>Photos analysées ce mois</span><b>${s.monthlyUsed ?? "?"}${lim ? " / " + lim : ""}</b><small>${lim ? "utilisées sur le quota" : "pas de quota mensuel"}</small></div>
-      ${s.trialTotal ? html`<div class="kpi"><span>Scans d'essai</span><b>${s.trialUsed ?? 0} / ${s.trialTotal}</b><small>utilisés</small></div>` : ""}
-    </div>
+  const left = lim ? Math.max(0, lim - (s.monthlyUsed || 0)) : 0;
+  if (!s.active) return { tone: "int", text: "Accès suspendu : personne ne peut se connecter." };
+  if (s.billing === "essai") return s.trialExpired
+    ? { tone: "int", text: `Essai terminé le ${frDate(s.paidUntil)} : l'analyse photo est coupée, la recherche fonctionne. Choisissez une formule ci-dessous pour rouvrir.` }
+    : { tone: "eco", text: `Mois d'essai jusqu'au ${frDate(s.paidUntil)} · ${left} photo${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} sur ${lim} ce mois.` };
+  if (s.billing === "mensuelle" || s.billing === "annuelle") {
+    const late = s.paidUntil && s.paidUntil < new Date().toISOString().slice(0, 10);
+    return { tone: late ? "hors" : "eco", text: `${planLabel(s.plan)}, facturation ${s.billing} ${s.paidUntil ? (late ? "échue depuis le " : "à jour jusqu'au ") + frDate(s.paidUntil) : "sans échéance renseignée"} · ${left} photo${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} sur ${lim} ce mois.` };
+  }
+  if (s.plan === "free") return { tone: "", text: `Site Découverte : recherche seule, ${s.trialTotal ? `${Math.max(0, s.trialTotal - (s.trialUsed || 0))} photo(s) offerte(s) restante(s)` : "pas d'analyse photo"}.` };
+  return { tone: "", text: `${planLabel(s.plan)}, facturation ${s.billing || "à définir"} · ${lim ? `${left} photos restantes sur ${lim} ce mois` : "pas de quota mensuel"}.` };
+}
+
+function siteBody(s) {
+  const st = statusLine(s);
+  const p = PLANS[s.plan] || PLANS.free;
+  const monthNow = new Date().toISOString().slice(0, 7);
+  return html`<div class="codebox"><b>${s.code}</b><button class="btn btn-ghost btn-sm" data-copy-code>${icon("copy")}Code</button><button class="btn btn-ghost btn-sm" data-copy-msg>${icon("copy")}Message d'accueil</button></div>
+    <div class="note ${st.tone}">${st.text}</div>
     <form data-edit style="display:grid;gap:12px">
-      <div class="section-h">Informations et offre</div>
+      <div class="section-h">Formule et facturation</div>
+      <div class="grid2">
+        <label class="field"><span>Offre</span><select class="select" name="plan">${planOptions(s.plan)}</select><span class="hint" data-plan-hint></span></label>
+        <label class="field"><span>Facturation</span><select class="select" name="billing">${[["", "À définir"], ["essai", "Mois d'essai gratuit"], ["mensuelle", "Mensuelle"], ["annuelle", "Annuelle"], ["offert", "Offert"]].map(([v, l]) => html`<option value="${v}" ${raw(s.billing === v ? "selected" : "")}>${l}</option>`)}</select><span class="hint">Changer de facturation propose automatiquement la prochaine échéance.</span></label>
+        <label class="field"><span data-until-label>${s.billing === "essai" ? "Essai jusqu'au" : "Payé jusqu'au"}</span><input class="input" type="date" name="paidUntil" value="${s.paidUntil || ""}" lang="fr-FR"><span class="hint">Pour un essai : date de fin. Pour un abonnement : date couverte par la dernière facture.</span></label>
+        <label class="field"><span>Photos analysées par mois</span><input class="input" type="number" min="0" name="scansOverride" value="${s.scansOverride ?? ""}" placeholder="${p.scans} (offre)"><span class="hint">Vide = quota de l'offre. Utilisé ce mois : ${s.monthlyUsed ?? 0}.</span></label>
+        <label class="field"><span>Nombre de profils maximum</span><input class="input" type="number" min="0" name="agentsOverride" value="${s.agentsOverride ?? ""}" placeholder="${p.agents || "illimité"} (offre)"><span class="hint">Vide = limite de l'offre. Profils actuels : ${s.agents}.</span></label>
+        ${s.plan === "free" || s.trialTotal ? html`<label class="field"><span>Photos offertes (site Découverte)</span><input class="input" type="number" min="0" name="trialTotal" value="${s.trialTotal ?? 0}"><span class="hint">Hors quota mensuel. Utilisées : ${s.trialUsed ?? 0}.</span></label>` : html`<input type="hidden" name="trialTotal" value="${s.trialTotal ?? 0}">`}
+      </div>
+      <div class="section-h">Site et responsable</div>
       <div class="grid2">
         <label class="field"><span>Nom du site</span><input class="input" name="site" value="${s.site}"></label>
         <label class="field"><span>Structure</span><input class="input" name="client" value="${s.client}"></label>
         <label class="field"><span>Responsable</span><input class="input" name="principal" value="${s.principal}"></label>
-        <label class="field"><span>Email du responsable</span><input class="input" type="email" name="principalEmail" value="${s.principalEmail}"></label>
-        <label class="field"><span>Offre</span><select class="select" name="plan">${planOptions(s.plan)}</select></label>
-        <label class="field"><span>Scans d'essai</span><input class="input" type="number" min="0" name="trialTotal" value="${s.trialTotal ?? 0}"></label>
-        <label class="field"><span>Quota mensuel spécifique</span><input class="input" type="number" min="0" name="scansOverride" value="${s.scansOverride ?? ""}" placeholder="selon l'offre"></label>
-        <label class="field"><span>Agents max spécifique</span><input class="input" type="number" min="1" name="agentsOverride" value="${s.agentsOverride ?? ""}" placeholder="selon l'offre"></label>
-        <label class="field"><span>Facturation</span><select class="select" name="billing">${["", "essai", "mensuelle", "annuelle", "offert"].map(v => html`<option value="${v}" ${raw(s.billing === v ? "selected" : "")}>${v === "essai" ? "Essai gratuit" : v || "À définir"}</option>`)}</select></label>
-        <label class="field"><span>${s.billing === "essai" ? "Essai jusqu'au" : "Payé jusqu'au"}</span><input class="input" type="date" name="paidUntil" value="${s.paidUntil || ""}" lang="fr-FR"></label>
+        <label class="field"><span>Email du responsable</span><input class="input" type="email" name="principalEmail" value="${s.principalEmail}"><span class="hint">Reçoit le code, les confirmations et le récapitulatif mensuel.</span></label>
       </div>
-      <label class="check"><input type="checkbox" name="teamLocked" ${raw(s.teamLocked ? "checked" : "")}><span><b>Profils gérés par TriDDS</b><br><span class="hint">Décoché : le responsable du site ajoute ou retire ses agents dans la limite de l'offre.</span></span></label>
+      <label class="check"><input type="checkbox" name="teamLocked" ${raw(s.teamLocked ? "checked" : "")}><span><b>Équipe gérée par TriDDS uniquement</b><br><span class="hint">Coché : le responsable ne peut ni ajouter ni retirer d'agents depuis l'appli.</span></span></label>
       <label class="field"><span>Notes internes</span><textarea class="textarea" name="notes">${s.notes}</textarea></label>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" type="submit">Enregistrer</button><button class="btn btn-ghost" type="button" data-act="reset">Remettre les compteurs à zéro</button></div>
     </form>
+    <div class="section-h">Journal du mois<button class="btn btn-ghost btn-sm" data-act="recap" style="margin-left:10px">${icon("mail")}Envoyer le récapitulatif</button></div>
+    <div class="panel" data-journal><p class="hint" style="padding:10px 0">Chargement…</p></div>
     <div class="section-h">Profils (${s.agents}${s.maxAgents ? " sur " + s.maxAgents : ""})</div>
     <div class="panel" style="padding:4px 12px">${(s.agentsList || []).length ? s.agentsList.map(a => html`<div class="agent-row" data-agent="${a.name}">
       <div class="name"><b>${a.name}</b>${a.role === "responsable" ? html` <span class="pill ink" style="display:inline-flex">Responsable</span>` : ""}
@@ -198,7 +257,20 @@ function siteBody(s) {
       <button class="btn btn-ghost btn-sm" data-ag="rename" aria-label="Renommer">${icon("edit")}</button>
       <button class="btn btn-danger btn-sm" data-ag="remove" aria-label="Retirer">${icon("trash")}</button>
     </div>`) : html`<p class="hint" style="padding:10px 0">Aucun profil : personne ne peut se connecter.</p>`}</div>
-    <form data-add style="display:flex;gap:8px"><input class="input" name="name" placeholder="Ajouter un profil (Prénom Nom)" required><button class="btn btn-primary" type="submit">${icon("plus")}Ajouter</button></form>`.toString();
+    <form data-add style="display:flex;gap:8px"><input class="input" name="name" placeholder="Ajouter un profil (Prénom Nom)" required><button class="btn btn-primary" type="submit">${icon("plus")}Ajouter</button></form>`;
+}
+
+function journalPanel(d) {
+  const st = d && d.stats;
+  if (!st || !st.total) return html`<p class="hint" style="padding:10px 0">Aucun produit orienté ce mois-ci.</p>`;
+  const agents = Object.entries(st.byAgent || {}).sort((a, b) => b[1] - a[1]);
+  return html`<div class="kpis" style="margin:10px 0 6px">
+      <div class="kpi"><span>Produits orientés</span><b>${st.total}</b><small>dont ${st.scans} par photo</small></div>
+      <div class="kpi"><span>Corrigés</span><b>${st.corrected}</b><small>${st.toReview} à vérifier</small></div>
+      <div class="kpi"><span>Refusés ou à isoler</span><b>${st.refused}</b><small>${st.eco} EcoDDS, ${st.hors} hors</small></div>
+    </div>
+    <p class="hint" style="padding:0 0 8px">${agents.map(([a, n]) => `${a} : ${n}`).join(" · ")}</p>
+    ${(st.topCorrections || []).length ? html`<p class="hint" style="padding:0 0 10px"><b>Corrections fréquentes :</b> ${st.topCorrections.slice(0, 5).map(([k, n]) => `${k} (${n})`).join(" · ")}</p>` : ""}`;
 }
 
 function bindSite(adm, el, s, close) {
@@ -208,6 +280,21 @@ function bindSite(adm, el, s, close) {
     close();
     openSite(adm, code);
   };
+  // Remplissage automatique : l'offre explique son quota, la facturation propose l'échéance.
+  const f0 = el.querySelector("[data-edit]");
+  const planHint = () => { const p = PLANS[f0.plan.value] || PLANS.free; el.querySelector("[data-plan-hint]").textContent = p.price ? `${p.price} € HT par mois et par site · ${p.scans} photos par mois · ${p.agents} profils` : p.price === 0 ? "Recherche seule, pour les démonstrations" : `Sur devis · ${p.scans} photos par mois · ${p.agents} profils`; f0.scansOverride.placeholder = `${p.scans} (offre)`; f0.agentsOverride.placeholder = `${p.agents || "illimité"} (offre)`; };
+  planHint();
+  f0.plan.addEventListener("change", planHint);
+  f0.billing.addEventListener("change", () => {
+    const b = f0.billing.value;
+    el.querySelector("[data-until-label]").textContent = b === "essai" ? "Essai jusqu'au" : "Payé jusqu'au";
+    const suggested = b === "essai" ? plusDays(TRIAL_DAYS) : b === "mensuelle" ? plusMonths(1) : b === "annuelle" ? plusMonths(12) : "";
+    if (suggested && (!f0.paidUntil.value || f0.paidUntil.value < new Date().toISOString().slice(0, 10) || b !== s.billing)) f0.paidUntil.value = suggested;
+    if (b === "essai" && f0.plan.value === "free") f0.plan.value = "pro";
+    planHint();
+  });
+  // Journal du mois, chargé à part pour ne pas ralentir l'ouverture.
+  adm.call("journal", { code: s.code }).then(d => { const j = el.querySelector("[data-journal]"); if (j) j.innerHTML = journalPanel(d).toString(); }).catch(() => { const j = el.querySelector("[data-journal]"); if (j) j.innerHTML = `<p class="hint" style="padding:10px 0">Journal indisponible.</p>`; });
   const run = async (fn, ok) => { try { await fn(); if (ok) toast(ok); await refresh(); } catch (e) { adm.fail(e); } };
   const names = (s.agentsList || []).map(a => a.name);
 
@@ -220,7 +307,13 @@ function bindSite(adm, el, s, close) {
       if (a === "email") return run(() => adm.call("send-access-email", { code: s.code }), "Email envoyé");
       if (a === "suspend") { if (await confirmDialog({ title: "Suspendre l'accès ?", message: "Tous les agents sont déconnectés et ne peuvent plus se connecter.", ok: "Suspendre", danger: true })) run(() => adm.call("update", { code: s.code, active: false }), "Accès suspendu"); return; }
       if (a === "resume") return run(() => adm.call("update", { code: s.code, active: true }), "Accès réactivé");
-      if (a === "reset") return run(() => adm.call("update", { code: s.code, resetUsage: true }), "Compteurs remis à zéro");
+      if (a === "reset") { if (await confirmDialog({ title: "Remettre les compteurs à zéro ?", message: "Les photos analysées ce mois et les photos offertes repartent de zéro.", ok: "Remettre à zéro" })) return run(() => adm.call("update", { code: s.code, resetUsage: true }), "Compteurs remis à zéro"); return; }
+      if (a === "recap") {
+        const month = prompt("Mois du récapitulatif (AAAA-MM)", new Date().toISOString().slice(0, 7));
+        if (!month) return;
+        try { const d = await adm.call("send-recaps", { month }); toast(d.sent ? `Récapitulatif envoyé (${d.sent} site${d.sent > 1 ? "s" : ""})` : "Rien à envoyer : aucune activité ce mois-là ou pas d'email de responsable", { ms: 5000 }); } catch (err) { adm.fail(err); }
+        return;
+      }
       if (a === "regen") {
         if (!(await confirmDialog({ title: "Changer le code du site ?", message: "L'ancien code ne fonctionnera plus. Les agents sont déconnectés ; il faudra leur transmettre le nouveau code.", ok: "Changer le code", danger: true }))) return;
         try { const d = await adm.call("regenerate-code", { code: s.code }); toast("Nouveau code : " + d.code); await refresh(d.code); } catch (err) { adm.fail(err); }
@@ -255,6 +348,7 @@ function bindSite(adm, el, s, close) {
     const f = e.target;
     const fd = Object.fromEntries(new FormData(f).entries());
     if (fd.plan !== s.plan && !confirm("Changer d'offre déconnecte les agents de ce site. Continuer ?")) return;
+    if (fd.billing === "essai" && !fd.paidUntil) return toast("Indiquez la date de fin de l'essai.", { error: true });
     run(() => adm.call("update", Object.assign(fd, { code: s.code, teamLocked: !!f.teamLocked.checked })), "Modifications enregistrées");
   });
   el.querySelector("[data-add]").addEventListener("submit", e => {

@@ -127,3 +127,12 @@ body.admin { background: var(--concrete); }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); display: grid; gap: 8px; justify-items: center; }
 .empty-state svg { width: 32px; height: 32px; color: #9aa59f; }
 .empty-state b { color: var(--ink); font-size: 17px; }
+
+/* Formules à la création : cartes radio */
+.formules { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.formule { position: relative; display: grid; gap: 4px; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: var(--r); background: var(--paper); cursor: pointer; }
+.formule input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.formule b { font-size: 15px; }
+.formule span { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.formule.on { border-color: var(--ink); background: var(--eco-soft); }
+.formule:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
