@@ -33,7 +33,7 @@ Le lien `admin.html` ne doit jamais être communiqué à un client.
 
 ```
 config.js            adresse de l'API, version
-data.js              base produits (482 fiches) et consignes envoyées à l'IA
+data.js              base produits (482 fiches) ; les consignes IA sont dans worker/src/prompt.js
 css/                 fonts.css, base.css (commun), app.css, site.css, admin.css
 js/shared/           plans (offres), catalogue et recherche, appels API, outils d'interface
 js/app/              appli agent (un fichier par écran)

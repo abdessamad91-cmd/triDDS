@@ -105,7 +105,7 @@ a { color: inherit; }
 }
 .textarea { min-height: 96px; resize: vertical; }
 .input:focus, .select:focus, .textarea:focus { border-color: var(--ink); }
-.input::placeholder, .textarea::placeholder { color: #8b958f; }
+.input::placeholder, .textarea::placeholder { color: #6f7a74; }
 .hint { font-size: 13px; color: var(--muted); }
 
 /* ---------- pastilles de flux ---------- */

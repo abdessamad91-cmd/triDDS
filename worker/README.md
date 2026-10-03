@@ -42,7 +42,7 @@ node test/api.test.mjs        # 63 vérifications sur un environnement simulé
 node test/dev-server.mjs 8787 # API locale avec des données d'exemple
 ```
 
-Après une modification des consignes dans `data.js` : `node scripts/build-prompt.mjs`.
+Les consignes métier de l'IA vivent dans `src/prompt.js` (elles ne sont plus embarquées dans `data.js` côté client).
 
 ## Déploiement automatique (GitHub Actions)
 
