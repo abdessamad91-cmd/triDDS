@@ -22,7 +22,8 @@ const PHOTO = {
     { q: "peinture maquette", label: "Petit pot de peinture émail" }
   ]
 };
-const SAMPLES = [PHOTO, "White spirit", "pH moins", "bombe de peinture", "Acide fluorhydrique", "Désherbant"];
+// Un cas par couleur : EcoDDS, hors EcoDDS, refusé.
+const SAMPLES = [PHOTO, "White spirit", "huile moteur", "Acide picrique"];
 const sampleKey = s => typeof s === "string" ? s : "__photo";
 $("[data-chips]").innerHTML = SAMPLES.map(s => typeof s === "string"
   ? `<button type="button" data-sample="${esc(s)}">${esc(s)}</button>`
