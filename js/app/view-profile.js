@@ -270,7 +270,15 @@ export const memoryView = {
       </div>`.toString();
   },
   mount(el, app) {
-    syncMemory().then(() => { if (app.screen === "memory") app.refresh(); });
+    // Une seule synchronisation par ouverture de l'écran, et un rafraîchissement seulement si
+    // le contenu a changé : sinon chaque rafraîchissement relançait une synchronisation (boucle).
+    if (!app.state.memorySyncing) {
+      app.state.memorySyncing = true;
+      const before = JSON.stringify(memory.brands || {});
+      syncMemory().then(() => {
+        if (app.screen === "memory" && JSON.stringify(memory.brands || {}) !== before) app.refresh();
+      }).finally(() => { app.state.memorySyncing = false; });
+    }
     el.addEventListener("click", async e => {
       const b = e.target.closest("[data-forget]");
       if (!b) return;
