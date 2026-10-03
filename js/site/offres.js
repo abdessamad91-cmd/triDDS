@@ -13,7 +13,15 @@ const n = productCount();
 if (n) $("[data-count]").textContent = `${n} produits classés selon le référentiel EcoDDS, et la mémoire de votre équipe en plus.`;
 
 // Une photo de plusieurs produits en vrac : chaque produit ressort avec son bac.
-const PHOTO = { label: "Photo d'une caisse en vrac", products: ["White spirit", "huile moteur", "Acide fluorhydrique"] };
+const PHOTO = {
+  label: "Photo d'une caisse en vrac",
+  src: "./assets/demo-caisse.jpg",
+  products: [
+    { q: "pot de peinture", label: "Pot de peinture 2,5 L" },
+    { q: "brou de noix", label: "Brou de noix (teinte bois)" },
+    { q: "peinture maquette", label: "Petit pot de peinture émail" }
+  ]
+};
 const SAMPLES = [PHOTO, "White spirit", "pH moins", "bombe de peinture", "Acide fluorhydrique", "Désherbant"];
 const sampleKey = s => typeof s === "string" ? s : "__photo";
 $("[data-chips]").innerHTML = SAMPLES.map(s => typeof s === "string"
@@ -31,18 +39,18 @@ async function showPhotoDemo() {
   input.value = "Photo : " + PHOTO.products.length + " produits en vrac";
   foot.textContent = "";
   out.innerHTML = `<div class="demo-photo" aria-label="Photo d'une caisse de produits, analyse en cours">
-    <div class="demo-photo-items"><i style="height:62%"></i><i style="height:44%"></i><i style="height:78%"></i><i style="height:36%"></i></div>
+    <img src="${PHOTO.src}" alt="Pots de peinture et brou de noix posés sur une caisse rouge, en déchèterie" width="960" height="909">
     <div class="demo-photo-scan"></div>
     <div class="demo-photo-tag">${icon("camera")}<span>Analyse de la photo…</span></div>
   </div>`;
   await new Promise(r => setTimeout(r, 1500));
   if (run !== photoRun) return;
-  const rows = PHOTO.products.map(q => {
+  const rows = PHOTO.products.map(({ q, label }) => {
     const r = search(q, 1)[0];
     const d = destination(r);
     return html`<li class="${d.tone}">
       <span class="dm-k">${d.tone === "int" ? icon("alert") : html`<img src="./assets/${d.tone === "eco" ? "eco-dds-96" : "hors-eco-dds-96"}.png" alt="" width="28" height="28">`}</span>
-      <span class="dm-t"><b>${d.bac}</b><small>${r.n} · ${d.kicker}</small></span>
+      <span class="dm-t"><b>${d.bac}</b><small>${label} · ${d.kicker}</small></span>
     </li>`;
   });
   out.innerHTML = html`<div class="demo-multi"><div class="dm-head">${PHOTO.products.length} produits reconnus sur la photo</div><ul>${rows}</ul></div>`.toString();

@@ -42,11 +42,8 @@ body.site { background: var(--concrete); }
 .demo-chips button.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .demo-chips .chip-photo { display: inline-flex; align-items: center; gap: 6px; border-color: var(--ink-2); }
 .demo-chips .chip-photo svg { width: 16px; height: 16px; }
-.demo-photo { position: relative; min-height: 196px; background: #2b3531; overflow: hidden; }
-.demo-photo-items { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 24px 24px 30px; }
-.demo-photo-items i { display: block; width: 52px; border-radius: 8px 8px 4px 4px; background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.12)); border: 1.5px solid rgba(255,255,255,.35); }
-.demo-photo-items i:nth-child(2) { width: 64px; border-radius: 6px; }
-.demo-photo-items i:nth-child(4) { width: 40px; border-radius: 20px 20px 4px 4px; }
+.demo-photo { position: relative; height: 230px; background: #2b3531; overflow: hidden; }
+.demo-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
 .demo-photo-scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--hors); box-shadow: 0 0 18px 4px rgba(240, 160, 28, .55); animation: demo-scan 1.4s ease-in-out infinite; }
 @keyframes demo-scan { 0% { top: 6%; } 50% { top: 92%; } 100% { top: 6%; } }
 .demo-photo-tag { position: absolute; left: 14px; top: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: 13px; font-weight: 600; }
