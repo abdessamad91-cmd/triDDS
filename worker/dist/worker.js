@@ -54,7 +54,7 @@ const PLANS = {
     scans: 200,
     agents: 25,
     pitch: "À partir de 3 déchèteries, tarif dégressif par site.",
-    features: ["Tout l'offre Déchèterie, sur chaque site", "39 € par site dès 3 sites, 29 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
+    features: ["Toute l'offre Déchèterie, sur chaque site", "39 € par site dès 3 sites, 29 € dès 10", "Un seul interlocuteur, une seule facture", "Déploiement accompagné : profils créés, agents formés", "Quotas ajustés à l'activité"],
     public: true
   }
 };

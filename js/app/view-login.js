@@ -58,11 +58,14 @@ export const loginView = {
         <p class="lead" style="margin-top:8px">Cherchez un produit ou prenez-le en photo : TriDDS indique s'il va en EcoDDS, hors EcoDDS ou s'il doit être refusé.</p></div>
         ${resume}
         ${card}
+        <a class="login-discover" href="./pricing.html">
+          <div><b>Vous découvrez TriDDS ?</b><span>Voir les offres, tester la démo, demander un mois d'essai gratuit.</span></div>
+          ${icon("chevron")}
+        </a>
       </div>
       <div class="login-foot">
         <button data-demo>Essayer sans code</button>
         ${step !== "forgot" ? html`<button data-step="forgot">Code oublié</button>` : ""}
-        <a href="./pricing.html">Offres et demande d'accès</a>
       </div>
     </div>`.toString();
   },
